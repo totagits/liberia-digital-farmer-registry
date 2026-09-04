@@ -402,35 +402,37 @@ export default function ExtensionServices({
             ＋ Record Field Visit & Advisory
           </button>
           <button
-            onClick={() => setDiagnosticModal(true)}
+            onClick={() => setTab("diagnostics")}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
               padding: "10px 16px",
               borderRadius: "8px",
-              background: "rgba(255,255,255,0.08)",
-              color: "#e2e8f0",
-              border: "1px solid rgba(255,255,255,0.2)",
+              background: "#ffffff",
+              color: "#166534",
+              border: "1px solid #86efac",
               cursor: "pointer",
-              fontWeight: 600,
+              fontWeight: 700,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
             }}
           >
             🔬 CABI Plantwise Diagnoser
           </button>
           <button
-            onClick={() => setClimateModal(true)}
+            onClick={() => setTab("climate")}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
               padding: "10px 16px",
               borderRadius: "8px",
-              background: "rgba(255,255,255,0.08)",
-              color: "#e2e8f0",
-              border: "1px solid rgba(255,255,255,0.2)",
+              background: "#ffffff",
+              color: "#0369a1",
+              border: "1px solid #bae6fd",
               cursor: "pointer",
-              fontWeight: 600,
+              fontWeight: 700,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
             }}
           >
             ⛅ Climate & Soil Advisory
@@ -443,11 +445,12 @@ export default function ExtensionServices({
               gap: "6px",
               padding: "10px 16px",
               borderRadius: "8px",
-              background: "rgba(245, 158, 11, 0.15)",
-              color: "#fbbf24",
-              border: "1px solid rgba(245, 158, 11, 0.35)",
+              background: "#fef3c7",
+              color: "#92400e",
+              border: "1.5px solid #fde68a",
               cursor: "pointer",
-              fontWeight: 600,
+              fontWeight: 700,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
             }}
           >
             📢 Broadcast Outbreak Alert
@@ -493,8 +496,8 @@ export default function ExtensionServices({
         <section className="panel registry">
           <div className="table-tools" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
             <div>
-              <b style={{ fontSize: "1rem", color: "#f8fafc" }}>Official Field Advisory Encounters Logbook</b>
-              <span style={{ marginLeft: 12, color: "#94a3b8", fontSize: "0.85rem" }}>
+              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>Official Field Advisory Encounters Logbook</b>
+              <span style={{ marginLeft: 12, color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
                 {allVisits.length} verified encounters recorded with spatial GPS tags & advice
               </span>
             </div>
@@ -531,28 +534,28 @@ export default function ExtensionServices({
                 {allVisits.map((v) => (
                   <tr key={v.visitCode}>
                     <td>
-                      <code style={{ color: "#38bdf8", fontWeight: 700 }}>{v.visitCode}</code>
+                      <code style={{ color: "#0369a1", fontWeight: 700 }}>{v.visitCode}</code>
                       <small style={{ display: "block", color: "#64748b" }}>{v.visitType}</small>
                     </td>
                     <td>
                       <b>{v.officerName || "Extension Agent"}</b>
-                      <small style={{ display: "block", color: "#94a3b8" }}>
+                      <small style={{ display: "block", color: "#64748b" }}>
                         {new Date(v.scheduledAt).toLocaleDateString("en-LR", { year: "numeric", month: "short", day: "numeric" })}
                       </small>
                     </td>
                     <td>
                       <b>{v.crop || "Agricultural Holding"}</b>
-                      <small style={{ display: "block", color: "#94a3b8" }}>{v.location}</small>
+                      <small style={{ display: "block", color: "#64748b" }}>{v.location}</small>
                     </td>
                     <td style={{ maxWidth: 220 }}>
-                      <span style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>{v.observations || v.purpose}</span>
+                      <span style={{ fontSize: "0.85rem", color: "#1e293b", lineHeight: 1.4 }}>{v.observations || v.purpose}</span>
                     </td>
                     <td style={{ maxWidth: 240 }}>
-                      <span style={{ fontSize: "0.85rem", color: "#34d399", fontWeight: 500 }}>
+                      <span style={{ fontSize: "0.85rem", color: "#15803d", fontWeight: 600, lineHeight: 1.4 }}>
                         {v.advice || "Advice recorded on field card."}
                       </span>
                       {v.diagnostic && (
-                        <span style={{ display: "block", fontSize: "0.75rem", color: "#f59e0b", marginTop: 4 }}>
+                        <span style={{ display: "block", fontSize: "0.75rem", color: "#b45309", fontWeight: 600, marginTop: 4 }}>
                           Pest: {v.diagnostic.pestOrDisease} ({v.diagnostic.severity})
                         </span>
                       )}
@@ -560,7 +563,7 @@ export default function ExtensionServices({
                     <td>
                       {v.referral ? (
                         <div>
-                          <span style={{ fontSize: "0.8rem", color: "#e2e8f0", fontWeight: 600 }}>{v.referral}</span>
+                          <span style={{ fontSize: "0.82rem", color: "#0369a1", fontWeight: 700 }}>{v.referral}</span>
                           <span className="status" style={{ display: "inline-block", marginTop: 4 }}>
                             {v.referralStatus || "Referred"}
                           </span>
@@ -575,11 +578,11 @@ export default function ExtensionServices({
                         style={{
                           padding: "6px 12px",
                           borderRadius: "6px",
-                          background: "rgba(56, 189, 248, 0.15)",
-                          color: "#38bdf8",
-                          border: "1px solid rgba(56, 189, 248, 0.35)",
+                          background: "#f0f9ff",
+                          color: "#0369a1",
+                          border: "1px solid #bae6fd",
                           fontSize: "0.78rem",
-                          fontWeight: 600,
+                          fontWeight: 700,
                           cursor: "pointer",
                           whiteSpace: "nowrap",
                         }}
@@ -593,8 +596,8 @@ export default function ExtensionServices({
             </table>
 
             {!allVisits.length && (
-              <div style={{ textAlign: "center", padding: "48px 24px", color: "#94a3b8" }}>
-                <p style={{ fontSize: "1.1rem", color: "#f8fafc", marginBottom: 8, fontWeight: 600 }}>
+              <div style={{ textAlign: "center", padding: "48px 24px", color: "#475569" }}>
+                <p style={{ fontSize: "1.1rem", color: "#0f172a", marginBottom: 8, fontWeight: 700 }}>
                   No field encounters recorded yet
                 </p>
                 <p style={{ fontSize: "0.9rem", maxWidth: 500, margin: "0 auto 20px" }}>
@@ -624,17 +627,17 @@ export default function ExtensionServices({
       {tab === "diagnostics" && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "24px" }}>
           {/* Diagnostic Factsheet Catalog */}
-          <section className="panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
+          <section className="panel" style={{ padding: "24px", gridColumn: "1 / -1", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
-                <h3 style={{ fontSize: "1.15rem", color: "#f8fafc", margin: 0 }}>
+                <h3 style={{ fontSize: "1.15rem", color: "#0f172a", fontWeight: 800, margin: 0 }}>
                   CABI PlantwisePlus Agronomic Diagnostics & IPM Guidelines
                 </h3>
-                <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "4px 0 0" }}>
+                <p style={{ fontSize: "0.85rem", color: "#475569", margin: "4px 0 0" }}>
                   Verified Integrated Pest Management (IPM) decision matrix for Liberia's primary agricultural value chains.
                 </p>
               </div>
-              <span style={{ fontSize: "0.8rem", padding: "4px 10px", borderRadius: "12px", background: "rgba(34, 197, 94, 0.15)", color: "#4ade80", border: "1px solid rgba(34, 197, 94, 0.3)" }}>
+              <span style={{ fontSize: "0.8rem", padding: "5px 12px", borderRadius: "12px", background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", fontWeight: 700 }}>
                 FAO · CABI Standard
               </span>
             </div>
@@ -644,29 +647,30 @@ export default function ExtensionServices({
                 <article
                   key={idx}
                   style={{
-                    background: "rgba(15, 23, 42, 0.6)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    background: "#ffffff",
+                    border: "1.5px solid #e2e8f0",
                     borderRadius: "10px",
                     padding: "18px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#38bdf8", fontWeight: 700 }}>
+                    <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#0284c7", fontWeight: 800 }}>
                       {item.crop}
                     </span>
-                    <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "8px", background: item.severity === "Critical" ? "rgba(239, 68, 68, 0.2)" : "rgba(245, 158, 11, 0.2)", color: item.severity === "Critical" ? "#f87171" : "#fbbf24", fontWeight: 600 }}>
+                    <span style={{ fontSize: "0.72rem", padding: "3px 9px", borderRadius: "8px", background: item.severity === "Critical" ? "#fee2e2" : "#fef3c7", color: item.severity === "Critical" ? "#991b1b" : "#92400e", fontWeight: 700 }}>
                       {item.severity} Severity
                     </span>
                   </div>
-                  <h4 style={{ color: "#f8fafc", margin: "0 0 8px", fontSize: "1rem" }}>{item.pest}</h4>
-                  <p style={{ fontSize: "0.82rem", color: "#cbd5e1", marginBottom: 12, lineHeight: 1.4 }}>
-                    <b>Symptoms:</b> {item.symptoms}
+                  <h4 style={{ color: "#0f172a", margin: "0 0 8px", fontSize: "1.05rem", fontWeight: 800 }}>{item.pest}</h4>
+                  <p style={{ fontSize: "0.84rem", color: "#334155", marginBottom: 12, lineHeight: 1.5 }}>
+                    <b style={{ color: "#0f172a" }}>Symptoms:</b> {item.symptoms}
                   </p>
 
-                  <div style={{ fontSize: "0.8rem", background: "rgba(0,0,0,0.25)", padding: "10px 12px", borderRadius: "6px", marginBottom: 12 }}>
-                    <div style={{ color: "#86efac", marginBottom: 4 }}><b>Cultural:</b> {item.cultural}</div>
-                    <div style={{ color: "#93c5fd", marginBottom: 4 }}><b>Biological:</b> {item.biological}</div>
-                    <div style={{ color: "#fca5a5" }}><b>Chemical (Last Resort):</b> {item.chemical}</div>
+                  <div style={{ fontSize: "0.82rem", background: "#f8fafc", border: "1px solid #e2e8f0", padding: "12px 14px", borderRadius: "8px", marginBottom: 14 }}>
+                    <div style={{ color: "#15803d", marginBottom: 6, lineHeight: 1.4 }}><b style={{ color: "#166534" }}>Cultural:</b> {item.cultural}</div>
+                    <div style={{ color: "#0369a1", marginBottom: 6, lineHeight: 1.4 }}><b style={{ color: "#075985" }}>Biological:</b> {item.biological}</div>
+                    <div style={{ color: "#b91c1c", lineHeight: 1.4 }}><b style={{ color: "#991b1b" }}>Chemical (Last Resort):</b> {item.chemical}</div>
                   </div>
 
                   <button
@@ -675,14 +679,15 @@ export default function ExtensionServices({
                     }}
                     style={{
                       width: "100%",
-                      padding: "8px",
-                      borderRadius: "6px",
-                      background: "rgba(34, 197, 94, 0.15)",
-                      color: "#4ade80",
-                      border: "1px solid rgba(34, 197, 94, 0.3)",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
+                      padding: "10px",
+                      borderRadius: "7px",
+                      background: "#f0fdf4",
+                      color: "#166534",
+                      border: "1.5px solid #86efac",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
                       cursor: "pointer",
+                      transition: "all 0.15s ease",
                     }}
                   >
                     Apply IPM Protocol to Field Encounter ↗
@@ -693,39 +698,39 @@ export default function ExtensionServices({
           </section>
 
           {/* Knapsack Sprayer Calibration Tool */}
-          <section className="panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
+          <section className="panel" style={{ padding: "24px", gridColumn: "1 / -1", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
-                <h3 style={{ fontSize: "1.15rem", color: "#f8fafc", margin: 0 }}>
+                <h3 style={{ fontSize: "1.2rem", color: "#0f172a", fontWeight: 800, margin: 0 }}>
                   FAO Safe Pesticide Dilution & Knapsack Sprayer Calibrator
                 </h3>
-                <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "4px 0 0" }}>
+                <p style={{ fontSize: "0.88rem", color: "#475569", margin: "4px 0 0", fontWeight: 500 }}>
                   Calculate tank refills, active ingredient dilution rates, and safety intervals to prevent over-dosing and environmental runoff.
                 </p>
               </div>
-              <span style={{ fontSize: "0.8rem", padding: "4px 10px", borderRadius: "12px", background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
+              <span style={{ fontSize: "0.8rem", padding: "5px 12px", borderRadius: "12px", background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", fontWeight: 700 }}>
                 WHO Class II/III Safe Use
               </span>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: 22 }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Field Area to Spray (Hectares)</label>
+                <label style={{ display: "block", fontSize: "0.82rem", color: "#1e293b", fontWeight: 700, marginBottom: 6 }}>Field Area to Spray (Hectares)</label>
                 <input
                   type="number"
                   step="0.1"
                   min="0.1"
                   value={calcAreaHa}
                   onChange={(e) => setCalcAreaHa(Number(e.target.value) || 0.1)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Knapsack Tank Capacity (Litres)</label>
+                <label style={{ display: "block", fontSize: "0.82rem", color: "#1e293b", fontWeight: 700, marginBottom: 6 }}>Knapsack Tank Capacity (Litres)</label>
                 <select
                   value={calcTankLitres}
                   onChange={(e) => setCalcTankLitres(Number(e.target.value))}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 >
                   <option value={15}>15 Litres (Standard Solo/Matabi)</option>
                   <option value={16}>16 Litres (Standard Knapsack)</option>
@@ -733,47 +738,47 @@ export default function ExtensionServices({
                 </select>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Chemical Dosage per Hectare (mL or g)</label>
+                <label style={{ display: "block", fontSize: "0.82rem", color: "#1e293b", fontWeight: 700, marginBottom: 6 }}>Chemical Dosage per Hectare (mL or g)</label>
                 <input
                   type="number"
                   step="10"
                   value={calcDoseHa}
                   onChange={(e) => setCalcDoseHa(Number(e.target.value) || 10)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Calibrated Water Volume (Litres / Ha)</label>
+                <label style={{ display: "block", fontSize: "0.82rem", color: "#1e293b", fontWeight: 700, marginBottom: 6 }}>Calibrated Water Volume (Litres / Ha)</label>
                 <input
                   type="number"
                   step="20"
                   value={calcWaterRateHa}
                   onChange={(e) => setCalcWaterRateHa(Number(e.target.value) || 100)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 />
               </div>
             </div>
 
             {/* Calculated Output Card */}
-            <div style={{ background: "rgba(22, 101, 52, 0.2)", border: "1px solid rgba(34, 197, 94, 0.35)", borderRadius: "8px", padding: "18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+            <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "12px", padding: "20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "18px", boxShadow: "0 2px 10px rgba(22, 101, 52, 0.05)" }}>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#86efac", textTransform: "uppercase" }}>Total Water Required</span>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff" }}>{sprayerResults.totalWater} Litres</div>
-                <small style={{ color: "#94a3b8" }}>For {calcAreaHa} ha coverage</small>
+                <span style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Water Required</span>
+                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", marginTop: 4 }}>{sprayerResults.totalWater} Litres</div>
+                <small style={{ color: "#475569", fontWeight: 500, fontSize: "0.82rem" }}>For {calcAreaHa} ha coverage</small>
               </div>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#86efac", textTransform: "uppercase" }}>Knapsack Tank Loads</span>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff" }}>{sprayerResults.totalTanks} Tanks</div>
-                <small style={{ color: "#94a3b8" }}>at {calcTankLitres}L per tank</small>
+                <span style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>Knapsack Tank Loads</span>
+                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", marginTop: 4 }}>{sprayerResults.totalTanks} Tanks</div>
+                <small style={{ color: "#475569", fontWeight: 500, fontSize: "0.82rem" }}>at {calcTankLitres}L per tank</small>
               </div>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#86efac", textTransform: "uppercase" }}>Chemical Measure per Tank</span>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#4ade80" }}>{sprayerResults.dosePerTank} mL / g</div>
-                <small style={{ color: "#94a3b8" }}>Dispense per filled tank</small>
+                <span style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>Chemical Measure per Tank</span>
+                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#15803d", marginTop: 4 }}>{sprayerResults.dosePerTank} mL / g</div>
+                <small style={{ color: "#475569", fontWeight: 500, fontSize: "0.82rem" }}>Dispense per filled tank</small>
               </div>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#86efac", textTransform: "uppercase" }}>Mandatory PPE Protocol</span>
-                <div style={{ fontSize: "0.85rem", color: "#fef08a", marginTop: 4 }}>
+                <span style={{ fontSize: "0.75rem", color: "#991b1b", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>⚠️ Mandatory PPE Protocol</span>
+                <div style={{ fontSize: "0.85rem", color: "#78350f", fontWeight: 600, background: "#fef3c7", padding: "10px 12px", borderRadius: "8px", border: "1px solid #fde68a", marginTop: 6, lineHeight: 1.45 }}>
                   Nose mask, eye goggles, nitrile gloves, gumboots, and long sleeves. Do NOT spray against the wind.
                 </div>
               </div>
@@ -786,20 +791,20 @@ export default function ExtensionServices({
       {tab === "climate" && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "24px" }}>
           {/* 7-14 Day Agro-Meteorological Forecasting */}
-          <section className="panel" style={{ padding: "24px" }}>
+          <section className="panel" style={{ padding: "24px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
-                <h3 style={{ fontSize: "1.15rem", color: "#f8fafc", margin: 0 }}>
+                <h3 style={{ fontSize: "1.15rem", color: "#0f172a", fontWeight: 800, margin: 0 }}>
                   Liberia 7–14 Day Agro-Meteorological Forecast
                 </h3>
-                <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "4px 0 0" }}>
+                <p style={{ fontSize: "0.85rem", color: "#475569", margin: "4px 0 0" }}>
                   Hyper-local weather telemetry for planting, weeding, and fertilizer basaling decisions.
                 </p>
               </div>
               <select
                 value={selectedWeatherCounty}
                 onChange={(e) => setSelectedWeatherCounty(e.target.value)}
-                style={{ padding: "6px 12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                style={{ padding: "8px 14px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontWeight: 700, fontSize: "0.85rem" }}
               >
                 {COUNTIES.map((c) => (
                   <option key={c} value={c}>{c} County</option>
@@ -811,24 +816,24 @@ export default function ExtensionServices({
               const w = COUNTY_WEATHER_DATA[selectedWeatherCounty] || COUNTY_WEATHER_DATA["Bong"];
               return (
                 <div>
-                  <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "8px", padding: "16px", marginBottom: 16, border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+                  <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "18px", marginBottom: 16, border: "1.5px solid #e2e8f0" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#38bdf8" }}>{selectedWeatherCounty} Outlook</span>
-                      <span style={{ fontSize: "0.8rem", padding: "3px 8px", borderRadius: "10px", background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8" }}>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0369a1" }}>{selectedWeatherCounty} Outlook</span>
+                      <span style={{ fontSize: "0.8rem", padding: "4px 10px", borderRadius: "10px", background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", fontWeight: 700 }}>
                         Rain Probability: {w.rainProb}%
                       </span>
                     </div>
-                    <p style={{ color: "#e2e8f0", fontSize: "0.9rem", margin: "8px 0" }}>{w.forecast}</p>
-                    <div style={{ display: "flex", gap: "16px", marginTop: 8, fontSize: "0.85rem", color: "#94a3b8" }}>
-                      <span>🌡 Temp: <strong style={{ color: "#fff" }}>{w.temp}</strong></span>
-                      <span>💧 Est. Rain: <strong style={{ color: "#fff" }}>{w.mm} mm</strong></span>
-                      <span>💨 Humidity: <strong style={{ color: "#fff" }}>{w.humidity}</strong></span>
+                    <p style={{ color: "#1e293b", fontSize: "0.95rem", margin: "10px 0", lineHeight: 1.5, fontWeight: 500 }}>{w.forecast}</p>
+                    <div style={{ display: "flex", gap: "18px", marginTop: 10, fontSize: "0.88rem", color: "#475569" }}>
+                      <span>🌡 Temp: <strong style={{ color: "#0f172a", fontWeight: 800 }}>{w.temp}</strong></span>
+                      <span>💧 Est. Rain: <strong style={{ color: "#0f172a", fontWeight: 800 }}>{w.mm} mm</strong></span>
+                      <span>💨 Humidity: <strong style={{ color: "#0f172a", fontWeight: 800 }}>{w.humidity}</strong></span>
                     </div>
                   </div>
 
-                  <div style={{ background: "rgba(59, 130, 246, 0.15)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: "8px", padding: "14px" }}>
-                    <b style={{ color: "#93c5fd", fontSize: "0.85rem", display: "block", marginBottom: 4 }}>Agro-Meteorological Advisory to Farmer:</b>
-                    <p style={{ color: "#e0f2fe", fontSize: "0.82rem", margin: 0, lineHeight: 1.4 }}>{w.advice}</p>
+                  <div style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe", borderRadius: "10px", padding: "14px" }}>
+                    <b style={{ color: "#1e40af", fontSize: "0.88rem", display: "block", marginBottom: 6, fontWeight: 800 }}>Agro-Meteorological Advisory to Farmer:</b>
+                    <p style={{ color: "#1e3a8a", fontSize: "0.88rem", margin: 0, lineHeight: 1.5, fontWeight: 500 }}>{w.advice}</p>
                   </div>
                 </div>
               );
@@ -836,24 +841,24 @@ export default function ExtensionServices({
           </section>
 
           {/* Digital Soil Test Probe Logger & Fertilizer Optimizer */}
-          <section className="panel" style={{ padding: "24px" }}>
+          <section className="panel" style={{ padding: "24px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
-                <h3 style={{ fontSize: "1.15rem", color: "#f8fafc", margin: 0 }}>
+                <h3 style={{ fontSize: "1.15rem", color: "#0f172a", fontWeight: 800, margin: 0 }}>
                   Soil Health & Fertilizer Optimizer
                 </h3>
-                <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "4px 0 0" }}>
+                <p style={{ fontSize: "0.85rem", color: "#475569", margin: "4px 0 0" }}>
                   Log field probe measurements (pH, EC, moisture) to compute lime & NPK application rates.
                 </p>
               </div>
-              <span style={{ fontSize: "0.8rem", padding: "4px 10px", borderRadius: "12px", background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
+              <span style={{ fontSize: "0.8rem", padding: "5px 12px", borderRadius: "12px", background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", fontWeight: 700 }}>
                 SoilGrids Compatible
               </span>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: 16 }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#94a3b8", marginBottom: 4 }}>Soil pH (Acidity)</label>
+                <label style={{ display: "block", fontSize: "0.78rem", color: "#1e293b", fontWeight: 700, marginBottom: 5 }}>Soil pH (Acidity)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -861,45 +866,45 @@ export default function ExtensionServices({
                   max="9.0"
                   value={probePh}
                   onChange={(e) => setProbePh(Number(e.target.value) || 5.0)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#94a3b8", marginBottom: 4 }}>EC (Salinity mS/cm)</label>
+                <label style={{ display: "block", fontSize: "0.78rem", color: "#1e293b", fontWeight: 700, marginBottom: 5 }}>EC (Salinity mS/cm)</label>
                 <input
                   type="number"
                   step="0.05"
                   value={probeEc}
                   onChange={(e) => setProbeEc(Number(e.target.value) || 0.1)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#94a3b8", marginBottom: 4 }}>Soil Moisture (%)</label>
+                <label style={{ display: "block", fontSize: "0.78rem", color: "#1e293b", fontWeight: 700, marginBottom: 5 }}>Soil Moisture (%)</label>
                 <input
                   type="number"
                   step="1"
                   value={probeMoisture}
                   onChange={(e) => setProbeMoisture(Number(e.target.value) || 50)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#ffffff", color: "#0f172a", border: "1.5px solid #cbd5e1", fontSize: "0.92rem", fontWeight: 600, outline: "none" }}
                 />
               </div>
             </div>
 
-            <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "8px", padding: "16px", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-              <div style={{ marginBottom: 10 }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Soil Acidity Classification:</span>
-                <div style={{ fontSize: "0.95rem", fontWeight: 700, color: probePh < 5.0 ? "#f87171" : "#4ade80" }}>
+            <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "18px", border: "1.5px solid #e2e8f0" }}>
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: "0.76rem", color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Soil Acidity Classification:</span>
+                <div style={{ fontSize: "1.05rem", fontWeight: 800, color: probePh < 5.0 ? "#b91c1c" : "#15803d", marginTop: 2 }}>
                   {soilDiagnosis.status}
                 </div>
               </div>
-              <div style={{ marginBottom: 10 }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Liming Requirement:</span>
-                <div style={{ fontSize: "0.85rem", color: "#e2e8f0" }}>{soilDiagnosis.lime}</div>
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: "0.76rem", color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Liming Requirement:</span>
+                <div style={{ fontSize: "0.9rem", color: "#1e293b", fontWeight: 600, marginTop: 2 }}>{soilDiagnosis.lime}</div>
               </div>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Site-Specific Nutrient Prescription:</span>
-                <div style={{ fontSize: "0.85rem", color: "#86efac", fontWeight: 600 }}>{soilDiagnosis.fert}</div>
+                <span style={{ fontSize: "0.76rem", color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Site-Specific Nutrient Prescription:</span>
+                <div style={{ fontSize: "0.95rem", color: "#15803d", fontWeight: 800, marginTop: 2 }}>{soilDiagnosis.fert}</div>
               </div>
             </div>
           </section>
@@ -911,8 +916,8 @@ export default function ExtensionServices({
         <section className="panel registry">
           <div className="table-tools" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
             <div>
-              <b style={{ fontSize: "1rem", color: "#f8fafc" }}>Multi-Agency Institutional Referral Pipeline</b>
-              <span style={{ marginLeft: 12, color: "#94a3b8", fontSize: "0.85rem" }}>
+              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>Multi-Agency Institutional Referral Pipeline</b>
+              <span style={{ marginLeft: 12, color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
                 Official linkages to CARI Research, MoA Plant Protection, Agro-Dealers, and MGCSP Cash Transfers
               </span>
             </div>
@@ -948,25 +953,25 @@ export default function ExtensionServices({
                 {referralsList.map((v) => (
                   <tr key={v.visitCode}>
                     <td>
-                      <code>{v.visitCode}</code>
+                      <code style={{ color: "#0369a1", fontWeight: 700 }}>{v.visitCode}</code>
                       <small style={{ display: "block", color: "#64748b" }}>{v.officerName}</small>
                     </td>
                     <td>
                       <b>{v.crop || "Farm"}</b>
-                      <small style={{ display: "block", color: "#94a3b8" }}>{v.location}</small>
+                      <small style={{ display: "block", color: "#64748b" }}>{v.location}</small>
                     </td>
                     <td>
-                      <b style={{ color: "#38bdf8" }}>{v.referral}</b>
+                      <b style={{ color: "#0369a1", fontWeight: 700 }}>{v.referral}</b>
                     </td>
                     <td style={{ maxWidth: 260 }}>
-                      <span style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>{v.observations || v.purpose}</span>
+                      <span style={{ fontSize: "0.85rem", color: "#1e293b", lineHeight: 1.4 }}>{v.observations || v.purpose}</span>
                     </td>
                     <td>
                       <span className="status">{v.referralStatus || "Referred"}</span>
                     </td>
                     <td>
                       {v.nextVisitAt ? (
-                        <span style={{ fontSize: "0.85rem", color: "#f59e0b" }}>{v.nextVisitAt}</span>
+                        <span style={{ fontSize: "0.85rem", color: "#b45309", fontWeight: 600 }}>{v.nextVisitAt}</span>
                       ) : (
                         <span style={{ color: "#64748b" }}>Not set</span>
                       )}
@@ -977,8 +982,8 @@ export default function ExtensionServices({
             </table>
 
             {!referralsList.length && (
-              <div style={{ textAlign: "center", padding: "48px 24px", color: "#94a3b8" }}>
-                <p style={{ fontSize: "1.1rem", color: "#f8fafc", marginBottom: 8, fontWeight: 600 }}>
+              <div style={{ textAlign: "center", padding: "48px 24px", color: "#475569" }}>
+                <p style={{ fontSize: "1.1rem", color: "#0f172a", marginBottom: 8, fontWeight: 700 }}>
                   No active referrals in queue
                 </p>
                 <p style={{ fontSize: "0.9rem", maxWidth: 480, margin: "0 auto 16px" }}>
@@ -1009,8 +1014,8 @@ export default function ExtensionServices({
         <section className="panel registry">
           <div className="table-tools" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
             <div>
-              <b style={{ fontSize: "1rem", color: "#f8fafc" }}>Farmer-Initiated Advisory Requests</b>
-              <span style={{ marginLeft: 12, color: "#94a3b8", fontSize: "0.85rem" }}>
+              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>Farmer-Initiated Advisory Requests</b>
+              <span style={{ marginLeft: 12, color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
                 {data.requests.length} total caseload cases
               </span>
             </div>
@@ -1019,11 +1024,12 @@ export default function ExtensionServices({
               style={{
                 padding: "8px 16px",
                 borderRadius: "6px",
-                background: "rgba(255,255,255,0.08)",
-                color: "#e2e8f0",
-                fontWeight: 600,
-                border: "1px solid rgba(255,255,255,0.2)",
+                background: "#ffffff",
+                color: "#166534",
+                fontWeight: 700,
+                border: "1.5px solid #166534",
                 cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
               }}
             >
               ＋ Log Request on Behalf of Farmer
@@ -1047,20 +1053,20 @@ export default function ExtensionServices({
                 {data.requests.map((r) => (
                   <tr key={r.requestCode}>
                     <td>
-                      <code>{r.requestCode}</code>
+                      <code style={{ color: "#0369a1", fontWeight: 700 }}>{r.requestCode}</code>
                       <small style={{ display: "block", color: "#64748b" }}>{new Date(r.createdAt).toLocaleDateString()}</small>
                     </td>
                     <td>
                       <b>{r.requesterName}</b>
-                      <small style={{ display: "block", color: "#94a3b8" }}>{r.farmerDfrId || "No DFR ID"}</small>
+                      <small style={{ display: "block", color: "#64748b" }}>{r.farmerDfrId || "No DFR ID"}</small>
                     </td>
                     <td>
-                      <b>{r.serviceType}</b>
-                      <small style={{ display: "block", color: "#cbd5e1" }}>{r.problemDescription}</small>
+                      <b style={{ color: "#0f172a" }}>{r.serviceType}</b>
+                      <small style={{ display: "block", color: "#475569", lineHeight: 1.3 }}>{r.problemDescription}</small>
                     </td>
                     <td>
-                      {r.county}
-                      <small style={{ display: "block", color: "#94a3b8" }}>{r.district}</small>
+                      <b>{r.county}</b>
+                      <small style={{ display: "block", color: "#64748b" }}>{r.district}</small>
                     </td>
                     <td>
                       <span className={`hd-priority ${r.urgency.toLowerCase()}`}>{r.urgency}</span>
@@ -1090,6 +1096,7 @@ export default function ExtensionServices({
                           background: "#166534",
                           color: "#fff",
                           fontSize: "0.78rem",
+                          fontWeight: 600,
                           border: "none",
                           cursor: "pointer",
                         }}
@@ -1103,8 +1110,8 @@ export default function ExtensionServices({
             </table>
 
             {!data.requests.length && (
-              <div style={{ textAlign: "center", padding: "48px 24px", color: "#94a3b8" }}>
-                <p style={{ fontSize: "1.1rem", color: "#f8fafc", marginBottom: 8, fontWeight: 600 }}>
+              <div style={{ textAlign: "center", padding: "48px 24px", color: "#475569" }}>
+                <p style={{ fontSize: "1.1rem", color: "#0f172a", marginBottom: 8, fontWeight: 700 }}>
                   No pending farmer requests
                 </p>
                 <p style={{ fontSize: "0.9rem", maxWidth: 450, margin: "0 auto 16px" }}>
@@ -1115,9 +1122,9 @@ export default function ExtensionServices({
                   style={{
                     padding: "8px 16px",
                     borderRadius: "6px",
-                    background: "rgba(255,255,255,0.08)",
+                    background: "#166534",
                     color: "#fff",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    border: "none",
                     fontWeight: 600,
                     cursor: "pointer",
                   }}
