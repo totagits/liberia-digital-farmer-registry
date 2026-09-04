@@ -701,17 +701,238 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       },
     ];
 
+    const defaultDictionary = [
+      { elementCode: "DFR.PERSON.SEX", name: "Sex", definition: "Sex of the registered person as reported and validated.", domain: "Demographic", dataType: "Code", allowedValues: ["Female", "Male", "Intersex", "Not stated"], standardOwner: "LISGIS", version: "1.1", status: "Standard" },
+      { elementCode: "DFR.HH.VULN", name: "Vulnerability classification", definition: "Approved household vulnerability category used for targeting.", domain: "Social protection", dataType: "Multi-code", allowedValues: ["Female-headed", "Youth", "Disability", "Shock-affected", "Food insecure"], standardOwner: "MGCSP", version: "1.0", status: "Standard" },
+      { elementCode: "DFR.GEO.COUNTY", name: "County code", definition: "Official county classification for Liberia.", domain: "Geospatial", dataType: "Code", allowedValues: ["Bomi", "Bong", "Gbarpolu", "Grand Bassa", "Grand Cape Mount", "Grand Gedeh", "Grand Kru", "Lofa", "Margibi", "Maryland", "Montserrado", "Nimba", "River Cess", "River Gee", "Sinoe"], standardOwner: "LISGIS", version: "2026.1", status: "Standard" },
+      { elementCode: "DFR.CROP.PRIMARY", name: "Primary crop code", definition: "Primary commercial or food security crop cultivated on registered parcel.", domain: "Agronomic", dataType: "Code", allowedValues: ["Rice (Oryza sativa / glaberrima)", "Cassava (Manihot esculenta)", "Cocoa (Theobroma cacao)", "Oil Palm (Elaeis guineensis)", "Rubber (Hevea brasiliensis)", "Coffee (Coffea liberica / robusta)", "Horticultural vegetables"], standardOwner: "MoA Agribusiness", version: "1.2", status: "Standard" },
+      { elementCode: "DFR.LAND.TENURE", name: "Land tenure right type", definition: "Customary, statutory, or communal land right under the Land Rights Act 2018.", domain: "Tenure & Rights", dataType: "Code", allowedValues: ["Customary Land Certificate", "Statutory Fee-Simple Deed", "Registered Leasehold", "Communal Farm Agreement", "Provisional Community Allocation"], standardOwner: "Liberia Land Authority (LLA)", version: "1.0", status: "Standard" },
+      { elementCode: "DFR.FIN.MOBILE", name: "Mobile money MSISDN", definition: "Normalized E.164 mobile number registered for subsidy disbursement.", domain: "Payments & Financial", dataType: "String", allowedValues: ["Lonestar Cell MTN (+23188...)", "Orange Liberia (+23177...)"], standardOwner: "Central Bank of Liberia", version: "2.0", status: "Standard" },
+    ];
+
+    const defaultAgreements = [
+      {
+        agreementCode: "DSA-MOA-MGCSP-001",
+        title: "Agriculture–Social Protection Minimum-Data Exchange Compact",
+        providerInstitution: "Ministry of Agriculture (MoA)",
+        recipientInstitution: "Ministry of Gender, Children and Social Protection (MGCSP)",
+        datasets: ["DFR-FARMER", "DFR-VULN"],
+        purpose: "Targeted disaster relief eligibility referral and automated beneficiary verification.",
+        legalBasis: "Approved inter-ministerial data-sharing protocol & Liberia Social Protection Policy",
+        sensitivity: "Highly restricted",
+        accessProtocol: "OAuth 2.0 + mTLS; automated field minimization; immutable event logging",
+        status: "Active",
+        effectiveDate: "2026-07-01",
+        expiryDate: "2027-06-30",
+        reviewDate: "2026-10-01",
+      },
+      {
+        agreementCode: "DSA-MOA-LISGIS-002",
+        title: "Geospatial Standards and Boundary Quality Assurance Agreement",
+        providerInstitution: "LISGIS",
+        recipientInstitution: "Ministry of Agriculture (MoA)",
+        datasets: ["DFR-GEO"],
+        purpose: "Official administrative reference and parcel topology validation for national census.",
+        legalBasis: "Government statistical and geospatial mandate Act of 2004",
+        sensitivity: "Restricted",
+        accessProtocol: "Signed GeoJSON packages and controlled REST query API",
+        status: "Active",
+        effectiveDate: "2026-06-15",
+        expiryDate: "2027-06-14",
+        reviewDate: "2026-09-15",
+      },
+      {
+        agreementCode: "DSA-MOA-CBL-003",
+        title: "Smallholder Rural Financial Inclusion & Mobile Money KYC Protocol",
+        providerInstitution: "Ministry of Agriculture (MoA)",
+        recipientInstitution: "Central Bank of Liberia (CBL)",
+        datasets: ["DFR-FARMER"],
+        purpose: "Automated identity verification for unbanked smallholders receiving emergency fertilizer cash transfers.",
+        legalBasis: "National Financial Inclusion Strategy 2024–2029 & Central Bank Regulations",
+        sensitivity: "Restricted",
+        accessProtocol: "Hashed identity token match via ISO 20022 gateway; zero PII storage",
+        status: "Draft for signature",
+        effectiveDate: "2026-09-01",
+        expiryDate: "2027-08-31",
+        reviewDate: "2026-11-01",
+      },
+      {
+        agreementCode: "DSA-MOA-LRA-004",
+        title: "Agricultural Input Duty-Free Tax Exemption Data Verification Protocol",
+        providerInstitution: "Ministry of Agriculture (MoA)",
+        recipientInstitution: "Liberia Revenue Authority (LRA)",
+        datasets: ["DFR-COOP", "DFR-FARMER"],
+        purpose: "Immediate customs port clearance for certified cooperative tractors, irrigation gear, and foundation seed.",
+        legalBasis: "Liberia Revenue Code (Amended) Section 1708 (Agricultural Exemptions)",
+        sensitivity: "Official-use",
+        accessProtocol: "Encrypted webhook validation & QR verification lookup",
+        status: "Active",
+        effectiveDate: "2026-05-01",
+        expiryDate: "2027-04-30",
+        reviewDate: "2026-12-01",
+      },
+    ];
+
+    const defaultExchanges = [
+      {
+        connectorCode: "CONN-NSR",
+        systemName: "National Social Registry (NSR)",
+        ownerInstitution: "MGCSP",
+        direction: "Bidirectional",
+        endpointAlias: "NSR Beneficiary Triage API",
+        standard: "REST/JSON · OpenAPI 3.1",
+        mappingVersion: "0.9",
+        environment: "Configuration",
+        status: "Awaiting endpoint",
+        lastTestedAt: "2026-08-01 14:22",
+        lastExchangeAt: "No live exchange",
+        result: "Endpoint pre-configured; awaiting mTLS certificate exchange",
+        records: 0,
+        correlationId: "CFG-NSR-001",
+      },
+      {
+        connectorCode: "CONN-CENSUS",
+        systemName: "National Census & Agricultural Statistical Gateway",
+        ownerInstitution: "LISGIS",
+        direction: "Inbound",
+        endpointAlias: "LISGIS Statistical Data Feed",
+        standard: "REST/JSON + CSV GeoPackage",
+        mappingVersion: "1.0",
+        environment: "Sandbox",
+        status: "Mapping validated",
+        lastTestedAt: "2026-07-31 09:15",
+        lastExchangeAt: "2026-07-31 16:30",
+        result: "Schema validation passed · 250 records synchronized",
+        records: 250,
+        correlationId: "TEST-LISGIS-250",
+      },
+      {
+        connectorCode: "CONN-CDA",
+        systemName: "CDA Cooperative Certification Portal",
+        ownerInstitution: "Cooperative Development Agency (CDA)",
+        direction: "Bidirectional",
+        endpointAlias: "CDA Verification & Registry Adapter",
+        standard: "REST/JSON · OpenAPI 3.1",
+        mappingVersion: "1.0",
+        environment: "Production",
+        status: "Active / Live",
+        lastTestedAt: "2026-08-02 08:00",
+        lastExchangeAt: "2026-08-02 11:45",
+        result: "Live sync operational · 48 certified cooperatives verified",
+        records: 48,
+        correlationId: "LIVE-CDA-048",
+      },
+      {
+        connectorCode: "CONN-ASYCUDA",
+        systemName: "ASYCUDA World (Customs Agricultural Port Clearance)",
+        ownerInstitution: "Liberia Revenue Authority (LRA)",
+        direction: "Inbound",
+        endpointAlias: "ASYCUDA Duty-Free Agro Verification",
+        standard: "SOAP/XML & JSON Webhook",
+        mappingVersion: "2.1",
+        environment: "Sandbox",
+        status: "Connected / Testing",
+        lastTestedAt: "2026-08-01 17:30",
+        lastExchangeAt: "2026-08-01 17:35",
+        result: "Handshake verified · test manifests cleared without tax levy",
+        records: 12,
+        correlationId: "ASY-TEST-012",
+      },
+      {
+        connectorCode: "CONN-CBL-MM",
+        systemName: "National Mobile Money Switch (ISO 20022)",
+        ownerInstitution: "Central Bank of Liberia",
+        direction: "Bidirectional",
+        endpointAlias: "CBL Subsidy Disbursement Gateway",
+        standard: "ISO 20022 / REST JSON",
+        mappingVersion: "2026.2",
+        environment: "Production",
+        status: "Active / Live",
+        lastTestedAt: "2026-08-02 09:30",
+        lastExchangeAt: "2026-08-02 12:00",
+        result: "Real-time payment callback active · 1,420 subsidy tranches processed",
+        records: 1420,
+        correlationId: "CBL-TX-1420",
+      },
+    ];
+
+    const defaultAudit = [
+      {
+        id: 1,
+        createdAt: "2026-08-02 12:00",
+        actor: "Central Bank Gateway (CBL)",
+        action: "SUBSIDY_BATCH_RECONCILED",
+        entity: "CONN-CBL-MM",
+        details: "Automated ISO 20022 reconciliation completed for 1,420 mobile subsidy transfers.",
+        sha256Hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      },
+      {
+        id: 2,
+        createdAt: "2026-08-02 11:45",
+        actor: "CDA Registrar",
+        action: "COOPERATIVE_REGISTRY_SYNC",
+        entity: "CONN-CDA",
+        details: "48 verified cooperatives synchronized with central national registry.",
+        sha256Hash: "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
+      },
+      {
+        id: 3,
+        createdAt: "2026-08-02 09:15",
+        actor: "Hon. J. Alexander Nuetah (Minister of Agriculture)",
+        action: "PLATFORM_POLICY_ENACTED",
+        entity: "POL-LBR-001",
+        details: "Enacted National Agricultural Data Sovereignty & Protection Directive.",
+        sha256Hash: "a2b9f3c7e8d1a4b6c5e2f9d8c7a1b3e5f7d9c1a3b5e7f9d1c3a5b7e9f1d3c5a7",
+      },
+      {
+        id: 4,
+        createdAt: "2026-08-01 16:30",
+        actor: "LISGIS Geo-Information Directorate",
+        action: "BOUNDARY_STANDARDS_UPDATE",
+        entity: "DFR.GEO.COUNTY",
+        details: "Published authoritative 15-county geospatial boundary release 2026.1.",
+        sha256Hash: "c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5",
+      },
+      {
+        id: 5,
+        createdAt: "2026-08-01 10:30",
+        actor: "National Governance Secretariat",
+        action: "GOVERNANCE_CONTROL_FRAMEWORK_INIT",
+        entity: "National DFR",
+        details: "Institutional accounts, data stewardship RACI, validation workflows, metadata, and exchange controls established.",
+        sha256Hash: "b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2",
+      },
+    ];
+
     const getStoredGovernance = () => {
-      if (typeof window === "undefined") return { policies: defaultPolicies };
+      if (typeof window === "undefined") {
+        return {
+          policies: defaultPolicies,
+          dictionary: defaultDictionary,
+          agreements: defaultAgreements,
+          exchanges: defaultExchanges,
+          audit: defaultAudit,
+        };
+      }
       try {
         const raw = localStorage.getItem(GOV_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (!parsed.policies || !parsed.policies.length) parsed.policies = defaultPolicies;
+          if (!parsed.dictionary || !parsed.dictionary.length) parsed.dictionary = defaultDictionary;
+          if (!parsed.agreements || !parsed.agreements.length) parsed.agreements = defaultAgreements;
+          if (!parsed.exchanges || !parsed.exchanges.length) parsed.exchanges = defaultExchanges;
+          if (!parsed.audit || !parsed.audit.length) parsed.audit = defaultAudit;
           return parsed;
         }
       } catch {}
-      return { policies: defaultPolicies };
+      return {
+        policies: defaultPolicies,
+        dictionary: defaultDictionary,
+        agreements: defaultAgreements,
+        exchanges: defaultExchanges,
+        audit: defaultAudit,
+      };
     };
 
     const saveStoredGovernance = (data: any) => {
@@ -744,27 +965,14 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
           { id: 3, caseId: "LISGIS-QA-00027", workflowType: "LISGIS geospatial approval", subjectRef: "PARCEL-LR-00027", title: "Parcel boundary and topology quality approval", submitterInstitution: "MOA", currentInstitution: "LISGIS", stage: "CORRECTION_REQUESTED", decision: "Correction required", notes: "Resolve overlap at north-west vertex.", dueDate: "2026-08-04", county: "Nimba", evidenceRef: "GeoJSON, GPS accuracy report" },
           { id: 4, caseId: "LOCAL-END-00076", workflowType: "Community contribution endorsement", subjectRef: "DFR-LR-00076", title: "Community-submitted farmer profile endorsement", submitterInstitution: "Community focal person", currentInstitution: "LOCAL", stage: "APPROVED", decision: "Endorsed", dueDate: "2026-08-03", county: "Grand Bassa", evidenceRef: "Community attestation and field photo" },
         ],
-        dictionary: [
-          { elementCode: "DFR.PERSON.SEX", name: "Sex", definition: "Sex of the registered person as reported and validated.", domain: "Demographic", dataType: "Code", allowedValues: ["Female", "Male", "Intersex", "Not stated"], standardOwner: "LISGIS", version: "1.1", status: "Standard" },
-          { elementCode: "DFR.HH.VULN", name: "Vulnerability classification", definition: "Approved household vulnerability category used for targeting.", domain: "Social protection", dataType: "Multi-code", allowedValues: ["Female-headed", "Youth", "Disability", "Shock-affected", "Food insecure"], standardOwner: "MGCSP", version: "1.0", status: "Standard" },
-          { elementCode: "DFR.GEO.COUNTY", name: "County code", definition: "Official county classification for Liberia.", domain: "Geospatial", dataType: "Code", allowedValues: ["Bomi", "Bong", "Gbarpolu", "Grand Bassa", "Grand Cape Mount", "Grand Gedeh", "Grand Kru", "Lofa", "Margibi", "Maryland", "Montserrado", "Nimba", "River Cess", "River Gee", "Sinoe"], standardOwner: "LISGIS", version: "2026.1", status: "Standard" },
-        ],
-        agreements: [
-          { agreementCode: "DSA-MOA-MGCSP-001", title: "Agriculture–social protection minimum-data exchange", providerInstitution: "MOA", recipientInstitution: "MGCSP", datasets: ["DFR-FARMER", "DFR-VULN"], purpose: "Eligibility referral and beneficiary validation", legalBasis: "Approved inter-ministerial data-sharing protocol", sensitivity: "Highly restricted", accessProtocol: "OAuth 2.0 + mTLS; field minimization; immutable logging", status: "Draft for signature", reviewDate: "2026-10-01" },
-          { agreementCode: "DSA-MOA-LISGIS-002", title: "Geospatial standards and boundary quality exchange", providerInstitution: "LISGIS", recipientInstitution: "MOA", datasets: ["DFR-GEO"], purpose: "Boundary reference and parcel quality assurance", legalBasis: "Government statistical and geospatial mandate", sensitivity: "Restricted", accessProtocol: "Signed GeoJSON packages and controlled API", status: "Active", reviewDate: "2026-09-15" },
-        ],
+        dictionary: store.dictionary || defaultDictionary,
+        agreements: store.agreements || defaultAgreements,
         decisions: [
           { decisionCode: "DGC-RES-2026-008", meetingType: "Data Governance Committee", title: "Adopt minimum-data principle for vulnerability exchange", decisionText: "Only approved eligibility attributes may be exchanged with programme systems.", responsibleInstitution: "MOA/MGCSP", actionOwner: "Data Protection Working Group", dueDate: "2026-08-14", priority: "High", escalationLevel: "Committee", status: "In progress" },
           { decisionCode: "GIS-WG-2026-014", meetingType: "Geospatial Working Group", title: "Approve LISGIS boundary release 2026.1", decisionText: "Use release 2026.1 as authoritative administrative reference after topology validation.", responsibleInstitution: "LISGIS", actionOwner: "MOA GIS Unit", dueDate: "2026-08-07", priority: "Normal", escalationLevel: "Working group", status: "Open" },
         ],
-        exchanges: [
-          { connectorCode: "CONN-NSR", systemName: "National Social Registry", ownerInstitution: "MGCSP", direction: "Bidirectional", endpointAlias: "NSR beneficiary exchange", standard: "REST/JSON · OpenAPI 3.1", mappingVersion: "0.9", environment: "Configuration", status: "Awaiting endpoint", lastExchangeAt: "No live exchange", result: "Configuration active", records: 0, correlationId: "CFG-NSR-001" },
-          { connectorCode: "CONN-CENSUS", systemName: "National Census & Survey Data", ownerInstitution: "LISGIS", direction: "Inbound", endpointAlias: "LISGIS statistical exchange", standard: "REST/JSON + CSV package", mappingVersion: "1.0", environment: "Sandbox", status: "Mapping validated", lastExchangeAt: "2026-07-31", result: "Schema validation passed", records: 250, correlationId: "TEST-LISGIS-250" },
-          { connectorCode: "CONN-CDA", systemName: "CDA Cooperative Certification", ownerInstitution: "CDA", direction: "Bidirectional", endpointAlias: "CDA verification adapter", standard: "REST/JSON · OpenAPI 3.1", mappingVersion: "1.0", environment: "Configuration", status: "Awaiting endpoint", lastExchangeAt: "No live exchange", result: "Workflow operational", records: 0, correlationId: "CFG-CDA-001" },
-        ],
-        audit: [
-          { id: 1, createdAt: "2026-08-01 10:30", actor: "Institutional Governance", action: "Governance control framework initialized", entity: "National DFR", details: "Institution accounts, stewardship, approval workflow, metadata, agreements and exchange controls established" },
-        ],
+        exchanges: store.exchanges || defaultExchanges,
+        audit: store.audit || defaultAudit,
         policies: store.policies || defaultPolicies,
         today: "2026-08-02",
       });
@@ -775,7 +983,12 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
         const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
         const store = getStoredGovernance();
         store.policies = store.policies || defaultPolicies;
+        store.dictionary = store.dictionary || defaultDictionary;
+        store.agreements = store.agreements || defaultAgreements;
+        store.exchanges = store.exchanges || defaultExchanges;
+        store.audit = store.audit || defaultAudit;
 
+        // 1. Policy actions
         if (body.action === "create-policy") {
           const code = body.policyCode || `POL-LBR-${Date.now().toString().slice(-4)}`;
           const newPolicy = {
@@ -791,6 +1004,18 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
             directives: Array.isArray(body.directives) ? body.directives : String(body.directives || "").split("\n").filter(Boolean),
           };
           store.policies = [newPolicy, ...store.policies.filter((p: any) => p.policyCode !== code)];
+          store.audit = [
+            {
+              id: Date.now(),
+              createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+              actor: body.actor || "Ministry Administrator",
+              action: "PLATFORM_POLICY_ENACTED",
+              entity: code,
+              details: `Enacted policy: ${newPolicy.title}`,
+              sha256Hash: `sha256:${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`,
+            },
+            ...store.audit,
+          ];
           saveStoredGovernance(store);
           return jsonResponse({ ok: true, policyCode: code }, { status: 201 });
         }
@@ -800,6 +1025,198 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
           saveStoredGovernance(store);
           return jsonResponse({ ok: true });
         }
+
+        // 2. Data dictionary actions
+        if (body.action === "create-dictionary-item") {
+          const code = body.elementCode || `DFR.${Date.now().toString().slice(-4)}`;
+          const newItem = {
+            elementCode: code,
+            name: String(body.name || code).trim(),
+            definition: String(body.definition || "").trim(),
+            domain: String(body.domain || "Agronomic").trim(),
+            dataType: String(body.dataType || "Code").trim(),
+            allowedValues: Array.isArray(body.allowedValues)
+              ? body.allowedValues
+              : String(body.allowedValues || "").split(",").map((s) => s.trim()).filter(Boolean),
+            standardOwner: String(body.standardOwner || "Ministry of Agriculture (MoA)").trim(),
+            version: body.version || "1.0",
+            status: body.status || "Standard",
+          };
+          store.dictionary = [newItem, ...store.dictionary.filter((d: any) => d.elementCode !== code)];
+          store.audit = [
+            {
+              id: Date.now(),
+              createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+              actor: body.actor || "Data Standards Steward",
+              action: "DATA_DICTIONARY_STANDARD_REGISTERED",
+              entity: code,
+              details: `Registered data element standard: ${newItem.name} (${newItem.domain})`,
+              sha256Hash: `sha256:${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`,
+            },
+            ...store.audit,
+          ];
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true, elementCode: code }, { status: 201 });
+        }
+
+        if (body.action === "delete-dictionary-item") {
+          store.dictionary = store.dictionary.filter((d: any) => d.elementCode !== body.elementCode);
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true });
+        }
+
+        // 3. Sharing agreement actions
+        if (body.action === "create-agreement") {
+          const code = body.agreementCode || `DSA-MOA-${Date.now().toString().slice(-4)}`;
+          const newAg = {
+            agreementCode: code,
+            title: String(body.title || "").trim(),
+            providerInstitution: String(body.providerInstitution || "Ministry of Agriculture (MoA)").trim(),
+            recipientInstitution: String(body.recipientInstitution || "Partner Agency").trim(),
+            datasets: Array.isArray(body.datasets)
+              ? body.datasets
+              : String(body.datasets || "").split(",").map((s) => s.trim()).filter(Boolean),
+            purpose: String(body.purpose || "").trim(),
+            legalBasis: String(body.legalBasis || "Inter-Agency Data Sharing Protocol").trim(),
+            sensitivity: String(body.sensitivity || "Restricted").trim(),
+            accessProtocol: String(body.accessProtocol || "OAuth 2.0 + mTLS; audit logging").trim(),
+            status: body.status || "Active",
+            effectiveDate: body.effectiveDate || new Date().toISOString().slice(0, 10),
+            expiryDate: body.expiryDate || "2027-12-31",
+            reviewDate: body.reviewDate || "2026-12-01",
+          };
+          store.agreements = [newAg, ...store.agreements.filter((a: any) => a.agreementCode !== code)];
+          store.audit = [
+            {
+              id: Date.now(),
+              createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+              actor: body.actor || "Legal & Interoperability Directorate",
+              action: "DATA_SHARING_AGREEMENT_EXECUTED",
+              entity: code,
+              details: `Executed compact between ${newAg.providerInstitution} and ${newAg.recipientInstitution}`,
+              sha256Hash: `sha256:${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`,
+            },
+            ...store.audit,
+          ];
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true, agreementCode: code }, { status: 201 });
+        }
+
+        if (body.action === "sign-agreement") {
+          store.agreements = store.agreements.map((a: any) =>
+            a.agreementCode === body.agreementCode ? { ...a, status: "Active" } : a
+          );
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true });
+        }
+
+        if (body.action === "delete-agreement") {
+          store.agreements = store.agreements.filter((a: any) => a.agreementCode !== body.agreementCode);
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true });
+        }
+
+        // 4. Interoperability connector actions
+        if (body.action === "create-connector") {
+          const code = body.connectorCode || `CONN-${Date.now().toString().slice(-4)}`;
+          const newConn = {
+            connectorCode: code,
+            systemName: String(body.systemName || "").trim(),
+            ownerInstitution: String(body.ownerInstitution || "Partner Ministry").trim(),
+            direction: String(body.direction || "Bidirectional").trim(),
+            endpointAlias: String(body.endpointAlias || "/api/v1/exchange").trim(),
+            standard: String(body.standard || "REST/JSON · OpenAPI 3.1").trim(),
+            mappingVersion: String(body.mappingVersion || "1.0").trim(),
+            environment: String(body.environment || "Sandbox").trim(),
+            status: body.status || "Active / Live",
+            lastTestedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+            lastExchangeAt: "Pending first scheduled sync",
+            result: "Gateway connection configured and credentials validated",
+            records: 0,
+            correlationId: `CFG-${Date.now().toString().slice(-4)}`,
+          };
+          store.exchanges = [newConn, ...store.exchanges.filter((c: any) => c.connectorCode !== code)];
+          store.audit = [
+            {
+              id: Date.now(),
+              createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+              actor: body.actor || "Interoperability Lead",
+              action: "API_CONNECTOR_REGISTERED",
+              entity: code,
+              details: `Registered connector for ${newConn.systemName} (${newConn.standard})`,
+              sha256Hash: `sha256:${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`,
+            },
+            ...store.audit,
+          ];
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true, connectorCode: code }, { status: 201 });
+        }
+
+        if (body.action === "test-connector") {
+          const nowStr = new Date().toISOString().slice(0, 16).replace("T", " ");
+          store.exchanges = store.exchanges.map((c: any) =>
+            c.connectorCode === body.connectorCode
+              ? {
+                  ...c,
+                  status: "Active / Live",
+                  lastTestedAt: nowStr,
+                  result: "Handshake verified · HTTP 200 OK · mTLS 1.3 latency 48ms",
+                }
+              : c
+          );
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true, latencyMs: 48, status: "Handshake verified" });
+        }
+
+        if (body.action === "trigger-sync") {
+          const nowStr = new Date().toISOString().slice(0, 16).replace("T", " ");
+          const newRecords = Math.floor(Math.random() * 50) + 20;
+          const corrId = `SYNC-${Date.now().toString().slice(-6)}`;
+          store.exchanges = store.exchanges.map((c: any) =>
+            c.connectorCode === body.connectorCode
+              ? {
+                  ...c,
+                  status: "Active / Live",
+                  lastExchangeAt: nowStr,
+                  records: (c.records || 0) + newRecords,
+                  result: `Synchronized ${newRecords} incremental records successfully`,
+                  correlationId: corrId,
+                }
+              : c
+          );
+          store.audit = [
+            {
+              id: Date.now(),
+              createdAt: nowStr,
+              actor: "Automated Gateway Scheduler",
+              action: "API_CONNECTOR_BATCH_SYNC",
+              entity: body.connectorCode,
+              details: `Batch synchronization executed for ${body.connectorCode}: ${newRecords} records transferred. Correlation: ${corrId}`,
+              sha256Hash: `sha256:${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`,
+            },
+            ...store.audit,
+          ];
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true, recordsAdded: newRecords, correlationId: corrId });
+        }
+
+        if (body.action === "delete-connector") {
+          store.exchanges = store.exchanges.filter((c: any) => c.connectorCode !== body.connectorCode);
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true });
+        }
+
+        // 5. Forensic audit verification
+        if (body.action === "verify-audit-chain") {
+          return jsonResponse({
+            ok: true,
+            verifiedCount: store.audit.length,
+            algorithm: "SHA-256 Merkel Linked Chain",
+            status: "CHAIN_INTEGRITY_VALID",
+            rootHash: "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+            verifiedAt: new Date().toISOString(),
+          });
+        }
       } catch (err: any) {
         return jsonResponse({ error: err.message || "Failed to process governance action" }, { status: 400 });
       }
@@ -808,6 +1225,7 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
     if (method === "PATCH" && init?.body) {
       return jsonResponse({ ok: true });
     }
+
   }
 
   // 10. Extension Services: /api/extension-services
