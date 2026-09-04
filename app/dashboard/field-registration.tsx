@@ -133,32 +133,8 @@ export default function FieldRegistrationWorkspace({
         }
       }
     } catch {}
-    // Seed default simulated queue if empty
-    const initialQueue: OfflineQueueItem[] = [
-      {
-        id: "Q-001",
-        type: "Farmer",
-        name: "Emmanuel Tokpa",
-        county: "Bong",
-        district: "Suakoko",
-        timestamp: "2026-09-03 14:22",
-        payload: { crop: "Cassava", farmSize: 2.2, phone: "0770987123" },
-        retries: 0,
-        status: "Pending",
-      },
-      {
-        id: "Q-002",
-        type: "Parcel",
-        name: "Gbedin Swamp Rice Field #4",
-        county: "Nimba",
-        district: "Sanniquellie-Mahn",
-        timestamp: "2026-09-03 15:40",
-        payload: { areaHa: 3.5, verticesCount: 4, crop: "Lowland Rice" },
-        retries: 0,
-        status: "Pending",
-      },
-    ];
-    setQueue(initialQueue);
+    // Initialize empty queue if nothing in storage
+    setQueue([]);
   };
 
   useEffect(() => {

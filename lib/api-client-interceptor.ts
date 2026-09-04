@@ -290,33 +290,19 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
         return jsonResponse(getStoredHouseholds());
       }
       if (opType === "identity") {
-        return jsonResponse([
-          { id: 1, farmerDfrId: "LBR-NI-000184", checkType: "Biometric & Phone Deduplication", riskScore: 8, outcome: "Clear — No index match", createdAt: "2026-08-12 10:15:00" },
-          { id: 2, farmerDfrId: "LBR-BG-000219", checkType: "National Identification Registry (NIR)", riskScore: 5, outcome: "Clear — Verified citizen ID", createdAt: "2026-08-14 11:30:00" },
-          { id: 3, farmerDfrId: "LBR-LF-000305", checkType: "Phone & Boundary Coordinate Check", riskScore: 12, outcome: "Clear — Spatial polygon unique", createdAt: "2026-08-18 14:45:00" },
-        ]);
+        return jsonResponse([]);
       }
       if (opType === "applications") {
-        return jsonResponse([
-          { id: 1, applicationId: "APP-2026-084", farmerDfrId: "LBR-BG-000219", programme: "National Rice Subsidy", county: "Bong", eligibilityScore: 94, status: "Approved" },
-          { id: 2, applicationId: "APP-2026-092", farmerDfrId: "LBR-NI-000184", programme: "Tree Crop Rehabilitation", county: "Nimba", eligibilityScore: 88, status: "In review" },
-        ]);
+        return jsonResponse([]);
       }
       if (opType === "payments") {
-        return jsonResponse([
-          { id: 1, farmerDfrId: "LBR-NI-000184", provider: "Lonestar MTN Mobile Money", accountName: "Kollie Flomo", accountNumberMasked: "0770***192", status: "Verified" },
-          { id: 2, farmerDfrId: "LBR-BG-000219", provider: "Orange Money Liberia", accountName: "Fatu Kamara", accountNumberMasked: "0886***309", status: "Verified" },
-        ]);
+        return jsonResponse([]);
       }
       if (opType === "vouchers") {
-        return jsonResponse([
-          { id: 1, voucherCode: "VCH-26-RICE-019", farmerDfrId: "LBR-BG-000219", category: "Seed and fertilizer", value: 185, currency: "USD", status: "Issued", expiresAt: "2026-11-30" },
-        ]);
+        return jsonResponse([]);
       }
       if (opType === "grievances") {
-        return jsonResponse([
-          { id: 1, ticketId: "GRV-26-0012", farmerDfrId: "LBR-MO-000412", category: "Record correction", county: "Montserrado", priority: "Normal", status: "In review" },
-        ]);
+        return jsonResponse([]);
       }
       return jsonResponse(getStoredHouseholds());
     }
@@ -480,25 +466,17 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
         { ruleCode: "DQR-01", name: "GPS Coordinate Liberia Bounding Box Check", dimension: "Accuracy", entityType: "Parcel", expression: "lat BETWEEN 4.15 AND 8.75 AND lng BETWEEN -11.65 AND -7.25", severity: "Fatal", ownerInstitution: "LISGIS", enabled: true },
         { ruleCode: "DQR-02", name: "Mandatory Phone Number Format Check", dimension: "Completeness", entityType: "Farmer", expression: "phone MATCHES ^(\\+231|0)[0-9]{8,9}$", severity: "Warning", ownerInstitution: "MOA", enabled: true },
       ],
-      assessments: [
-        { assessmentCode: "DQA-2026-Q3", subjectRef: "National Registry Batch Q3", assessmentType: "Full Audit", accuracy: 96, completeness: 94, consistency: 98, timeliness: 91, uniqueness: 99, reliability: 97, overallScore: 96, outcome: "Passed quality threshold", assessedBy: "FAO Quality Specialist", assessedAt: "2026-08-28" },
-      ],
+      assessments: [],
       controls: [
-        { id: 1, controlCode: "CTRL-SEC-01", controlType: "Field supervision", title: "Audit Trail Immutability Verification", institution: "MOA", county: "National", owner: "Security Auditor", status: "Completed", priority: "Critical", dueDate: "2026-10-01" },
-        { id: 2, controlCode: "CTRL-DQA-02", controlType: "Spot check", title: "Nimba & Bong Parcel Demarcation Spot Check", institution: "LISGIS", county: "Nimba", owner: "GIS Supervisor", status: "In progress", priority: "High", dueDate: "2026-09-25" },
+        { id: 1, controlCode: "CTRL-SEC-01", controlType: "Field supervision", title: "Audit Trail Immutability Verification", institution: "MOA", county: "National", owner: "Security Auditor", status: "Active", priority: "Critical", dueDate: "2026-10-01" },
+        { id: 2, controlCode: "CTRL-DQA-02", controlType: "Spot check", title: "Parcel Demarcation Spot Check", institution: "LISGIS", county: "Nimba", owner: "GIS Supervisor", status: "Active", priority: "High", dueDate: "2026-09-25" },
       ],
-      consents: [
-        { id: 1, consentCode: "CONS-001", subjectRef: "LBR-NI-000184", version: "v2.0", language: "English / Kpelle", purposes: ["Agricultural Subsidies", "Extension Advisory", "EUDR Traceability"], channel: "Field Paper + Digital Sign", grantedBy: "Kollie Flomo", status: "Active", grantedAt: "2026-08-12" },
-        { id: 2, consentCode: "CONS-002", subjectRef: "LBR-BG-000219", version: "v2.0", language: "English / Bassa", purposes: ["Agricultural Subsidies", "Cadastre Demarcation"], channel: "Digital Biometric Sign", grantedBy: "Fatu Kamara", status: "Active", grantedAt: "2026-08-14" },
-      ],
+      consents: [],
       indicators: [
-        { indicatorCode: "IND-01", name: "County Registry Coverage Percentage", definition: "% of targeted farming households enrolled in the national DFR", numerator: "184200", denominator: "220000", frequency: "Monthly", owner: "M&E Officer", disaggregations: "County, Gender, Commodity", currentValue: 83.7, unit: "%", lastCalculatedAt: "2026-09-01" },
+        { indicatorCode: "IND-01", name: "County Registry Coverage Percentage", definition: "% of targeted farming households enrolled in the national DFR", numerator: "0", denominator: "220000", frequency: "Monthly", owner: "M&E Officer", disaggregations: "County, Gender, Commodity", currentValue: 0, unit: "%", lastCalculatedAt: new Date().toISOString().slice(0, 10) },
       ],
       assignments: [
         { id: 1, email: "tis@totaggroup.com", displayName: "Michael Gwoah", role: "Ministry administrator", institution: "Ministry of Agriculture", countyScope: "National", districtScope: "All Districts", sensitivityCeiling: "Top Secret / Restr.", status: "Active" },
-        { id: 2, email: "kollie.flomo@moa.gov.lr", displayName: "Kollie Flomo", role: "County agricultural officer", institution: "Ministry of Agriculture", countyScope: "Nimba", districtScope: "Sanniquellie-Mahn", sensitivityCeiling: "Internal", status: "Active" },
-        { id: 3, email: "fatu.kamara@moa.gov.lr", displayName: "Fatu Kamara", role: "Enumerator", institution: "Ministry of Agriculture", countyScope: "Bong", districtScope: "Suakoko", sensitivityCeiling: "Restricted", status: "Active" },
-        { id: 4, email: "tambaa.saa@lisgis.gov.lr", displayName: "Tambaa Saa", role: "GIS officer", institution: "LISGIS", countyScope: "Lofa", districtScope: "Foya", sensitivityCeiling: "Confidential", status: "Active" },
       ],
       farmers: getStoredFarmers(),
       access: { institution: "Ministry of Agriculture", role: "Ministry administrator", countyScope: "National", sensitivityCeiling: "Full Unrestricted", capabilities: ["registry.create", "registry.verify", "registry.manage", "reports.export"] },
@@ -508,9 +486,7 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
   // 9. Help Desk: /api/help-desk
   if (pathname === "/api/help-desk") {
     return jsonResponse({
-      tickets: [
-        { ticketCode: "HD-2026-018", requesterName: "Kollie Flomo", requesterEmail: "tis@totaggroup.com", requesterRole: "Farmer", subject: "Parcel boundary adjustment request", category: "GIS & Parcels", priority: "Normal", status: "Open", assignedTeam: "GIS Unit", slaHours: 48, createdAt: "2026-08-29", dueAt: "2026-09-05", description: "Requesting re-demarcation of eastern cocoa parcel boundary.", messages: [] },
-      ],
+      tickets: [],
       articles: [
         { articleCode: "KB-001", title: "How to capture offline field coordinates", category: "Field Operations", audience: "Enumerators", summary: "Step-by-step guidance on GPS calibration and saving unverified drafts offline.", content: "Ensure device GPS accuracy is under 5 meters before logging boundary vertices." },
         { articleCode: "KB-002", title: "E-Voucher Redemption Protocols", category: "Benefits & Inputs", audience: "Input Agro-dealers", summary: "Verification of farmer DFR ID and SMS OTP before input release.", content: "Dealers must scan farmer QR code or verify 6-digit SMS token." },
@@ -522,9 +498,7 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
   // 10. Extension Services: /api/extension-services
   if (pathname === "/api/extension-services") {
     return jsonResponse({
-      requests: [
-        { requestCode: "EXT-2026-041", requesterName: "Fatu Kamara", requesterEmail: "tis@totaggroup.com", requesterRole: "Farmer", county: "Bong", district: "Suakoko", serviceType: "Pest & Disease Advisory", problemDescription: "Brown spot detected on lowland rice paddies.", urgency: "High", status: "Assigned", assignedOfficer: "Dr. John Kerkulah (Extension Agent)", visits: [{ visitCode: "VIS-2026-092", scheduledAt: "2026-09-10", officerName: "Dr. John Kerkulah", status: "Scheduled", purpose: "Field inspection of rice paddy infestation", location: "Phebe Valley" }] },
-      ],
+      requests: [],
       access: { canManage: true, role: "Ministry administrator" },
     });
   }
@@ -573,53 +547,7 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       },
     ];
 
-    const defaultApplications = [
-      {
-        applicationCode: "APP-2026-084",
-        programmeTitle: "National Rice Self-Sufficiency Input Subsidy",
-        applicantEmail: "tis@totaggroup.com",
-        applicantName: "Fatu Kamara",
-        applicantRef: "LBR-BG-000219",
-        county: "Bong",
-        district: "Suakoko",
-        requestedSupport: "NPK 15-15-15 (4 bags) & Suakoko 8 Seed Rice (50 kg)",
-        status: "Approved",
-        eligibilityScore: 94,
-        reviewer: "County Agricultural Officer",
-        decisionReason: "Eligible smallholder rice farmer with verified 3.2 ha lowland paddy.",
-        submittedAt: "2026-08-20T10:30:00Z",
-      },
-      {
-        applicationCode: "APP-2026-092",
-        programmeTitle: "Tree Crop Rehabilitation & EUDR Compliance Facility",
-        applicantEmail: "tis@totaggroup.com",
-        applicantName: "Kollie Flomo",
-        applicantRef: "LBR-NI-000184",
-        county: "Nimba",
-        district: "Sanniquellie-Mahn",
-        requestedSupport: "500 Cocoa Clonal Seedlings & Soil Remediation Kit",
-        status: "Under review",
-        eligibilityScore: 88,
-        reviewer: "Tree Crop Specialist",
-        decisionReason: "Under technical evaluation; verified GIS parcel boundary.",
-        submittedAt: "2026-08-25T14:15:00Z",
-      },
-      {
-        applicationCode: "APP-2026-105",
-        programmeTitle: "Smallholder Mechanization Service Grant",
-        applicantEmail: "tis@totaggroup.com",
-        applicantName: "Tambaa Saa",
-        applicantRef: "LBR-LF-000305",
-        county: "Lofa",
-        district: "Foya",
-        requestedSupport: "Walk-behind Power Tiller for Community Cluster",
-        status: "Eligible",
-        eligibilityScore: 91,
-        reviewer: "Mechanization Specialist",
-        decisionReason: "Priority cluster in Foya with 6.5 ha cultivated area.",
-        submittedAt: "2026-09-01T09:00:00Z",
-      },
-    ];
+    const defaultApplications: any[] = [];
 
     if (method === "GET") {
       let programmes = defaultProgrammes;
@@ -741,103 +669,9 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
   // 12. Benefits: /api/benefits
   if (pathname === "/api/benefits") {
-    const defaultVouchers = [
-      {
-        id: 1,
-        voucherCode: "VCH-26-RICE-019",
-        farmerDfrId: "LBR-BG-000219",
-        ownerEmail: "tis@totaggroup.com",
-        programme: "National Rice Subsidy",
-        category: "Seed & Fertilizer",
-        value: 185,
-        currency: "USD",
-        status: "Issued",
-        expiresAt: "2026-11-30",
-        distributionSite: "Suakoko Agro Hub",
-        appointmentAt: "2026-09-15 09:00",
-        receiptAcknowledged: false,
-      },
-      {
-        id: 2,
-        voucherCode: "VCH-26-COCOA-042",
-        farmerDfrId: "LBR-NI-000184",
-        ownerEmail: "tis@totaggroup.com",
-        programme: "Tree Crop Rehabilitation",
-        category: "Clonal Seedlings & Inputs",
-        value: 220,
-        currency: "USD",
-        status: "Redeemed",
-        expiresAt: "2026-10-31",
-        distributionSite: "Sanniquellie Cooperative Center",
-        appointmentAt: "2026-08-28 11:00",
-        receiptAcknowledged: true,
-      },
-    ];
-
-    const defaultAccounts = [
-      {
-        id: 1,
-        farmerDfrId: "LBR-NI-000184",
-        ownerEmail: "tis@totaggroup.com",
-        provider: "Lonestar MTN Mobile Money",
-        accountName: "Kollie Flomo",
-        accountNumberMasked: "0770***192",
-        verified: true,
-        status: "Verified",
-        accountType: "Mobile money",
-      },
-      {
-        id: 2,
-        farmerDfrId: "LBR-BG-000219",
-        ownerEmail: "tis@totaggroup.com",
-        provider: "Orange Money Liberia",
-        accountName: "Fatu Kamara",
-        accountNumberMasked: "0886***309",
-        verified: true,
-        status: "Verified",
-        accountType: "Mobile money",
-      },
-      {
-        id: 3,
-        farmerDfrId: "LBR-LF-000305",
-        ownerEmail: "tis@totaggroup.com",
-        provider: "Lonestar MTN Mobile Money",
-        accountName: "Tambaa Saa",
-        accountNumberMasked: "0778***411",
-        verified: false,
-        status: "Pending verification",
-        accountType: "Mobile money",
-      },
-    ];
-
-    const defaultTransactions = [
-      {
-        id: 1,
-        transactionCode: "TX-2026-8812",
-        farmerDfrId: "LBR-NI-000184",
-        ownerEmail: "tis@totaggroup.com",
-        programme: "Cocoa Outgrower Cash Incentive",
-        amount: 120,
-        currency: "USD",
-        provider: "MTN Mobile Money",
-        status: "Completed",
-        receiptRef: "MM-993214",
-        processedAt: "2026-08-29 14:22:00",
-      },
-      {
-        id: 2,
-        transactionCode: "TX-2026-9041",
-        farmerDfrId: "LBR-BG-000219",
-        ownerEmail: "tis@totaggroup.com",
-        programme: "Rice Production Transport Subsidy",
-        amount: 85,
-        currency: "USD",
-        provider: "Orange Money",
-        status: "Completed",
-        receiptRef: "OM-441890",
-        processedAt: "2026-09-01 10:15:00",
-      },
-    ];
+    const defaultVouchers: any[] = [];
+    const defaultAccounts: any[] = [];
+    const defaultTransactions: any[] = [];
 
     if (method === "GET") {
       let vouchers = defaultVouchers;

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { accessAssignments, auditEvents, deliveryEvidence, deliveryItems } from "../../../db/schema";
 import { getChatGPTUser } from "../../chatgpt-auth";
+import { realtimeBus } from "../../../lib/realtime-bus";
 
 export const dynamic = "force-dynamic";
 
@@ -59,12 +60,14 @@ export async function POST(req:NextRequest){
       await c.db.insert(deliveryItems).values({reference,component:t.component,workstream:t.workstream,title:t.title,description:t.description,owner:t.owner,county:"National",dueDate:t.dueDate,status:"Planned",metadata:JSON.stringify(metadata)});
       await c.db.insert(auditEvents).values({actor:c.user.email,action:"FAO deliverable initialized",entity:reference,details:`${t.number}: ${t.title}`});created++;
     }
+    realtimeBus.publish("delivery:updated", { action: "initialize-rfp", created });
     return NextResponse.json({ok:true,created});
   }
   const reference=`FAO-C${body.component}-${Date.now().toString().slice(-6)}`;
   const metadata={deliverableNumber:body.deliverableNumber||"Supporting record",institution:body.institution||"MoA / TOTAG",reviewer:body.reviewer||"FAO Technical Team",approver:body.approver||"FAO Contract Manager",startDate:body.startDate||"",dependencies:body.dependencies||"",risks:body.risks||"",priority:body.priority||"Normal",progress:+body.progress||0,version:body.version||"0.1",acceptanceCriteria:body.acceptanceCriteria||"",history:[historyEntry(c.user.email,c.role,"Delivery record created",body.description||"")]};
   await c.db.insert(deliveryItems).values({reference,component:+body.component,workstream:body.workstream,title:body.title,description:body.description||"",owner:body.owner,county:body.county||"National",dueDate:body.dueDate,status:body.status||"Planned",metadata:JSON.stringify(metadata)});
   await c.db.insert(auditEvents).values({actor:c.user.email,action:"Delivery record created",entity:reference,details:body.title});
+  realtimeBus.publish("delivery:updated", { action: "create", reference });
   return NextResponse.json({ok:true,reference},{status:201});
 }
 
@@ -95,5 +98,6 @@ export async function PATCH(req:NextRequest){
   if(body.status)patch.status=body.status;if(decision)patch.acceptanceStatus=decision;if(body.owner)patch.owner=body.owner;if(body.dueDate)patch.dueDate=body.dueDate;
   await c.db.update(deliveryItems).set(patch).where(eq(deliveryItems.id,id));
   await c.db.insert(auditEvents).values({actor:c.user.email,action,entity:row.reference,details:JSON.stringify({from:row.acceptanceStatus,to:decision||row.acceptanceStatus,notes:body.notes||body.decisionNotes||""})});
+  realtimeBus.publish("delivery:updated", { action: "update", id, decision, reference: row.reference });
   return NextResponse.json({ok:true});
 }

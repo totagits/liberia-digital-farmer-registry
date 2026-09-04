@@ -39,7 +39,7 @@ export const DEMO_USERS: DemoUser[] = [
     institution: "Individual Smallholder Producer",
     countyScope: "Nimba County",
     districtScope: "Sanniquellie-Mahn",
-    description: "Registered Cocoa producer (DFR ID: LBR-NI-000184). Access e-vouchers, mobile money subsidies, and grievance lodging.",
+    description: "Registered smallholder cocoa producer. Access e-vouchers, mobile money subsidies, and grievance lodging.",
     badgeColor: "#eab308",
     category: "producer",
     avatar: "KF",

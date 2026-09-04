@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { auditEvents, farmers, grievances, households, identityChecks, paymentAccounts, programmeApplications, vouchers } from "../../../db/schema";
+import { realtimeBus } from "../../../lib/realtime-bus";
 
 export const dynamic="force-dynamic";
 const maps={households,identity:identityChecks,applications:programmeApplications,payments:paymentAccounts,vouchers,grievances} as const;
@@ -24,6 +25,10 @@ export async function POST(req:NextRequest){
   else if(type==="grievances"){entity=`GRV-${Date.now().toString().slice(-6)}`;values={ticketId:entity,farmerDfrId:body.farmerDfrId||"Anonymous",category:body.category,channel:body.channel,county:body.county,description:body.description,priority:body.priority||"Normal"};await db.insert(grievances).values(values)}
   else return NextResponse.json({error:"Unknown operation"},{status:400});
   await db.insert(auditEvents).values({actor:"Authorized platform user",action:`${type} record created`,entity,details:"Created through governed workflow"});
+  
+  if (type === "households") realtimeBus.publish("household:registered", { householdId: entity, county: body.county });
+  realtimeBus.publish("audit:logged", { actor: "Authorized platform user", action: `${type} record created`, entity });
+
   return NextResponse.json({ok:true,entity},{status:201});
 }
 
@@ -35,5 +40,8 @@ export async function PATCH(req:NextRequest){
   else if(b.type==="payments") await db.update(paymentAccounts).set({status:b.status,verified:b.status==="Verified"}).where(eq(paymentAccounts.id,+b.id));
   else return NextResponse.json({error:"Unsupported update"},{status:400});
   await db.insert(auditEvents).values({actor:"Authorized platform user",action:`${b.type} status updated`,entity:String(b.id),details:String(b.status)});
+  
+  realtimeBus.publish("audit:logged", { actor: "Authorized platform user", action: `${b.type} status updated`, entity: String(b.id) });
+
   return NextResponse.json({ok:true});
 }

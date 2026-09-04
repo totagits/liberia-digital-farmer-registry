@@ -7,51 +7,6 @@ export const dynamic="force-dynamic";
 const today="2026-08-02";
 const caps=["registry.approve","quality.manage","supervision.manage","reports.publish","sop.approve","training.manage","social.referral","governance.manage","recovery.test","access.admin"];
 async function context(){const user=await getChatGPTUser();if(!user)return null;const db=await getDb();let a=(await db.select().from(accessAssignments).where(eq(accessAssignments.email,user.email)).limit(1))[0];if(!a){await db.insert(accessAssignments).values({email:user.email,displayName:user.displayName,role:"Ministry administrator",institution:"MOA",reviewedAt:today,capabilities:JSON.stringify(caps)});a=(await db.select().from(accessAssignments).where(eq(accessAssignments.email,user.email)).limit(1))[0]}return{db,user,a,capabilities:JSON.parse(a.capabilities||"[]") as string[]}}
-const seeds={
- sops:[
-  ["SOP-01","Farmer identification and registration","MoA","INSTITUTIONAL_REVIEW",["MOA","LOCAL"],["MOA"],"Consultation completed",2],
-  ["SOP-02","Data collection and validation","MoA/LISGIS","TECHNICAL_REVIEW",["MOA","LISGIS"],["MOA"],"Comments disposition in progress",5],
-  ["SOP-03","Data storage, protection and updating","MoA ICT","LEGAL_SECURITY_REVIEW",["MOA","LISGIS"],[],"Security review scheduled",3],
-  ["SOP-04","Social-protection MIS integration","MoA/MGCSP","INSTITUTIONAL_REVIEW",["MOA","MGCSP"],["MOA"],"MGCSP validation pending",4],
-  ["SOP-05","Grievance redress and appeal","MoA/MGCSP","APPROVED",["MOA","MGCSP"],["MOA","MGCSP"],"Validated",0],
-  ["SOP-06","Monitoring, reporting and data use","MoA M&E","DRAFT",["MOA","LISGIS"],[],"Workshop planned",6],
-  ["SOP-07","Institutional coordination and escalation","Steering Secretariat","APPROVED",["MOA","MGCSP","CDA","LISGIS"],["MOA","MGCSP","CDA","LISGIS"],"Validated",0],
-  ["SOP-08","SOP consultation and validation workshops","Capacity Lead","DRAFT",["MOA","FAO"],[],"Stakeholder mapping open",7],
-  ["SOP-09","SOP change control and audit","MoA Quality","PUBLICATION_READY",["MOA","LISGIS"],["MOA","LISGIS"],"Effective-date confirmation pending",0]
- ],
- rules:[
-  ["DQR-001","Mandatory identity and location fields","Completeness","Farmer","firstName && lastName && county && district && community","Critical","MOA"],
-  ["DQR-002","Coordinates inside Liberia extent","Accuracy","Farm","lat 4.15..8.75; lng -11.65..-7.25","High","LISGIS"],
-  ["DQR-003","County–district hierarchy","Consistency","Farmer","district IN officialDistricts[county]","High","LISGIS"],
-  ["DQR-004","Phone and biographic duplicate risk","Uniqueness","Farmer","phone exact OR name+location similarity >= 0.85","High","MOA"],
-  ["DQR-005","Record update recency","Timeliness","Registry record","updatedAt <= approved refresh interval","Medium","MOA"],
-  ["DQR-006","Evidence and source confidence","Reliability","Registry record","consent + enumerator + verification evidence","High","MOA"],
- ],
- controls:[
-  ["SUP-2026-014","Field supervision","Bong enumerator accompanied observation","ENUM-BG-014","MOA","Bong","Senior Enumerator K. Flomo","County Agricultural Officer","Scheduled","High","2026-08-06",{checklist:"Consent, identity, GPS, interview conduct, device security"}],
-  ["SPOT-2026-031","Spot check","Random 5% verification sample—Lofa","SAMPLE-LO-031","MOA","Lofa","Verification Officer","County Agricultural Officer","Assigned","Normal","2026-08-08",{sampleSize:25,method:"Systematic random sample"}],
-  ["DQA-2026-Q3","Periodic DQA","Quarterly national data-quality audit","DFR-2026-Q3","MOA","National","MoA Data Quality Unit","LISGIS Quality Lead","In progress","High","2026-08-31",{dimensions:["Accuracy","Completeness","Consistency","Timeliness","Uniqueness","Reliability"]}],
-  ["RPT-2026-07","Scheduled report","July monthly operational report","DFR-MONTHLY","MOA","National","M&E Officer","MoA Data Manager","Ready for review","Normal","2026-08-05",{period:"2026-07",format:"Controlled PDF/CSV",release:"Internal"}],
-  ["NSC-2026-03","National Steering Committee","Quarterly DFR Steering Committee meeting","GOV-NSC","MOA","National","Governance Secretariat","Committee Chair","Agenda issued","High","2026-08-12",{quorum:"4 of 6 institutions",agenda:["SOP approval","Pilot readiness","Data-sharing agreements"]}],
-  ["TWG-2026-07","Technical Working Group","Interoperability and data standards session","GOV-TWG","LISGIS","National","TWG Secretariat","LISGIS Director","Scheduled","Normal","2026-08-09",{quorum:"5 technical members",agenda:["Community codes","OpenAPI mappings","Quality rules"]}],
-  ["TRN-2026-BG-01","Training session","Bong enumerator certification cohort","CURR-ENUM-1.0","MOA","Bong","Master Trainer","County Officer","Enrollment open","Normal","2026-08-15",{target:30,attendance:18,passMark:80,certificatesIssued:0}],
-  ["SUPPORT-0042","Technical support","Offline synchronization receipt failure","DEVICE-BG-018","MOA","Bong","Help Desk Officer","System Administrator","Investigating","High","2026-08-03",{slaHours:8,channel:"Help desk"}],
-  ["REF-2026-0018","Social-protection referral","Shock-affected household eligibility referral","HH-LBR-00118","MGCSP","Bong","MGCSP Validation Officer","Programme Officer","Submitted","High","2026-08-05",{shock:"Flooding",purpose:"Emergency livelihood assistance",minimumData:true,externalExchange:"Credential-gated"}],
-  ["SHOCK-2026-FLOOD","Shock response","Flood response activation—Bong river communities","ZONE-BG-04","MGCSP","Bong","Shock Response Coordinator","Steering Committee","Active","Critical","2026-08-04",{affectedHouseholds:218,targetingStatus:"Rapid validation",assistanceCycle:"Activation 1"}],
-  ["LISGIS-REF-2026.1","Reference dataset","Liberia administrative and community code release","BOUNDARY-2026.1","LISGIS","National","LISGIS Data Steward","MoA GIS Lead","Pending authoritative file","High","2026-08-10",{standard:"WGS84/EPSG:4326",counties:15,communityCodes:"Awaiting signed LISGIS release"}],
-  ["BKP-2026-08-02","Backup run","Automated encrypted registry backup","DFR-PRIMARY","MOA ICT","National","System Administrator","Security Auditor","Completed","Normal","2026-08-02",{type:"Full",result:"Verified",rpo:"24 hours",replica:"Secondary region"}],
-  ["RST-2026-Q3","Restoration test","Quarterly isolated restoration exercise","DFR-DR","MOA ICT","National","DR Coordinator","Security Auditor","Scheduled","High","2026-08-18",{rtoTarget:"4 hours",rpoTarget:"24 hours",environment:"Isolated recovery"}],
-  ["CONN-NSR-001","Government connector","National Social Registry beneficiary exchange","NSR","MGCSP","National","Integration Lead","Security Architect","Awaiting credentials","High","2026-09-01",{endpoint:"Not supplied",agreement:"Draft",live:false}],
- ],
- indicators:[
-  ["IND-001","Registered farmers","Count of approved and provisional farmer records","COUNT(farmers)","1","Monthly","MoA Registry","County,District,Sex,Youth,Disability",0,"records"],
-  ["IND-002","Verification rate","Approved DFR records as percentage of submissions","COUNT(approved)","COUNT(submitted)","Monthly","MoA Data Quality","County,Enumerator",0,"percent"],
-  ["IND-003","Women farmers","Women as percentage of registered farmers","COUNT(sex=Female)","COUNT(farmers)","Quarterly","MoA M&E","County,Crop",0,"percent"],
-  ["IND-004","Mapped farmland","Total verified parcel area","SUM(parcel hectares)","1","Monthly","MoA GIS","County,Land type,Commodity",0,"hectares"],
- ]
-};
-/* Reference definitions are configuration, not operational evidence. Page
-   visits must never manufacture records or fail on a partially migrated DB. */
 async function ensureSeed(c:NonNullable<Awaited<ReturnType<typeof context>>>){return c.db}
 const parse=(v:string,f:any)=>{try{return JSON.parse(v)}catch{return f}};
 export async function GET(){const c=await context();if(!c)return NextResponse.json({error:"Authentication required"},{status:401});const db=await ensureSeed(c);const [s,r,q,oc,co,ind,fa,aa]=await Promise.all([db.select().from(sopControls),db.select().from(qualityRules),db.select().from(qualityAssessments).orderBy(desc(qualityAssessments.assessedAt)),db.select().from(operationalControls).orderBy(desc(operationalControls.updatedAt)),db.select().from(consentRecords),db.select().from(monitoringIndicators),db.select().from(farmers),db.select().from(accessAssignments)]);return NextResponse.json({access:{...c.a,capabilities:c.capabilities},sops:s.map(x=>({...x,requiredApprovals:parse(x.requiredApprovals,[]),approvals:parse(x.approvals,[])})),rules:r,assessments:q,controls:oc.map(x=>({...x,details:parse(x.details,{}),evidence:parse(x.evidence,[])})),consents:co.map(x=>({...x,purposes:parse(x.purposes,[])})),indicators:ind,farmers:fa,assignments:aa.map(x=>({...x,capabilities:parse(x.capabilities,[])}))})}

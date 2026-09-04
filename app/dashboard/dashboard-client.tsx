@@ -27,6 +27,7 @@ import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
 import { getActiveDemoUser, setActiveDemoUser, DEMO_USERS } from "../../lib/demo-users";
+import { useRealtime } from "../../lib/use-realtime";
 const GISWorkspace = dynamic(() => import("./gis-workspace"), {
   ssr: false,
   loading: () => (
@@ -623,6 +624,14 @@ export default function DashboardClient({
       setAudits([]);
     }
   };
+  const { connected: realtimeConnected } = useRealtime({
+    onFarmerChange: () => load(),
+    onAuditChange: () => load(),
+    onParcelChange: () => load(),
+    onPartyChange: () => load(),
+    onDeliveryChange: () => load(),
+    onHouseholdChange: () => load(),
+  });
   useEffect(() => {
     installClientApiInterceptor();
     load();
@@ -784,6 +793,34 @@ export default function DashboardClient({
             />
           </div>
           <div className="top-actions">
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 10px",
+                borderRadius: "20px",
+                background: realtimeConnected ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)",
+                border: `1px solid ${realtimeConnected ? "rgba(16, 185, 129, 0.35)" : "rgba(245, 158, 11, 0.35)"}`,
+                color: realtimeConnected ? "#34d399" : "#fbbf24",
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+              }}
+              title={realtimeConnected ? "Real-time pipeline connected (SSE active)" : "Real-time pipeline standby / local sync"}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  backgroundColor: realtimeConnected ? "#10b981" : "#f59e0b",
+                  boxShadow: realtimeConnected ? "0 0 6px #10b981" : "none",
+                  display: "inline-block",
+                }}
+              />
+              {realtimeConnected ? "Live Sync" : "Local Sync"}
+            </div>
             <button className="bell" onClick={()=>nav(visible.some(m=>m[0]==="Verification")?"Verification":"Home")} title="Open pending work">
               ♢<sup>{pending}</sup>
             </button>
