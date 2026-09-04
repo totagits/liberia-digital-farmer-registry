@@ -1019,7 +1019,7 @@ export default function DashboardClient({
             />
           )}
           {active === "Help Desk" && (
-            <HelpDesk role={role} notify={setNotice} />
+            <HelpDesk role={role} notify={setNotice} onNavigate={(ws) => setActive(ws)} />
           )}
           {active === "Extension Services" && (
             <ExtensionServices role={role} notify={setNotice} />

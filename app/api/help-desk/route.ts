@@ -22,7 +22,33 @@ function sla(priority:string){return priority==="Critical"?4:priority==="High"?8
 
 export async function GET(){const c=await ctx();if(!c)return fail("Sign in required",401);await seed(c);const rows=c.canManage?await c.db.select().from(helpTickets).orderBy(desc(helpTickets.updatedAt)):await c.db.select().from(helpTickets).where(eq(helpTickets.requesterEmail,c.user.email)).orderBy(desc(helpTickets.updatedAt));const msgs=await c.db.select().from(helpTicketMessages).orderBy(helpTicketMessages.createdAt);const safeMessages=msgs.filter(m=>m.visibility!=="Internal"||c.canManage);const kb=await c.db.select().from(knowledgeArticles).where(eq(knowledgeArticles.status,"Published")).orderBy(knowledgeArticles.category);return NextResponse.json({tickets:rows.map(t=>({...t,messages:safeMessages.filter(m=>m.ticketCode===t.ticketCode)})),articles:kb,access:{role:c.role,canManage:c.canManage,institution:c.assignment?.institution||"Citizen / farmer"}})}
 
-export async function POST(req:NextRequest){const c=await ctx();if(!c)return fail("Sign in required",401);const b=await req.json();if(b.action==="message")return message(c,b);if(!String(b.subject||"").trim()||!String(b.description||"").trim())return fail("Subject and description are required");const priority=["Low","Normal","High","Critical"].includes(b.priority)?b.priority:"Normal";const hours=sla(priority);const code=`HD-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0,6).toUpperCase()}`;await c.db.insert(helpTickets).values({ticketCode:code,requesterEmail:c.user.email,requesterName:c.user.displayName,requesterRole:String(b.requesterRole||c.role),institution:c.assignment?.institution||"Citizen / farmer",county:String(b.county||"National"),subject:String(b.subject).trim(),category:String(b.category||"General support"),channel:String(b.channel||"In-platform"),description:String(b.description).trim(),priority,sensitivity:String(b.sensitivity||"Internal"),slaHours:hours,dueAt:due(hours)});await c.db.insert(helpTicketMessages).values({ticketCode:code,authorEmail:c.user.email,authorName:c.user.displayName,authorRole:c.role,message:String(b.description).trim()});await c.db.insert(auditEvents).values({actor:c.user.email,action:"HELP_TICKET_CREATED",entity:code,details:`${priority} · ${b.category||"General support"}`});return NextResponse.json({ok:true,ticketCode:code},{status:201})}
+export async function POST(req:NextRequest){const c=await ctx();if(!c)return fail("Sign in required",401);const b=await req.json();if(b.action==="message")return message(c,b);
+if(b.action==="create-article"){
+  if(!c.canManage)return fail("Only administrators and support staff can author knowledge articles",403);
+  const code=b.articleCode||`KB-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`;
+  await c.db.insert(knowledgeArticles).values({
+    articleCode:code,
+    title:String(b.title||"").trim(),
+    category:String(b.category||"General support").trim(),
+    audience:String(b.audience||"All users").trim(),
+    summary:String(b.summary||"").trim(),
+    content:String(b.content||"").trim(),
+    status:String(b.status||"Published"),
+  });
+  await c.db.insert(auditEvents).values({
+    actor:c.user.email,
+    action:"KNOWLEDGE_ARTICLE_CREATED",
+    entity:code,
+    details:b.title,
+  });
+  return NextResponse.json({ok:true,articleCode:code},{status:201});
+}
+if(b.action==="delete-article"){
+  if(!c.canManage)return fail("Only administrators and support staff can manage knowledge articles",403);
+  await c.db.delete(knowledgeArticles).where(eq(knowledgeArticles.articleCode,String(b.articleCode)));
+  return NextResponse.json({ok:true});
+}
+if(!String(b.subject||"").trim()||!String(b.description||"").trim())return fail("Subject and description are required");const priority=["Low","Normal","High","Critical"].includes(b.priority)?b.priority:"Normal";const hours=sla(priority);const code=`HD-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0,6).toUpperCase()}`;await c.db.insert(helpTickets).values({ticketCode:code,requesterEmail:c.user.email,requesterName:c.user.displayName,requesterRole:String(b.requesterRole||c.role),institution:c.assignment?.institution||"Citizen / farmer",county:String(b.county||"National"),subject:String(b.subject).trim(),category:String(b.category||"General support"),channel:String(b.channel||"In-platform"),description:String(b.description).trim(),priority,sensitivity:String(b.sensitivity||"Internal"),slaHours:hours,dueAt:due(hours)});await c.db.insert(helpTicketMessages).values({ticketCode:code,authorEmail:c.user.email,authorName:c.user.displayName,authorRole:c.role,message:String(b.description).trim()});await c.db.insert(auditEvents).values({actor:c.user.email,action:"HELP_TICKET_CREATED",entity:code,details:`${priority} · ${b.category||"General support"}`});return NextResponse.json({ok:true,ticketCode:code},{status:201})}
 
 async function message(c:NonNullable<Awaited<ReturnType<typeof ctx>>>,b:any){const t=(await c.db.select().from(helpTickets).where(eq(helpTickets.ticketCode,String(b.ticketCode))).limit(1))[0];if(!t)return fail("Ticket not found",404);if(!c.canManage&&t.requesterEmail!==c.user.email)return fail("Not authorized",403);if(!String(b.message||"").trim())return fail("Message is required");const visibility=b.visibility==="Internal"&&c.canManage?"Internal":"Requester-visible";await c.db.insert(helpTicketMessages).values({ticketCode:t.ticketCode,authorEmail:c.user.email,authorName:c.user.displayName,authorRole:c.role,message:String(b.message).trim(),visibility});await c.db.update(helpTickets).set({updatedAt:new Date().toISOString(),status:!c.canManage&&t.status==="Waiting for user"?"In progress":t.status}).where(eq(helpTickets.ticketCode,t.ticketCode));await c.db.insert(auditEvents).values({actor:c.user.email,action:visibility==="Internal"?"HELP_INTERNAL_NOTE":"HELP_TICKET_MESSAGE",entity:t.ticketCode,details:"Support conversation updated"});return NextResponse.json({ok:true})}
 

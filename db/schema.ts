@@ -464,3 +464,19 @@ export const integrationExchanges = sqliteTable("integration_exchanges", {
   records:integer("records").notNull().default(0), result:text("result").notNull(), correlationId:text("correlation_id").notNull(), errorSummary:text("error_summary").notNull().default(""),
   createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const governancePolicies = sqliteTable("governance_policies", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  policyCode: text("policy_code").notNull().unique(),
+  title: text("title").notNull(),
+  category: text("category").notNull(),
+  enforcingBody: text("enforcing_body").notNull(),
+  legalBasis: text("legal_basis").notNull(),
+  effectiveDate: text("effective_date").notNull(),
+  reviewCycle: text("review_cycle").notNull().default("Annual"),
+  status: text("status").notNull().default("Active / Enacted"),
+  summary: text("summary").notNull(),
+  directives: text("directives").notNull().default("[]"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});

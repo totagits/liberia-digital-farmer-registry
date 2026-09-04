@@ -1,7 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
-import { auditEvents, dataDictionaryItems, dataSharingAgreements, governanceDatasets, governanceDecisions, governanceInstitutions, governanceWorkflows, integrationExchanges } from "../../../db/schema";
+import { auditEvents, dataDictionaryItems, dataSharingAgreements, governanceDatasets, governanceDecisions, governanceInstitutions, governancePolicies, governanceWorkflows, integrationExchanges } from "../../../db/schema";
 
 export const dynamic="force-dynamic";
 const today="2026-08-02";
@@ -45,9 +45,153 @@ async function seed(){const db=await getDb();if(!(await db.select({id:governance
     {connectorCode:"CONN-CDA",systemName:"CDA Cooperative Certification",ownerInstitution:"CDA",direction:"Bidirectional",endpointAlias:"CDA verification adapter",standard:"REST/JSON · OpenAPI 3.1",mappingVersion:"1.0",environment:"Configuration",status:"Awaiting endpoint",result:"Workflow operational; external endpoint pending",correlationId:"CFG-CDA-001"},
   ]);
   await db.insert(auditEvents).values({actor:"Institutional Governance",action:"Governance control framework initialized",entity:"National DFR",details:"Institution accounts, stewardship, approval workflow, metadata, agreements and exchange controls established"});
-}return db}
+}
+if (!(await db.select({ id: governancePolicies.id }).from(governancePolicies).limit(1)).length) {
+  await db.insert(governancePolicies).values([
+    {
+      policyCode: "POL-LBR-001",
+      title: "National Agricultural Data Sovereignty & Protection Directive",
+      category: "Data Protection & Privacy",
+      enforcingBody: "Ministry of Agriculture (MoA) & National Data Protection Authority",
+      legalBasis: "Liberia Data Protection Act 2024; Republic of Liberia Telecommunications Act; FAO Guidelines",
+      effectiveDate: "2026-01-01",
+      reviewCycle: "Annual",
+      status: "Active / Enacted",
+      summary: "Statutory framework establishing farmer data ownership, explicit consent verification, biometric encryption, and prohibition of unauthorized commercialization of smallholder registries.",
+      directives: JSON.stringify([
+        "Mandatory Informed Consent: No smallholder farmer personal data, photo, or land coordinates may be collected or stored without an explicit, verifiable consent record in the farmer's preferred language (English, Kpelle, Bassa, Mano, Gio).",
+        "Purpose Limitation & Non-Commercialization: DFR data is held in public trust exclusively for national food security, input subsidies, extension advisory, and social protection targeting. Resale or monetization to private marketing aggregators is strictly illegal.",
+        "Biometric Encryption Standard: Facial portraits, NINs, and spatial coordinates must be encrypted at rest (AES-256) and in transit (TLS 1.3). Decryption keys are managed under multi-party custody.",
+        "Right to Free Inspection & Rectification: Any registered smallholder may inspect their holding size, crop declarations, and household records at no cost, and submit controlled correction requests without administrative penalties."
+      ]),
+    },
+    {
+      policyCode: "POL-LBR-002",
+      title: "Cross-Agency Interoperability & Social Protection Compact (MoA–MGCSP–LISGIS)",
+      category: "Interoperability & Data Sharing",
+      enforcingBody: "National DFR Inter-Ministerial Steering Committee",
+      legalBasis: "Government of Liberia Inter-Agency Circular on Digital Public Infrastructure (DPI)",
+      effectiveDate: "2026-03-15",
+      reviewCycle: "Biannual",
+      status: "Active / Enacted",
+      summary: "Binding technical protocol governing secure API exchange between the National Digital Farmer Registry, the National Social Registry (NSR), and LISGIS statistical boundary services.",
+      directives: JSON.stringify([
+        "Zero-Trust Machine Authentication: All inter-system API exchanges must authenticate via mutual TLS (mTLS) with scoped OAuth 2.0 bearer tokens. Unauthenticated public query endpoints are prohibited.",
+        "Minimum-Data Exchange Rule: When verifying vulnerability status or disaster relief eligibility with MGCSP, only the categorical eligibility flag and confirmation UUID shall be exchanged. Raw banking or detailed personal records must not be transmitted.",
+        "Authoritative Geospatial Boundary Standard: Administrative county, district, and clan boundaries must strictly reference the authoritative LISGIS 2026.1 spatial standard.",
+        "Daily Transaction Reconciliation: During active planting or emergency cash distribution cycles, automated reconciliation audits must execute daily at 00:00 GMT."
+      ]),
+    },
+    {
+      policyCode: "POL-LBR-003",
+      title: "Frontline Enumerator & Extension Agent Geospatial Code of Conduct",
+      category: "Field Operations & Enumeration",
+      enforcingBody: "Directorate of Agricultural Extension & National Quality Assurance Taskforce",
+      legalBasis: "Civil Service Commission Code of Conduct & MoA Operational Regulations",
+      effectiveDate: "2026-02-01",
+      reviewCycle: "Annual",
+      status: "Active / Enacted",
+      summary: "Mandatory standards of integrity, GPS boundary mapping accuracy, cultural respect, and safeguarding during rural enumerator missions.",
+      directives: JSON.stringify([
+        "Physical Perimeter Ground Truth: Enumerators must physically traverse farm boundaries with GPS active. Remote polygon digitization without physical inspection constitutes gross misconduct.",
+        "Horizontal Accuracy Threshold: Boundary vertices must not be recorded unless the device GPS horizontal accuracy is ≤5 meters (HDOP ≤ 2.0).",
+        "Zero Solicitation & Safeguarding: Enumerators and Extension Agents are strictly prohibited from demanding fees, transportation money, or farm produce from smallholders in exchange for registration or advisory services.",
+        "48-Hour Sync Requirement: Data collected on offline mobile devices must be synchronized to the central cloud repository within 48 hours of regaining network connectivity."
+      ]),
+    },
+    {
+      policyCode: "POL-LBR-004",
+      title: "Targeted Agricultural Input Subsidy & Anti-Diversion Regulations",
+      category: "Subsidy Distribution & Input Entitlements",
+      enforcingBody: "MoA Directorate of Inputs & Agribusiness / FAO Project Operations Office",
+      legalBasis: "National Food Security & Input Subsidy Operational Manual",
+      effectiveDate: "2026-04-10",
+      reviewCycle: "Seasonal",
+      status: "Active / Enacted",
+      summary: "Operational rules regulating electronic voucher allocation, agro-dealer verification, physical inventory redemption, and anti-fraud monitoring.",
+      directives: JSON.stringify([
+        "Dual-Factor Identity Verification: Input redemption requires physical presentation of the farmer DFR ID Card (QR code) and one-time verification of an SMS token sent to the farmer's verified mobile number.",
+        "Certified Inputs Only: Agro-dealers are prohibited from substituting uncertified seed or unauthorized chemical formulations for approved voucher redemption.",
+        "Anti-Diversion Monitoring: Selling, transferring, or re-bagging subsidized fertilizers or foundation seed outside designated farming communities triggers immediate merchant license revocation and prosecution.",
+        "Mandatory Farmer Receipt Acknowledgement: Beneficiaries must acknowledge physical receipt of inputs via mobile SMS confirmation or counter-signed field voucher slip."
+      ]),
+    },
+    {
+      policyCode: "POL-LBR-005",
+      title: "DFR Citizen Grievance Redress & Whistleblower Protection Charter",
+      category: "Grievance Redress & Transparency",
+      enforcingBody: "Independent Grievance Redress Committee & MoA Legal Counsel",
+      legalBasis: "Freedom of Information Act & National Administrative Procedure Act",
+      effectiveDate: "2026-05-01",
+      reviewCycle: "Annual",
+      status: "Active / Enacted",
+      summary: "Procedures for lodging, escalating, and impartially resolving complaints regarding exclusion, disputed land boundaries, missing vouchers, and administrative malpractice.",
+      directives: JSON.stringify([
+        "Universal Grievance Access: Any citizen may lodge a complaint via web Help Desk, mobile USSD, toll-free telephone hotline, or in person at County Agricultural Offices without any filing fee.",
+        "Accountable Resolution Timelines: Urgent safeguarding or fraud allegations must be acknowledged within 4 hours and investigated within 48 hours; general administrative disputes must be resolved within 72 hours.",
+        "Whistleblower Protection: Informants reporting corruption, illegal land appropriation, or voucher diversion are guaranteed strict anonymity and legal protection against retaliation.",
+        "Independent Appellate Review: Claimants dissatisfied with frontline decisions may request review by the Independent DFR Oversight Panel within 30 days."
+      ]),
+    },
+  ]);
+}
+return db}
 const parse=(x:string,fallback:any)=>{try{return JSON.parse(x)}catch{return fallback}};
-export async function GET(){const db=await seed();const [i,d,w,dd,a,dec,x,audit]=await Promise.all([db.select().from(governanceInstitutions),db.select().from(governanceDatasets),db.select().from(governanceWorkflows).orderBy(desc(governanceWorkflows.updatedAt)),db.select().from(dataDictionaryItems),db.select().from(dataSharingAgreements),db.select().from(governanceDecisions).orderBy(desc(governanceDecisions.meetingDate)),db.select().from(integrationExchanges).orderBy(desc(integrationExchanges.createdAt)),db.select().from(auditEvents).orderBy(desc(auditEvents.id)).limit(30)]);return NextResponse.json({institutions:i.map(v=>({...v,contentResponsibilities:parse(v.contentResponsibilities,[])})),datasets:d.map(v=>({...v,metadata:parse(v.metadata,{})})),workflows:w,dictionary:dd.map(v=>({...v,allowedValues:parse(v.allowedValues,[])})),agreements:a.map(v=>({...v,datasets:parse(v.datasets,[])})),decisions:dec,exchanges:x,audit,today})}
+export async function GET(){const db=await seed();const [i,d,w,dd,a,dec,x,audit,pol]=await Promise.all([db.select().from(governanceInstitutions),db.select().from(governanceDatasets),db.select().from(governanceWorkflows).orderBy(desc(governanceWorkflows.updatedAt)),db.select().from(dataDictionaryItems),db.select().from(dataSharingAgreements),db.select().from(governanceDecisions).orderBy(desc(governanceDecisions.meetingDate)),db.select().from(integrationExchanges).orderBy(desc(integrationExchanges.createdAt)),db.select().from(auditEvents).orderBy(desc(auditEvents.id)).limit(30),db.select().from(governancePolicies).orderBy(desc(governancePolicies.effectiveDate))]);return NextResponse.json({institutions:i.map(v=>({...v,contentResponsibilities:parse(v.contentResponsibilities,[])})),datasets:d.map(v=>({...v,metadata:parse(v.metadata,{})})),workflows:w,dictionary:dd.map(v=>({...v,allowedValues:parse(v.allowedValues,[])})),agreements:a.map(v=>({...v,datasets:parse(v.datasets,[])})),decisions:dec,exchanges:x,audit,policies:pol.map(p=>({...p,directives:parse(p.directives,[])})),today})}
+export async function POST(req:NextRequest){
+  const b=await req.json();
+  const db=await seed();
+  if(b.action==="create-policy"){
+    const code=b.policyCode||`POL-LBR-${Date.now().toString().slice(-4)}`;
+    const directives=Array.isArray(b.directives)?b.directives:String(b.directives||"").split("\n").map((s:string)=>s.trim()).filter(Boolean);
+    const existing=(await db.select().from(governancePolicies).where(eq(governancePolicies.policyCode,code)).limit(1))[0];
+    if(existing){
+      await db.update(governancePolicies).set({
+        title:String(b.title||"").trim(),
+        category:String(b.category||"Data Protection & Privacy").trim(),
+        enforcingBody:String(b.enforcingBody||"Ministry of Agriculture (MoA)").trim(),
+        legalBasis:String(b.legalBasis||"Liberia National Agriculture Policy").trim(),
+        effectiveDate:b.effectiveDate||new Date().toISOString().slice(0,10),
+        reviewCycle:b.reviewCycle||"Annual",
+        status:b.status||"Active / Enacted",
+        summary:String(b.summary||"").trim(),
+        directives:JSON.stringify(directives),
+        updatedAt:sql`CURRENT_TIMESTAMP`,
+      }).where(eq(governancePolicies.policyCode,code));
+    } else {
+      await db.insert(governancePolicies).values({
+        policyCode:code,
+        title:String(b.title||"").trim(),
+        category:String(b.category||"Data Protection & Privacy").trim(),
+        enforcingBody:String(b.enforcingBody||"Ministry of Agriculture (MoA)").trim(),
+        legalBasis:String(b.legalBasis||"Liberia National Agriculture Policy").trim(),
+        effectiveDate:b.effectiveDate||new Date().toISOString().slice(0,10),
+        reviewCycle:b.reviewCycle||"Annual",
+        status:b.status||"Active / Enacted",
+        summary:String(b.summary||"").trim(),
+        directives:JSON.stringify(directives),
+      });
+    }
+    await db.insert(auditEvents).values({
+      actor:b.actor||"Governance Authority",
+      action:"PLATFORM_POLICY_ENACTED",
+      entity:code,
+      details:String(b.title||""),
+    });
+    return NextResponse.json({ok:true,policyCode:code},{status:201});
+  }
+  if(b.action==="delete-policy"){
+    await db.delete(governancePolicies).where(eq(governancePolicies.policyCode,String(b.policyCode)));
+    await db.insert(auditEvents).values({
+      actor:b.actor||"Governance Authority",
+      action:"PLATFORM_POLICY_REPEALED",
+      entity:String(b.policyCode),
+      details:"Policy repealed or deleted by administrator",
+    });
+    return NextResponse.json({ok:true});
+  }
+  return NextResponse.json({error:"Unsupported action"},{status:400});
+}
 const stages=["SUBMITTED","UNDER_REVIEW","CORRECTION_REQUESTED","RESUBMITTED","APPROVED","PUBLISHED"];
 export async function PATCH(req:NextRequest){const b=await req.json();const db=await seed();if(b.entityType==="workflow"){
   const current=(await db.select().from(governanceWorkflows).where(eq(governanceWorkflows.id,+b.id)).limit(1))[0];if(!current)return NextResponse.json({error:"Case not found"},{status:404});

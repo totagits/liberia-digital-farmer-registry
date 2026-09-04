@@ -485,14 +485,329 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
   // 9. Help Desk: /api/help-desk
   if (pathname === "/api/help-desk") {
-    return jsonResponse({
-      tickets: [],
-      articles: [
-        { articleCode: "KB-001", title: "How to capture offline field coordinates", category: "Field Operations", audience: "Enumerators", summary: "Step-by-step guidance on GPS calibration and saving unverified drafts offline.", content: "Ensure device GPS accuracy is under 5 meters before logging boundary vertices." },
-        { articleCode: "KB-002", title: "E-Voucher Redemption Protocols", category: "Benefits & Inputs", audience: "Input Agro-dealers", summary: "Verification of farmer DFR ID and SMS OTP before input release.", content: "Dealers must scan farmer QR code or verify 6-digit SMS token." },
-      ],
-      access: { canManage: true, role: "Ministry administrator" },
-    });
+    const HD_STORAGE_KEY = "dfr_help_desk_v2";
+    const defaultArticles = [
+      { articleCode: "KB-001", title: "How to capture offline field coordinates & cadastral polygons", category: "Field Operations", audience: "Enumerators", summary: "Step-by-step guidance on GPS calibration and saving unverified drafts offline.", content: "1. Calibrate device GPS by stepping outside under open sky.\n2. Verify that horizontal accuracy is under 5 meters.\n3. Walk the perimeter of the holding, pausing at each vertex for 3 seconds.\n4. Save the boundary as a draft. Do not submit without farmer signature or thumbprint." },
+      { articleCode: "KB-002", title: "E-Voucher Redemption Protocols & SMS Token Verification", category: "Benefits & Inputs", audience: "Input Agro-dealers", summary: "Verification of farmer DFR ID and SMS OTP before releasing seed and fertilizer inputs.", content: "1. Request the farmer's official DFR ID Card or SMS voucher code.\n2. Scan the QR code or type the 8-digit voucher code into the dealer portal.\n3. Verify the 6-digit confirmation token sent to the farmer's registered phone number.\n4. Dispense only the approved inputs (e.g. NPK 15-15-15, certified lowland rice seed).\n5. Click 'Confirm Distribution' immediately to record the immutable transaction." },
+      { articleCode: "KB-003", title: "Registering a farmer or organization in the National DFR", category: "Registration & Identity", audience: "All users", summary: "Use the single Registration button to open the entity-tailored wizard for individuals or cooperatives.", content: "1. Click '＋ New Registration' in the top header or Farmer Registry.\n2. Select either 'Individual Smallholder' or 'Agricultural Organization / Cooperative'.\n3. Complete the 4-step wizard: Basic Bio, Farm Coordinates, Value Chains, and Consent.\n4. A provisional DFR ID is generated immediately for tracking." },
+      { articleCode: "KB-004", title: "Recovering an offline synchronization queue on frontline tablets", category: "Offline Synchronization", audience: "Enumerators", summary: "Resolve records that remain stuck in the device synchronization queue after field missions.", content: "1. Confirm cellular or Wi-Fi data connectivity is active.\n2. Navigate to 'Offline Sync' from the left workspace menu.\n3. Inspect the pending queue for any validation errors (e.g. missing coordinates).\n4. Click 'Sync All Records Now'. If records fail, export the offline JSON payload and submit a technical Help Desk ticket." },
+      { articleCode: "KB-005", title: "National Data Privacy, Farmer Consent & Biometric Safeguards", category: "Data Privacy & Safeguards", audience: "All users", summary: "Mandatory compliance with Liberia Data Protection Act 2024 and FAO Digital Agriculture Standards.", content: "1. Enumerators must read the Vernacular Consent Statement (English/Kpelle/Bassa) before taking photos or coordinates.\n2. Farmers have the statutory right to inspect, verify, and request corrections.\n3. Biometric and spatial data may never be shared with commercial advertisers or unauthorized third parties." },
+    ];
+
+    const getStoredHelpDesk = () => {
+      if (typeof window === "undefined") return { tickets: [], articles: defaultArticles };
+      try {
+        const raw = localStorage.getItem(HD_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (!parsed.articles || !parsed.articles.length) parsed.articles = defaultArticles;
+          return parsed;
+        }
+      } catch {}
+      return { tickets: [], articles: defaultArticles };
+    };
+
+    const saveStoredHelpDesk = (data: any) => {
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(HD_STORAGE_KEY, JSON.stringify(data));
+        } catch {}
+      }
+    };
+
+    if (method === "GET") {
+      const store = getStoredHelpDesk();
+      return jsonResponse({
+        tickets: store.tickets || [],
+        articles: store.articles || defaultArticles,
+        access: { canManage: true, role: "Ministry administrator" },
+      });
+    }
+
+    if (method === "POST" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        const store = getStoredHelpDesk();
+        store.tickets = store.tickets || [];
+        store.articles = store.articles || defaultArticles;
+
+        if (body.action === "create-article") {
+          const code = body.articleCode || `KB-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`;
+          const newArticle = {
+            articleCode: code,
+            title: String(body.title || "").trim(),
+            category: String(body.category || "General support").trim(),
+            audience: String(body.audience || "All users").trim(),
+            summary: String(body.summary || "").trim(),
+            content: String(body.content || "").trim(),
+            status: String(body.status || "Published"),
+            views: 0,
+            updatedAt: new Date().toISOString(),
+          };
+          store.articles = [newArticle, ...store.articles.filter((a: any) => a.articleCode !== code)];
+          saveStoredHelpDesk(store);
+          return jsonResponse({ ok: true, articleCode: code }, { status: 201 });
+        }
+
+        if (body.action === "delete-article") {
+          store.articles = store.articles.filter((a: any) => a.articleCode !== body.articleCode);
+          saveStoredHelpDesk(store);
+          return jsonResponse({ ok: true });
+        }
+
+        // Default: Create support ticket
+        const code = `HD-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+        const newTicket = {
+          ticketCode: code,
+          requesterEmail: "hon.nuetah@moa.gov.lr",
+          requesterName: "Hon. J. Alexander Nuetah",
+          requesterRole: body.requesterRole || "Ministry administrator",
+          county: body.county || "National",
+          category: body.category || "General support",
+          subject: body.subject || "Support Inquiry",
+          description: body.description || "",
+          priority: body.priority || "Normal",
+          sensitivity: body.sensitivity || "Internal",
+          status: "Open",
+          slaHours: body.priority === "Critical" ? 4 : body.priority === "High" ? 8 : 24,
+          dueAt: new Date(Date.now() + 24 * 3600000).toISOString(),
+          assignedTeam: "Help Desk",
+          assignedTo: "National Triage Officer",
+          resolution: "",
+          satisfaction: 0,
+          createdAt: new Date().toISOString(),
+          messages: [{
+            id: Date.now(),
+            authorName: "Hon. J. Alexander Nuetah",
+            authorRole: "Ministry administrator",
+            message: body.description || body.subject || "",
+            visibility: "Requester-visible",
+            createdAt: new Date().toISOString(),
+          }],
+        };
+        store.tickets = [newTicket, ...store.tickets];
+        saveStoredHelpDesk(store);
+        return jsonResponse({ ok: true, ticketCode: code }, { status: 201 });
+      } catch (err: any) {
+        return jsonResponse({ error: err.message || "Failed to process request" }, { status: 400 });
+      }
+    }
+
+    if (method === "PATCH" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        const store = getStoredHelpDesk();
+        store.tickets = store.tickets || [];
+        const idx = store.tickets.findIndex((t: any) => t.ticketCode === body.ticketCode);
+        if (idx !== -1) {
+          store.tickets[idx] = { ...store.tickets[idx], ...body, updatedAt: new Date().toISOString() };
+          saveStoredHelpDesk(store);
+        }
+        return jsonResponse({ ok: true });
+      } catch (err: any) {
+        return jsonResponse({ error: err.message || "Update failed" }, { status: 400 });
+      }
+    }
+  }
+
+  // 9b. Institutional Governance & Platform Policies: /api/governance
+  if (pathname === "/api/governance") {
+    const GOV_STORAGE_KEY = "dfr_governance_v2";
+    const defaultPolicies = [
+      {
+        policyCode: "POL-LBR-001",
+        title: "National Smallholder Data Sovereignty & Farmer Privacy Regulation",
+        category: "Data Protection & Privacy",
+        enforcingBody: "Ministry of Agriculture (MoA) & National Data Protection Authority",
+        legalBasis: "Liberia Data Protection Act 2024; Republic of Liberia Telecommunications Act; FAO Guidelines",
+        effectiveDate: "2026-01-01",
+        reviewCycle: "Annual",
+        status: "Active / Enacted",
+        summary: "Statutory framework establishing farmer data ownership, explicit consent verification, biometric encryption, and prohibition of unauthorized commercialization of smallholder registries.",
+        directives: [
+          "Mandatory Informed Consent: No smallholder farmer personal data, photo, or land coordinates may be collected or stored without an explicit, verifiable consent record in the farmer's preferred language (English, Kpelle, Bassa, Mano, Gio).",
+          "Purpose Limitation & Non-Commercialization: DFR data is held in public trust exclusively for national food security, input subsidies, extension advisory, and social protection targeting. Resale or monetization to private marketing aggregators is strictly illegal.",
+          "Biometric Encryption Standard: Facial portraits, NINs, and spatial coordinates must be encrypted at rest (AES-256) and in transit (TLS 1.3). Decryption keys are managed under multi-party custody.",
+          "Right to Free Inspection & Rectification: Any registered smallholder may inspect their holding size, crop declarations, and household records at no cost, and submit controlled correction requests without administrative penalties.",
+        ],
+      },
+      {
+        policyCode: "POL-LBR-002",
+        title: "Cross-Agency Interoperability & Social Protection Compact (MoA–MGCSP–LISGIS)",
+        category: "Interoperability & Data Sharing",
+        enforcingBody: "National DFR Inter-Ministerial Steering Committee",
+        legalBasis: "Government of Liberia Inter-Agency Circular on Digital Public Infrastructure (DPI)",
+        effectiveDate: "2026-03-15",
+        reviewCycle: "Biannual",
+        status: "Active / Enacted",
+        summary: "Binding technical protocol governing secure API exchange between the National Digital Farmer Registry, the National Social Registry (NSR), and LISGIS statistical boundary services.",
+        directives: [
+          "Zero-Trust Machine Authentication: All inter-system API exchanges must authenticate via mutual TLS (mTLS) with scoped OAuth 2.0 bearer tokens. Unauthenticated public query endpoints are prohibited.",
+          "Minimum-Data Exchange Rule: When verifying vulnerability status or disaster relief eligibility with MGCSP, only the categorical eligibility flag and confirmation UUID shall be exchanged. Raw banking or detailed personal records must not be transmitted.",
+          "Authoritative Geospatial Boundary Standard: Administrative county, district, and clan boundaries must strictly reference the authoritative LISGIS 2026.1 spatial standard.",
+          "Daily Transaction Reconciliation: During active planting or emergency cash distribution cycles, automated reconciliation audits must execute daily at 00:00 GMT.",
+        ],
+      },
+      {
+        policyCode: "POL-LBR-003",
+        title: "Frontline Enumerator & Extension Agent Geospatial Code of Conduct",
+        category: "Field Operations & Enumeration",
+        enforcingBody: "Directorate of Agricultural Extension & National Quality Assurance Taskforce",
+        legalBasis: "Civil Service Commission Code of Conduct & MoA Operational Regulations",
+        effectiveDate: "2026-02-01",
+        reviewCycle: "Annual",
+        status: "Active / Enacted",
+        summary: "Mandatory standards of integrity, GPS boundary mapping accuracy, cultural respect, and safeguarding during rural enumerator missions.",
+        directives: [
+          "Physical Perimeter Ground Truth: Enumerators must physically traverse farm boundaries with GPS active. Remote polygon digitization without physical inspection constitutes gross misconduct.",
+          "Horizontal Accuracy Threshold: Boundary vertices must not be recorded unless the device GPS horizontal accuracy is ≤5 meters (HDOP ≤ 2.0).",
+          "Zero Solicitation & Safeguarding: Enumerators and Extension Agents are strictly prohibited from demanding fees, transportation money, or farm produce from smallholders in exchange for registration or advisory services.",
+          "48-Hour Sync Requirement: Data collected on offline mobile devices must be synchronized to the central cloud repository within 48 hours of regaining network connectivity.",
+        ],
+      },
+      {
+        policyCode: "POL-LBR-004",
+        title: "Targeted Agricultural Input Subsidy & Anti-Diversion Regulations",
+        category: "Subsidy Distribution & Input Entitlements",
+        enforcingBody: "MoA Directorate of Inputs & Agribusiness / FAO Project Operations Office",
+        legalBasis: "National Food Security & Input Subsidy Operational Manual",
+        effectiveDate: "2026-04-10",
+        reviewCycle: "Seasonal",
+        status: "Active / Enacted",
+        summary: "Operational rules regulating electronic voucher allocation, agro-dealer verification, physical inventory redemption, and anti-fraud monitoring.",
+        directives: [
+          "Dual-Factor Identity Verification: Input redemption requires physical presentation of the farmer DFR ID Card (QR code) and one-time verification of an SMS token sent to the farmer's verified mobile number.",
+          "Certified Inputs Only: Agro-dealers are prohibited from substituting uncertified seed or unauthorized chemical formulations for approved voucher redemption.",
+          "Anti-Diversion Monitoring: Selling, transferring, or re-bagging subsidized fertilizers or foundation seed outside designated farming communities triggers immediate merchant license revocation and prosecution.",
+          "Mandatory Farmer Receipt Acknowledgement: Beneficiaries must acknowledge physical receipt of inputs via mobile SMS confirmation or counter-signed field voucher slip.",
+        ],
+      },
+      {
+        policyCode: "POL-LBR-005",
+        title: "DFR Citizen Grievance Redress & Whistleblower Protection Charter",
+        category: "Grievance Redress & Transparency",
+        enforcingBody: "Independent Grievance Redress Committee & MoA Legal Counsel",
+        legalBasis: "Freedom of Information Act & National Administrative Procedure Act",
+        effectiveDate: "2026-05-01",
+        reviewCycle: "Annual",
+        status: "Active / Enacted",
+        summary: "Procedures for lodging, escalating, and impartially resolving complaints regarding exclusion, disputed land boundaries, missing vouchers, and administrative malpractice.",
+        directives: [
+          "Universal Grievance Access: Any citizen may lodge a complaint via web Help Desk, mobile USSD, toll-free telephone hotline, or in person at County Agricultural Offices without any filing fee.",
+          "Accountable Resolution Timelines: Urgent safeguarding or fraud allegations must be acknowledged within 4 hours and investigated within 48 hours; general administrative disputes must be resolved within 72 hours.",
+          "Whistleblower Protection: Informants reporting corruption, illegal land appropriation, or voucher diversion are guaranteed strict anonymity and legal protection against retaliation.",
+          "Independent Appellate Review: Claimants dissatisfied with frontline decisions may request review by the Independent DFR Oversight Panel within 30 days.",
+        ],
+      },
+    ];
+
+    const getStoredGovernance = () => {
+      if (typeof window === "undefined") return { policies: defaultPolicies };
+      try {
+        const raw = localStorage.getItem(GOV_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (!parsed.policies || !parsed.policies.length) parsed.policies = defaultPolicies;
+          return parsed;
+        }
+      } catch {}
+      return { policies: defaultPolicies };
+    };
+
+    const saveStoredGovernance = (data: any) => {
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(GOV_STORAGE_KEY, JSON.stringify(data));
+        } catch {}
+      }
+    };
+
+    if (method === "GET") {
+      const store = getStoredGovernance();
+      return jsonResponse({
+        institutions: [
+          { institutionCode: "MOA", name: "Ministry of Agriculture", mandate: "Lead institution and official owner of national agricultural data and services.", accountRole: "Lead data owner", contentResponsibilities: ["Farmer and farm registry", "Production and value chains", "Agricultural programmes", "Publication approval"] },
+          { institutionCode: "MGCSP", name: "Ministry of Gender, Children and Social Protection", mandate: "Social protection, gender equality, vulnerability and beneficiary validation.", accountRole: "Social protection validator", contentResponsibilities: ["Household vulnerability", "Social protection participation", "Gender and inclusion", "Beneficiary validation"] },
+          { institutionCode: "CDA", name: "Cooperative Development Agency", mandate: "Certification, profiling and strengthening of cooperatives and farmer organizations.", accountRole: "Cooperative certifier", contentResponsibilities: ["Cooperative certification", "Organization governance", "Membership records", "Compliance status"] },
+          { institutionCode: "LISGIS", name: "Liberia Institute of Statistics and Geo-Information Services", mandate: "Statistical standards, geospatial reference data, boundaries and national harmonization.", accountRole: "Statistical and GIS authority", contentResponsibilities: ["Data classifications", "Administrative boundaries", "Geospatial quality", "Survey harmonization"] },
+          { institutionCode: "LOCAL", name: "County, District and Community Authorities", mandate: "Validated local contributions, field confirmation, endorsement and escalation.", accountRole: "Local endorsing authority", contentResponsibilities: ["Community submissions", "Farm location endorsement", "Production updates", "Local corrections"] },
+        ],
+        datasets: [
+          { id: 1, datasetCode: "DFR-FARMER", title: "National Farmer & Farm Master Registry", domain: "Agriculture", ownerInstitution: "MOA", stewardInstitution: "MOA", custodianInstitution: "MOA ICT", approvingAuthority: "MOA Chief Data Officer", sensitivity: "Restricted", accessRule: "Purpose-bound role and geographic scope", classificationStandard: "DFR Core v1.2", lastReviewedAt: "2026-07-15", nextReviewAt: "2026-10-13", version: "1.2", status: "Active", reviewFrequencyDays: 90 },
+          { id: 2, datasetCode: "DFR-VULN", title: "Household Vulnerability & Social Protection", domain: "Social protection", ownerInstitution: "MGCSP", stewardInstitution: "MGCSP", custodianInstitution: "DFR Operations", approvingAuthority: "MGCSP Director", sensitivity: "Highly restricted", accessRule: "Explicit purpose, minimum fields, logged access", classificationStandard: "National Social Registry mapping v0.9", lastReviewedAt: "2026-04-01", nextReviewAt: "2026-06-30", version: "0.9", status: "Pending Review", reviewFrequencyDays: 90 },
+          { id: 3, datasetCode: "DFR-COOP", title: "Cooperatives & Producer Organizations", domain: "Organizations", ownerInstitution: "CDA", stewardInstitution: "CDA", custodianInstitution: "MOA Registry Unit", approvingAuthority: "CDA Registrar", sensitivity: "Official-use", accessRule: "Organization verification roles; public summary only", classificationStandard: "CDA Cooperative Profile v1.0", lastReviewedAt: "2026-07-12", nextReviewAt: "2026-10-10", version: "1.0", status: "Active", reviewFrequencyDays: 90 },
+          { id: 4, datasetCode: "DFR-GEO", title: "Administrative Boundaries & Farm Parcels", domain: "Geospatial", ownerInstitution: "LISGIS", stewardInstitution: "LISGIS", custodianInstitution: "MOA GIS Unit", approvingAuthority: "LISGIS Geo-Information Director", sensitivity: "Restricted", accessRule: "Generalized public view; exact parcels controlled", classificationStandard: "WGS84 / EPSG:4326; GeoJSON", lastReviewedAt: "2026-06-20", nextReviewAt: "2026-09-18", version: "2026.1", status: "Active", reviewFrequencyDays: 90 },
+        ],
+        workflows: [
+          { id: 1, caseId: "CDA-VER-00041", workflowType: "CDA cooperative certification", subjectRef: "ORG-LR-2026-0041", title: "Foya Cocoa & Rice Farmers Cooperative", submitterInstitution: "MOA", currentInstitution: "CDA", stage: "UNDER_REVIEW", dueDate: "2026-08-07", county: "Lofa", evidenceRef: "CDA certificate, bylaws, officer register" },
+          { id: 2, caseId: "MGCSP-VAL-00118", workflowType: "MGCSP vulnerability validation", subjectRef: "HH-LR-00118", title: "Household vulnerability and beneficiary validation", submitterInstitution: "LOCAL", currentInstitution: "MGCSP", stage: "SUBMITTED", dueDate: "2026-08-05", county: "Bong", evidenceRef: "Consent, household roster, field assessment" },
+          { id: 3, caseId: "LISGIS-QA-00027", workflowType: "LISGIS geospatial approval", subjectRef: "PARCEL-LR-00027", title: "Parcel boundary and topology quality approval", submitterInstitution: "MOA", currentInstitution: "LISGIS", stage: "CORRECTION_REQUESTED", decision: "Correction required", notes: "Resolve overlap at north-west vertex.", dueDate: "2026-08-04", county: "Nimba", evidenceRef: "GeoJSON, GPS accuracy report" },
+          { id: 4, caseId: "LOCAL-END-00076", workflowType: "Community contribution endorsement", subjectRef: "DFR-LR-00076", title: "Community-submitted farmer profile endorsement", submitterInstitution: "Community focal person", currentInstitution: "LOCAL", stage: "APPROVED", decision: "Endorsed", dueDate: "2026-08-03", county: "Grand Bassa", evidenceRef: "Community attestation and field photo" },
+        ],
+        dictionary: [
+          { elementCode: "DFR.PERSON.SEX", name: "Sex", definition: "Sex of the registered person as reported and validated.", domain: "Demographic", dataType: "Code", allowedValues: ["Female", "Male", "Intersex", "Not stated"], standardOwner: "LISGIS", version: "1.1", status: "Standard" },
+          { elementCode: "DFR.HH.VULN", name: "Vulnerability classification", definition: "Approved household vulnerability category used for targeting.", domain: "Social protection", dataType: "Multi-code", allowedValues: ["Female-headed", "Youth", "Disability", "Shock-affected", "Food insecure"], standardOwner: "MGCSP", version: "1.0", status: "Standard" },
+          { elementCode: "DFR.GEO.COUNTY", name: "County code", definition: "Official county classification for Liberia.", domain: "Geospatial", dataType: "Code", allowedValues: ["Bomi", "Bong", "Gbarpolu", "Grand Bassa", "Grand Cape Mount", "Grand Gedeh", "Grand Kru", "Lofa", "Margibi", "Maryland", "Montserrado", "Nimba", "River Cess", "River Gee", "Sinoe"], standardOwner: "LISGIS", version: "2026.1", status: "Standard" },
+        ],
+        agreements: [
+          { agreementCode: "DSA-MOA-MGCSP-001", title: "Agriculture–social protection minimum-data exchange", providerInstitution: "MOA", recipientInstitution: "MGCSP", datasets: ["DFR-FARMER", "DFR-VULN"], purpose: "Eligibility referral and beneficiary validation", legalBasis: "Approved inter-ministerial data-sharing protocol", sensitivity: "Highly restricted", accessProtocol: "OAuth 2.0 + mTLS; field minimization; immutable logging", status: "Draft for signature", reviewDate: "2026-10-01" },
+          { agreementCode: "DSA-MOA-LISGIS-002", title: "Geospatial standards and boundary quality exchange", providerInstitution: "LISGIS", recipientInstitution: "MOA", datasets: ["DFR-GEO"], purpose: "Boundary reference and parcel quality assurance", legalBasis: "Government statistical and geospatial mandate", sensitivity: "Restricted", accessProtocol: "Signed GeoJSON packages and controlled API", status: "Active", reviewDate: "2026-09-15" },
+        ],
+        decisions: [
+          { decisionCode: "DGC-RES-2026-008", meetingType: "Data Governance Committee", title: "Adopt minimum-data principle for vulnerability exchange", decisionText: "Only approved eligibility attributes may be exchanged with programme systems.", responsibleInstitution: "MOA/MGCSP", actionOwner: "Data Protection Working Group", dueDate: "2026-08-14", priority: "High", escalationLevel: "Committee", status: "In progress" },
+          { decisionCode: "GIS-WG-2026-014", meetingType: "Geospatial Working Group", title: "Approve LISGIS boundary release 2026.1", decisionText: "Use release 2026.1 as authoritative administrative reference after topology validation.", responsibleInstitution: "LISGIS", actionOwner: "MOA GIS Unit", dueDate: "2026-08-07", priority: "Normal", escalationLevel: "Working group", status: "Open" },
+        ],
+        exchanges: [
+          { connectorCode: "CONN-NSR", systemName: "National Social Registry", ownerInstitution: "MGCSP", direction: "Bidirectional", endpointAlias: "NSR beneficiary exchange", standard: "REST/JSON · OpenAPI 3.1", mappingVersion: "0.9", environment: "Configuration", status: "Awaiting endpoint", lastExchangeAt: "No live exchange", result: "Configuration active", records: 0, correlationId: "CFG-NSR-001" },
+          { connectorCode: "CONN-CENSUS", systemName: "National Census & Survey Data", ownerInstitution: "LISGIS", direction: "Inbound", endpointAlias: "LISGIS statistical exchange", standard: "REST/JSON + CSV package", mappingVersion: "1.0", environment: "Sandbox", status: "Mapping validated", lastExchangeAt: "2026-07-31", result: "Schema validation passed", records: 250, correlationId: "TEST-LISGIS-250" },
+          { connectorCode: "CONN-CDA", systemName: "CDA Cooperative Certification", ownerInstitution: "CDA", direction: "Bidirectional", endpointAlias: "CDA verification adapter", standard: "REST/JSON · OpenAPI 3.1", mappingVersion: "1.0", environment: "Configuration", status: "Awaiting endpoint", lastExchangeAt: "No live exchange", result: "Workflow operational", records: 0, correlationId: "CFG-CDA-001" },
+        ],
+        audit: [
+          { id: 1, createdAt: "2026-08-01 10:30", actor: "Institutional Governance", action: "Governance control framework initialized", entity: "National DFR", details: "Institution accounts, stewardship, approval workflow, metadata, agreements and exchange controls established" },
+        ],
+        policies: store.policies || defaultPolicies,
+        today: "2026-08-02",
+      });
+    }
+
+    if (method === "POST" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        const store = getStoredGovernance();
+        store.policies = store.policies || defaultPolicies;
+
+        if (body.action === "create-policy") {
+          const code = body.policyCode || `POL-LBR-${Date.now().toString().slice(-4)}`;
+          const newPolicy = {
+            policyCode: code,
+            title: String(body.title || "").trim(),
+            category: String(body.category || "Data Protection & Privacy").trim(),
+            enforcingBody: String(body.enforcingBody || "Ministry of Agriculture (MoA)").trim(),
+            legalBasis: String(body.legalBasis || "Liberia National Agriculture Policy").trim(),
+            effectiveDate: body.effectiveDate || new Date().toISOString().slice(0, 10),
+            reviewCycle: body.reviewCycle || "Annual",
+            status: body.status || "Active / Enacted",
+            summary: String(body.summary || "").trim(),
+            directives: Array.isArray(body.directives) ? body.directives : String(body.directives || "").split("\n").filter(Boolean),
+          };
+          store.policies = [newPolicy, ...store.policies.filter((p: any) => p.policyCode !== code)];
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true, policyCode: code }, { status: 201 });
+        }
+
+        if (body.action === "delete-policy") {
+          store.policies = store.policies.filter((p: any) => p.policyCode !== body.policyCode);
+          saveStoredGovernance(store);
+          return jsonResponse({ ok: true });
+        }
+      } catch (err: any) {
+        return jsonResponse({ error: err.message || "Failed to process governance action" }, { status: 400 });
+      }
+    }
+
+    if (method === "PATCH" && init?.body) {
+      return jsonResponse({ ok: true });
+    }
   }
 
   // 10. Extension Services: /api/extension-services
