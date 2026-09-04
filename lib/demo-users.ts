@@ -208,3 +208,12 @@ export function setActiveDemoUser(user: DemoUser): void {
     } catch {}
   }
 }
+
+export function clearActiveDemoUser(): void {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER);
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_ROLE);
+    } catch {}
+  }
+}

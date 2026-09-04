@@ -26,7 +26,7 @@ import FieldRegistrationWorkspace from "./field-registration";
 import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
-import { getActiveDemoUser, setActiveDemoUser, DEMO_USERS } from "../../lib/demo-users";
+import { getActiveDemoUser, setActiveDemoUser, clearActiveDemoUser, DEMO_USERS } from "../../lib/demo-users";
 import { useRealtime } from "../../lib/use-realtime";
 const GISWorkspace = dynamic(() => import("./gis-workspace"), {
   ssr: false,
@@ -587,6 +587,12 @@ export default function DashboardClient({
     }
     return "/signin/";
   };
+  const handleLogout = () => {
+    clearActiveDemoUser();
+    if (typeof window !== "undefined") {
+      window.location.href = getSignOutUrl();
+    }
+  };
   const getAssetUrl = (p: string) => {
     const clean = p.startsWith("/") ? p.slice(1) : p;
     if (typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry")) {
@@ -760,23 +766,48 @@ export default function DashboardClient({
             </button>
           ))}
         </nav>
-        <div className="side-foot">
-          <img
-            src={getAssetUrl("assets/moa-logo.png")}
-            alt="MoA"
-            onError={(e) => {
-              const el = e.currentTarget;
-              if (!el.src.includes("/liberia-digital-farmer-registry/")) {
-                el.src = "/liberia-digital-farmer-registry/assets/moa-logo.png";
-              } else {
-                el.src = "/assets/moa-logo.png";
-              }
-            }}
-          />
-          <div>
-            <b>Ministry of Agriculture</b>
-            <small>Secure government platform</small>
+        <div className="side-foot" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <img
+              src={getAssetUrl("assets/moa-logo.png")}
+              alt="MoA"
+              onError={(e) => {
+                const el = e.currentTarget;
+                if (!el.src.includes("/liberia-digital-farmer-registry/")) {
+                  el.src = "/liberia-digital-farmer-registry/assets/moa-logo.png";
+                } else {
+                  el.src = "/assets/moa-logo.png";
+                }
+              }}
+            />
+            <div>
+              <b>Ministry of Agriculture</b>
+              <small>Secure government platform</small>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            title="Log Out of Registry"
+            style={{
+              background: "rgba(239, 68, 68, 0.15)",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              borderRadius: "6px",
+              color: "#f87171",
+              padding: "6px 8px",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
       </aside>
       <section className="dash-main">
@@ -881,6 +912,40 @@ export default function DashboardClient({
             >
               Accounts ↗
             </a>
+            <button
+              onClick={handleLogout}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 14px",
+                borderRadius: "8px",
+                background: "rgba(239, 68, 68, 0.15)",
+                color: "#fca5a5",
+                border: "1px solid rgba(239, 68, 68, 0.35)",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              title="Log Out of Registry"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Log Out
+            </button>
           </div>
         </header>
         <div className="dash-content">
