@@ -1,0 +1,17 @@
+DELETE FROM party_documents WHERE party_id IN ('ORG-COOP-00041','ORG-GRP-00072','ORG-AGR-00018','ORG-PO-00012','ORG-SVC-00009');
+DELETE FROM party_activities WHERE party_id IN ('ORG-COOP-00041','ORG-GRP-00072','ORG-AGR-00018','ORG-PO-00012','ORG-SVC-00009');
+DELETE FROM party_resources WHERE party_id IN ('ORG-COOP-00041','ORG-GRP-00072','ORG-AGR-00018','ORG-PO-00012','ORG-SVC-00009');
+DELETE FROM party_relationships WHERE from_party_id IN ('ORG-COOP-00041','ORG-GRP-00072','ORG-AGR-00018','ORG-PO-00012','ORG-SVC-00009') OR to_party_id IN ('LBR-MO-000184','LBR-BG-000219','LBR-NI-000067','LBR-GB-000103');
+DELETE FROM parties WHERE party_id IN ('ORG-COOP-00041','ORG-GRP-00072','ORG-AGR-00018','ORG-PO-00012','ORG-SVC-00009');
+DELETE FROM households WHERE household_id IN ('HH-LBR-00091','HH-LBR-00112');
+DELETE FROM programme_applications WHERE application_id IN ('APP-260081','APP-260094');
+DELETE FROM payment_accounts WHERE farmer_dfr_id IN ('LBR-MO-000184','LBR-BG-000219') AND owner_email = '';
+DELETE FROM vouchers WHERE voucher_code = 'VCH-26-A9F2';
+DELETE FROM grievances WHERE ticket_id = 'GRV-260031';
+DELETE FROM consent_records WHERE consent_code = 'CONS-000184';
+DELETE FROM operational_controls WHERE control_code IN ('SUP-2026-014','SPOT-2026-031','DQA-2026-Q3','RPT-2026-07','NSC-2026-03','TWG-2026-07','TRN-2026-BG-01','SUPPORT-0042','REF-2026-0018','SHOCK-2026-FLOOD','LISGIS-REF-2026.1','BKP-2026-08-02','RST-2026-Q3','CONN-NSR-001');
+DELETE FROM agriculture_programmes WHERE programme_code IN ('CSI-2026','Cocoa-REHAB');
+DELETE FROM delivery_evidence WHERE item_id IN (SELECT id FROM delivery_items WHERE reference IN ('FAO-C1-001','FAO-C1-002','FAO-C2-003','FAO-C2-004','FAO-C3-005','FAO-C4-006','FAO-C5-007','FAO-C6-008','FAO-C6-009','FAO-C7-010'));
+DELETE FROM delivery_items WHERE reference IN ('FAO-C1-001','FAO-C1-002','FAO-C2-003','FAO-C2-004','FAO-C3-005','FAO-C4-006','FAO-C5-007','FAO-C6-008','FAO-C6-009','FAO-C7-010');
+DELETE FROM farmers WHERE dfr_id IN ('LBR-MO-000184','LBR-BG-000219','LBR-NI-000067','LBR-GB-000103');
+DELETE FROM audit_events WHERE action IN ('Registry initialized','Unified Party Registry initialized','Seven-component framework initialized','Appendix 2 operational controls initialized');

@@ -1,0 +1,7 @@
+"use client";
+import {MapContainer,Marker,Popup,TileLayer} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+type Farmer={id:number;dfrId:string;firstName:string;lastName:string;county:string;district:string;crop:string;farmSize:number;latitude:number|null;longitude:number|null};
+const icon=L.divIcon({className:"coverage-pin",html:"<span></span>",iconSize:[18,18],iconAnchor:[9,9]});
+export default function CoverageMap({farmers,openGIS}:{farmers:Farmer[];openGIS:()=>void}){const mapped=farmers.filter(f=>Number.isFinite(f.latitude)&&Number.isFinite(f.longitude));return <div className="coverage-leaflet"><MapContainer center={[6.45,-9.45]} zoom={7} minZoom={6} maxZoom={18} maxBounds={[[4.15,-11.65],[8.75,-7.25]]} scrollWheelZoom={false}><TileLayer attribution="Tiles © Esri" url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"/>{mapped.map(f=><Marker key={f.id} position={[f.latitude!,f.longitude!]} icon={icon}><Popup><b>{f.firstName} {f.lastName}</b><br/>{f.dfrId}<br/>{f.county}, {f.district}<br/>{f.crop} · {f.farmSize} ha</Popup></Marker>)}</MapContainer><div className="coverage-map-info"><b>{new Set(farmers.map(f=>f.county)).size} of 15 counties reporting</b><span>{mapped.length} georeferenced farms · geographic WGS 84 markers</span><button onClick={openGIS}>Open spatial cadastre →</button></div></div>}
