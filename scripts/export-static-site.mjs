@@ -121,8 +121,9 @@ async function exportSite() {
     console.log(`  ✓ ${route} -> ${path.relative(rootDir, targetFilePath)}`);
   }
 
-  // 3. Patch CSS files in outDir to use correct font URLs
+  // 3. Patch CSS and JS files in outDir to use correct asset URLs
   patchCssFiles(path.join(outDir, "assets"));
+  patchJsFiles(path.join(outDir, "assets"));
 
   // 4. Create .nojekyll
   fs.writeFileSync(path.join(outDir, ".nojekyll"), "", "utf-8");
@@ -162,6 +163,22 @@ function patchCssFiles(dir) {
       let content = fs.readFileSync(fullPath, "utf-8");
       content = content.replaceAll(/url\(\/workspace\/[^)]*\/fonts\//g, `url(${baseWithoutSlash}/assets/_vinext_fonts/`);
       content = content.replaceAll(/url\(\/assets\//g, `url(${baseWithoutSlash}/assets/`);
+      fs.writeFileSync(fullPath, content, "utf-8");
+    }
+  }
+}
+
+function patchJsFiles(dir) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      patchJsFiles(fullPath);
+    } else if (entry.name.endsWith(".js") || entry.name.endsWith(".mjs")) {
+      let content = fs.readFileSync(fullPath, "utf-8");
+      content = content.replaceAll('"/assets/', `"${baseWithoutSlash}/assets/`);
+      content = content.replaceAll("'/assets/", `'${baseWithoutSlash}/assets/`);
       fs.writeFileSync(fullPath, content, "utf-8");
     }
   }

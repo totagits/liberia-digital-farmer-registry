@@ -560,6 +560,13 @@ export default function DashboardClient({
     }
     return "/signin/";
   };
+  const getAssetUrl = (p: string) => {
+    const clean = p.startsWith("/") ? p.slice(1) : p;
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry")) {
+      return `/liberia-digital-farmer-registry/${clean}`;
+    }
+    return `/${clean}`;
+  };
   const [active, setActive] = useState("Home");
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [audits, setAudits] = useState<Audit[]>([]);
@@ -655,7 +662,18 @@ export default function DashboardClient({
     <main className="dash-shell">
       <aside className={`dash-sidebar glass ${mobile ? "open" : ""}`}>
         <Link href="/" className="dash-brand">
-          <img src="/assets/fao-logo.png" alt="FAO" />
+          <img
+            src={getAssetUrl("assets/fao-logo.png")}
+            alt="FAO"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (!el.src.includes("/liberia-digital-farmer-registry/")) {
+                el.src = "/liberia-digital-farmer-registry/assets/fao-logo.png";
+              } else {
+                el.src = "/assets/fao-logo.png";
+              }
+            }}
+          />
           <div>
             <strong>DFR Liberia</strong>
             <span>National Registry</span>
@@ -676,7 +694,18 @@ export default function DashboardClient({
           ))}
         </nav>
         <div className="side-foot">
-          <img src="/assets/moa-logo.png" alt="MoA" />
+          <img
+            src={getAssetUrl("assets/moa-logo.png")}
+            alt="MoA"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (!el.src.includes("/liberia-digital-farmer-registry/")) {
+                el.src = "/liberia-digital-farmer-registry/assets/moa-logo.png";
+              } else {
+                el.src = "/assets/moa-logo.png";
+              }
+            }}
+          />
           <div>
             <b>Ministry of Agriculture</b>
             <small>Secure government platform</small>
