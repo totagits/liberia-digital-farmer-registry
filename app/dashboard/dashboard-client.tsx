@@ -15,6 +15,7 @@ import OrganizationRegistrationWizard from "./organization-registration-wizard";
 import RegistrationRouter from "./registration-router";
 import GovernanceWorkspace from "./governance";
 import AppendixControls from "./appendix-controls";
+import UsersAccessWorkspace from "./users-access";
 import HelpDesk from "./help-desk";
 import ExtensionServices from "./extension-services";
 import ProgrammeApplications from "./programme-applications";
@@ -900,7 +901,13 @@ export default function DashboardClient({
             <AppendixControls key="appendix-operations" notify={setNotice} />
           )}
           {active === "Users & Access" && (
-            <AppendixControls key="users-access" notify={setNotice} initialTab="Consent & access" accessOnly />
+            <UsersAccessWorkspace
+              notify={setNotice}
+              onSwitchUser={(newUser, newRole) => {
+                setCurrentUser(newUser);
+                setRole(newRole);
+              }}
+            />
           )}
           {active === "Help Desk" && (
             <HelpDesk role={role} notify={setNotice} />

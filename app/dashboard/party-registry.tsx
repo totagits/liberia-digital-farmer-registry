@@ -244,9 +244,9 @@ export default function PartyRegistry({
     const duplicateIds=new Set(rows.filter((r,i)=>rows.some((x,j)=>i!==j&&((r.registrationNumber&&r.registrationNumber===x.registrationNumber)||r.legalName.trim().toLowerCase()===x.legalName.trim().toLowerCase()))).map(r=>r.partyId));
     if(workspaceTab==="Duplicate review")return rows.filter(r=>duplicateIds.has(r.partyId));
     if(workspaceTab==="Verification queue")return rows.filter(r=>r.verificationStatus!=="Verified");
-    if(workspaceTab==="Compliance alerts")return rows.filter(r=>r.documents.some(d=>d.expiryDate&&new Date(d.expiryDate)<new Date())||!r.registrationNumber);
-    if(workspaceTab==="Farms & facilities")return rows.filter(r=>r.resources.length>0);
-    if(workspaceTab==="Production & markets")return rows.filter(r=>r.activities.length>0);
+    if(workspaceTab==="Compliance alerts")return rows.filter(r=>(r.documents||[]).some(d=>d.expiryDate&&new Date(d.expiryDate)<new Date())||!r.registrationNumber);
+    if(workspaceTab==="Farms & facilities")return rows.filter(r=>(r.resources||[]).length>0);
+    if(workspaceTab==="Production & markets")return rows.filter(r=>(r.activities||[]).length>0);
     return rows;
   },[rows,workspaceTab]);
   async function register(e: FormEvent<HTMLFormElement>) {
@@ -344,12 +344,12 @@ export default function PartyRegistry({
         </article>
         <article>
           <span>Managed resources</span>
-          <b>{rows.reduce((s, r) => s + r.resources.length, 0)}</b>
+          <b>{rows.reduce((s, r) => s + (r.resources || []).length, 0)}</b>
           <small>Farms, facilities & equipment</small>
         </article>
       </div>
       <nav className="party-workspace-tabs" aria-label="Organization registry workspaces">
-        {["Organizations","Verification queue","Duplicate review","Compliance alerts","Farms & facilities","Production & markets"].map(x=>{const duplicateCount=rows.filter((r,i)=>rows.some((y,j)=>i!==j&&((r.registrationNumber&&r.registrationNumber===y.registrationNumber)||r.legalName.trim().toLowerCase()===y.legalName.trim().toLowerCase()))).length;const count=x==="Organizations"?rows.length:x==="Verification queue"?rows.filter(r=>r.verificationStatus!=="Verified").length:x==="Duplicate review"?duplicateCount:x==="Compliance alerts"?rows.filter(r=>r.documents.some(d=>d.expiryDate&&new Date(d.expiryDate)<new Date())||!r.registrationNumber).length:x==="Farms & facilities"?rows.reduce((s,r)=>s+r.resources.length,0):rows.reduce((s,r)=>s+r.activities.length,0);return <button key={x} className={workspaceTab===x?"active":""} onClick={()=>setWorkspaceTab(x)}>{x}<b>{count}</b></button>})}
+        {["Organizations","Verification queue","Duplicate review","Compliance alerts","Farms & facilities","Production & markets"].map(x=>{const duplicateCount=rows.filter((r,i)=>rows.some((y,j)=>i!==j&&((r.registrationNumber&&r.registrationNumber===y.registrationNumber)||r.legalName.trim().toLowerCase()===y.legalName.trim().toLowerCase()))).length;const count=x==="Organizations"?rows.length:x==="Verification queue"?rows.filter(r=>r.verificationStatus!=="Verified").length:x==="Duplicate review"?duplicateCount:x==="Compliance alerts"?rows.filter(r=>(r.documents||[]).some(d=>d.expiryDate&&new Date(d.expiryDate)<new Date())||!r.registrationNumber).length:x==="Farms & facilities"?rows.reduce((s,r)=>s+(r.resources||[]).length,0):rows.reduce((s,r)=>s+(r.activities||[]).length,0);return <button key={x} className={workspaceTab===x?"active":""} onClick={()=>setWorkspaceTab(x)}>{x}<b>{count}</b></button>})}
       </nav>
       <article className="panel party-index">
         <div className="party-toolbar">
@@ -654,7 +654,7 @@ function detailTab(
       <RecordList
         title="Linked people, households and organizations"
         action={canRegister ? () => setAdd("relationship") : undefined}
-        rows={p.relationships.map((x) => [
+        rows={(p.relationships || []).map((x) => [
           x.relationshipType,
           x.toPartyId,
           x.roleTitle || x.status,
@@ -666,7 +666,7 @@ function detailTab(
       <RecordList
         title="Farms, parcels, facilities and equipment"
         action={canRegister ? () => setAdd("resource") : undefined}
-        rows={p.resources.map((x) => [
+        rows={(p.resources || []).map((x) => [
           x.resourceType,
           x.name,
           `${x.quantity || ""} ${x.unit || x.capacity} · ${x.status}`,
@@ -678,7 +678,7 @@ function detailTab(
       <RecordList
         title="Production, aggregation and market records"
         action={canRegister ? () => setAdd("activity") : undefined}
-        rows={p.activities.map((x) => [
+        rows={(p.activities || []).map((x) => [
           x.activityType,
           x.commodity || x.programme,
           `${x.volume} ${x.unit} · ${x.currency} ${x.value.toLocaleString()}`,
@@ -690,7 +690,7 @@ function detailTab(
       <RecordList
         title="Registration, tax, bylaws and certification"
         action={canRegister?()=>setAdd("document"):undefined}
-        rows={p.documents.map((x) => [
+        rows={(p.documents || []).map((x) => [
           x.documentType,
           x.documentNumber,
           `${x.verificationStatus}${x.expiryDate?` · expires ${x.expiryDate}`:""}`,
@@ -702,7 +702,7 @@ function detailTab(
     <RecordList
       title="Programmes, services, vouchers and transactions"
       action={canRegister ? () => setAdd("activity") : undefined}
-      rows={p.activities
+      rows={(p.activities || [])
         .filter(
           (x) =>
             x.programme ||

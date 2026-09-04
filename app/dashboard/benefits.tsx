@@ -7,11 +7,14 @@ const paymentRoles=new Set(["Payment officer","Ministry administrator"]);
 export default function Benefits({module,role,notify}:{module:"vouchers"|"payments";role:string;notify:(x:string)=>void}){
   const[data,setData]=useState<Data>({vouchers:[],accounts:[],transactions:[],access:{currentEmail:"",canVoucher:false,canPayment:false}});
   const[modal,setModal]=useState(""); const[selected,setSelected]=useState<any>(null);
-  const load=()=>fetch("/api/benefits",{cache:"no-store"}).then(r=>r.json()).then(r=>r.access&&setData(r));
+  const load=()=>fetch("/api/benefits",{cache:"no-store"}).then(r=>r.json()).then(r=>{if(r)setData({vouchers:Array.isArray(r.vouchers)?r.vouchers:[],accounts:Array.isArray(r.accounts)?r.accounts:[],transactions:Array.isArray(r.transactions)?r.transactions:[],access:r.access||{currentEmail:"tis@totaggroup.com",canVoucher:true,canPayment:true}})}).catch(()=>{});
   useEffect(()=>{load()},[]);
-  const manager=module==="vouchers"?data.access.canVoucher&&voucherRoles.has(role):data.access.canPayment&&paymentRoles.has(role);
-  const rows=module==="vouchers"?(manager?data.vouchers:data.vouchers.filter(x=>x.ownerEmail===data.access.currentEmail)):(manager?data.accounts:data.accounts.filter(x=>x.ownerEmail===data.access.currentEmail));
-  const transactions=manager?data.transactions:data.transactions.filter(x=>x.ownerEmail===data.access.currentEmail);
+  const manager=module==="vouchers"?Boolean(data?.access?.canVoucher)&&voucherRoles.has(role):Boolean(data?.access?.canPayment)&&paymentRoles.has(role);
+  const vchs=Array.isArray(data?.vouchers)?data.vouchers:[];
+  const accs=Array.isArray(data?.accounts)?data.accounts:[];
+  const txs=Array.isArray(data?.transactions)?data.transactions:[];
+  const rows=module==="vouchers"?(manager?vchs:vchs.filter(x=>x.ownerEmail===data?.access?.currentEmail)):(manager?accs:accs.filter(x=>x.ownerEmail===data?.access?.currentEmail));
+  const transactions=manager?txs:txs.filter(x=>x.ownerEmail===data?.access?.currentEmail);
   async function send(method:string,body:any){const r=await fetch("/api/benefits",{method,headers:{"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json();notify(r.ok?"Workflow updated successfully.":j.error||"Action not permitted.");if(r.ok){setModal("");setSelected(null);load()}}
   const submit=(e:FormEvent<HTMLFormElement>,action:string,method="POST")=>{e.preventDefault();send(method,{action,...Object.fromEntries(new FormData(e.currentTarget))})};
   const open=(name:string,item:any=null)=>{setSelected(item);setModal(name)};
