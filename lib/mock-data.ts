@@ -656,6 +656,44 @@ export function saveStoredFarmer(farmer: Omit<MockFarmer, "id" | "createdAt">): 
   return newRecord;
 }
 
+export function updateStoredFarmer(id: number, update: Partial<MockFarmer>): MockFarmer | null {
+  const existing = getStoredFarmers();
+  let updatedFarmer: MockFarmer | null = null;
+  const updated = existing.map((f) => {
+    if (f.id === id) {
+      const countyPrefix = (update.county || f.county || "MO").slice(0, 2).toUpperCase();
+      const approvedDfrId =
+        update.status === "Verified" && !f.approvedDfrId
+          ? `LBR-${countyPrefix}-${String(f.id).padStart(6, "0")}`
+          : (update.approvedDfrId ?? f.approvedDfrId);
+      
+      updatedFarmer = {
+        ...f,
+        ...update,
+        approvedDfrId: approvedDfrId || f.approvedDfrId,
+        dfrId: approvedDfrId || f.dfrId,
+      };
+      return updatedFarmer;
+    }
+    return f;
+  });
+
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.FARMERS, JSON.stringify(updated));
+      if (updatedFarmer) {
+        addStoredAudit({
+          actor: "verification.officer@moa.gov.lr",
+          action: update.status === "Verified" ? "Official DFR ID approved" : "Farmer record updated",
+          entity: (updatedFarmer as MockFarmer).approvedDfrId || (updatedFarmer as MockFarmer).dfrId,
+          details: `Status: ${(updatedFarmer as MockFarmer).status}. Approved DFR ID: ${(updatedFarmer as MockFarmer).approvedDfrId || "Pending"}. Updated through official verification workflow.`,
+        });
+      }
+    } catch {}
+  }
+  return updatedFarmer;
+}
+
 export function getStoredParties(): MockParty[] {
   if (typeof window === "undefined") return INITIAL_PARTIES;
   try {

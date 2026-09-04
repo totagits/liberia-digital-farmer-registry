@@ -20,6 +20,7 @@ import ExtensionServices from "./extension-services";
 import ProgrammeApplications from "./programme-applications";
 import Benefits from "./benefits";
 import GrievanceWorkspace from "./grievances";
+import FarmerDossier from "./farmer-dossier";
 import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
@@ -582,6 +583,8 @@ export default function DashboardClient({
   const [notice, setNotice] = useState("");
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   const [mobile, setMobile] = useState(false);
+  const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
+  const [farmerTab, setFarmerTab] = useState("Profile");
   const load = async () => {
     try {
       const [f, a] = await Promise.all([
@@ -645,13 +648,43 @@ export default function DashboardClient({
     }
   }
   async function verify(id: number, status: string) {
-    await fetch(`/api/farmers/${id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    setNotice(`Record marked ${status}.`);
-    await load();
+    try {
+      await fetch(`/api/farmers/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      setFarmers((prev) =>
+        prev.map((f) => {
+          if (f.id === id) {
+            const prefix = (f.county || "MO").slice(0, 2).toUpperCase();
+            const approvedDfrId =
+              status === "Verified" && !f.approvedDfrId
+                ? `LBR-${prefix}-${String(f.id).padStart(6, "0")}`
+                : f.approvedDfrId;
+            const updated = {
+              ...f,
+              status,
+              approvedDfrId: approvedDfrId || f.approvedDfrId,
+              dfrId: approvedDfrId || f.dfrId,
+            };
+            if (selectedFarmer && selectedFarmer.id === id) {
+              setSelectedFarmer(updated);
+            }
+            return updated;
+          }
+          return f;
+        })
+      );
+      setNotice(
+        status === "Verified"
+          ? `Record approved. Official National DFR ID issued.`
+          : `Record marked ${status}.`
+      );
+      await load();
+    } catch {
+      setNotice("Failed to update verification status.");
+    }
   }
   const nav = (name: string) => {
     setActive(name);
@@ -824,6 +857,10 @@ export default function DashboardClient({
               farmers={farmers}
               verify={verify}
               verification={active === "Verification"}
+              openFarmer={(f, t) => {
+                setSelectedFarmer(f);
+                if (t) setFarmerTab(t);
+              }}
             />
           )}
           {active === "Farms & GIS" && <GISWorkspace notify={setNotice} />}
@@ -935,6 +972,21 @@ export default function DashboardClient({
             setOrgRegistrationType(type);
             setRouter(false);
             setOrgModal(true);
+          }}
+        />
+      )}
+      {selectedFarmer && (
+        <FarmerDossier
+          farmer={selectedFarmer}
+          initialTab={farmerTab}
+          onClose={() => setSelectedFarmer(null)}
+          onVerify={verify}
+          notify={setNotice}
+          onUpdate={(updated) => {
+            setFarmers((prev) =>
+              prev.map((f) => (f.id === updated.id ? { ...f, ...updated } : f))
+            );
+            setSelectedFarmer(updated);
           }}
         />
       )}
@@ -1096,10 +1148,12 @@ function Registry({
   farmers,
   verify,
   verification,
+  openFarmer,
 }: {
   farmers: Farmer[];
   verify: (id: number, s: string) => void;
   verification: boolean;
+  openFarmer: (farmer: Farmer, tab?: string) => void;
 }) {
   const rows = verification
     ? farmers.filter((f) => f.status !== "Verified")
@@ -1168,16 +1222,48 @@ function Registry({
                   </span>
                 </td>
                 <td>
-                  {f.status !== "Verified" ? (
-                    <button
-                      className="approve"
-                      onClick={() => verify(f.id, "Verified")}
-                    >
-                      Approve & issue DFR ID
-                    </button>
-                  ) : (
-                    <button className="ghost">View</button>
-                  )}
+                  <div className="table-actions-cell" style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                    {f.status !== "Verified" ? (
+                      <>
+                        <button
+                          className="approve"
+                          onClick={() => {
+                            verify(f.id, "Verified");
+                            const prefix = (f.county || "MO").slice(0, 2).toUpperCase();
+                            const approvedDfrId = f.approvedDfrId || `LBR-${prefix}-${String(f.id).padStart(6, "0")}`;
+                            openFarmer({ ...f, status: "Verified", approvedDfrId, dfrId: approvedDfrId }, "Official ID & Certificate");
+                          }}
+                          title="Approve registration and issue official national DFR ID"
+                        >
+                          Approve & issue DFR ID
+                        </button>
+                        <button
+                          className="ghost"
+                          onClick={() => openFarmer(f, "Profile")}
+                          title="Review submitted field registration details"
+                        >
+                          Review
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="approve outline"
+                          onClick={() => openFarmer(f, "Profile")}
+                          title="View complete farmer profile, crops, logistics and activities"
+                        >
+                          View
+                        </button>
+                        <button
+                          className="ghost"
+                          onClick={() => openFarmer(f, "Official ID & Certificate")}
+                          title="View and print official National DFR Credential ID Card"
+                        >
+                          ID Card
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

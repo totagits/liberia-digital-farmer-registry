@@ -5,6 +5,7 @@
 import {
   getStoredFarmers,
   saveStoredFarmer,
+  updateStoredFarmer,
   getStoredParties,
   saveStoredParty,
   updateStoredParty,
@@ -60,11 +61,23 @@ function jsonResponse(data: unknown, status = 200): Response {
 function handleMockApi(url: string, init?: RequestInit): Response | null {
   const method = (init?.method || "GET").toUpperCase();
   const parsedUrl = new URL(url, "http://localhost");
-  const pathname = parsedUrl.pathname;
+  let pathname = parsedUrl.pathname;
+  if (pathname.startsWith("/liberia-digital-farmer-registry")) {
+    pathname = pathname.replace("/liberia-digital-farmer-registry", "");
+  }
 
   // 1. Farmers API: /api/farmers
   if (pathname === "/api/farmers" || pathname.startsWith("/api/farmers/")) {
+    const parts = pathname.split("/").filter(Boolean);
+    const lastPart = parts[parts.length - 1];
+    const maybeId = Number(lastPart);
+
     if (method === "GET") {
+      if (!isNaN(maybeId) && maybeId > 0 && lastPart !== "farmers") {
+        const farmer = getStoredFarmers().find((f) => f.id === maybeId);
+        if (farmer) return jsonResponse(farmer);
+        return jsonResponse({ error: "Farmer not found" }, 404);
+      }
       const q = (parsedUrl.searchParams.get("q") || "").toLowerCase().trim();
       const all = getStoredFarmers();
       const filtered = q
@@ -122,7 +135,15 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
     }
 
     if (method === "PATCH") {
-      return jsonResponse({ success: true, status: "Verified" });
+      let body: any = {};
+      try {
+        body = typeof init?.body === "string" ? JSON.parse(init.body) : init?.body || {};
+      } catch {}
+      if (!isNaN(maybeId) && maybeId > 0) {
+        const updated = updateStoredFarmer(maybeId, body);
+        return jsonResponse({ ok: true, success: true, farmer: updated });
+      }
+      return jsonResponse({ ok: true, success: true, status: body.status || "Verified" });
     }
   }
 
