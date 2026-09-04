@@ -55,7 +55,8 @@ async function exportSite() {
   console.log(`[Export] Rendering ${routes.length} routes to static HTML...`);
 
   for (const route of routes) {
-    const req = new Request(`http://localhost${route}`, {
+    const fullRoute = `${baseWithoutSlash}${route === "/" ? "" : route}`;
+    const req = new Request(`http://localhost${fullRoute || "/"}`, {
       headers: {
         accept: "text/html",
         "oai-authenticated-user-email": "tis@totaggroup.com",
