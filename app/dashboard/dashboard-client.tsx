@@ -11,6 +11,7 @@ import DeliveryWorkspace from "./delivery";
 import SOPManual from "./sop-manual";
 import PartyRegistry from "./party-registry";
 import RegistrationWizard from "./registration-wizard";
+import OrganizationRegistrationWizard from "./organization-registration-wizard";
 import RegistrationRouter from "./registration-router";
 import GovernanceWorkspace from "./governance";
 import AppendixControls from "./appendix-controls";
@@ -566,6 +567,8 @@ export default function DashboardClient({
   const [modal, setModal] = useState(false);
   const [router, setRouter] = useState(false);
   const [farmerRegistrationType,setFarmerRegistrationType]=useState("individual");
+  const [orgModal, setOrgModal] = useState(false);
+  const [orgRegistrationType, setOrgRegistrationType] = useState("Cooperative");
   const [partyRegistrationRequest, setPartyRegistrationRequest] = useState({id:0,type:""});
   const [selectedCounty, setSelectedCounty] = useState("Bomi");
   const [busy, setBusy] = useState(false);
@@ -884,11 +887,26 @@ export default function DashboardClient({
           refresh={load}
         />
       )}
+      {orgModal && canRegister && registrationRoles.has(role) && (
+        <OrganizationRegistrationWizard
+          initialType={orgRegistrationType}
+          close={() => setOrgModal(false)}
+          notify={setNotice}
+          refresh={load}
+          onSuccess={() => {
+            setActive("Party & Organization Registry");
+          }}
+        />
+      )}
       {router && canRegister && registrationRoles.has(role) && (
         <RegistrationRouter
           close={()=>setRouter(false)}
           openFarmer={(type)=>{setFarmerRegistrationType(type);setRouter(false);setModal(true)}}
-          openOrganization={(type)=>{setRouter(false);setActive("Party & Organization Registry");setPartyRegistrationRequest(x=>({id:x.id+1,type}))}}
+          openOrganization={(type)=>{
+            setOrgRegistrationType(type);
+            setRouter(false);
+            setOrgModal(true);
+          }}
         />
       )}
     </main>

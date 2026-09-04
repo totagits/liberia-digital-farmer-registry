@@ -6,6 +6,8 @@ import {
   getStoredFarmers,
   saveStoredFarmer,
   getStoredParties,
+  saveStoredParty,
+  updateStoredParty,
   getStoredParcels,
   saveStoredParcel,
   updateStoredParcel,
@@ -130,15 +132,56 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
   }
 
   // 3. Parties API: /api/parties
+  if (pathname === "/api/parties/records" && method === "POST" && init?.body) {
+    try {
+      const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+      const parties = getStoredParties();
+      const p = parties.find((x) => x.partyId === body.partyId);
+      if (p) {
+        if (body.recordType === "relationship") {
+          p.relationships = p.relationships || [];
+          p.relationships.push({ id: Date.now(), ...body, status: "Active" });
+        } else if (body.recordType === "resource") {
+          p.resources = p.resources || [];
+          p.resources.push({ id: Date.now(), ...body, status: "Active" });
+        } else if (body.recordType === "activity") {
+          p.activities = p.activities || [];
+          p.activities.push({ id: Date.now(), ...body, status: "Recorded" });
+        } else if (body.recordType === "document") {
+          p.documents = p.documents || [];
+          p.documents.push({ id: Date.now(), ...body, verificationStatus: "Pending" });
+        }
+        updateStoredParty(p);
+      }
+      return jsonResponse({ success: true }, 201);
+    } catch {
+      return jsonResponse({ success: true }, 201);
+    }
+  }
+
   if (pathname === "/api/parties" || pathname.startsWith("/api/parties/")) {
     if (method === "GET") {
       return jsonResponse(getStoredParties());
     }
-    if (method === "POST") {
-      return jsonResponse({ partyId: `ORG-COOP-${Date.now().toString().slice(-5)}`, status: "Active" }, 201);
+    if (method === "POST" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        const newParty = saveStoredParty(body);
+        return jsonResponse(newParty, 201);
+      } catch (err) {
+        return jsonResponse({ error: "Invalid party registration data" }, 400);
+      }
     }
-    if (method === "PATCH") {
-      return jsonResponse({ success: true });
+    if (method === "PATCH" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        if (body.partyId) {
+          updateStoredParty(body);
+        }
+        return jsonResponse({ success: true });
+      } catch {
+        return jsonResponse({ success: true });
+      }
     }
   }
 

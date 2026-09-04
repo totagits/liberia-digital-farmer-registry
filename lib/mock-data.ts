@@ -53,6 +53,14 @@ export interface MockParty {
   primaryCommodity: string;
   verificationStatus: string;
   status: string;
+  taxId?: string;
+  establishedDate?: string;
+  metadata?: Record<string, any>;
+  relationships?: any[];
+  resources?: any[];
+  activities?: any[];
+  documents?: any[];
+  audits?: any[];
   createdAt: string;
 }
 
@@ -660,6 +668,98 @@ export function getStoredParties(): MockParty[] {
   } catch {
     return INITIAL_PARTIES;
   }
+}
+
+export function saveStoredParty(party: Partial<MockParty>): MockParty {
+  const existing = getStoredParties();
+  const id = existing.length > 0 ? Math.max(...existing.map((p) => p.id || 0)) + 1 : 1;
+  const rawType = (party.partyType || "").toLowerCase();
+  const typePrefix = rawType.includes("coop")
+    ? "COOP"
+    : rawType.includes("agri")
+    ? "AGR"
+    : rawType.includes("producer")
+    ? "PROD"
+    : rawType.includes("group")
+    ? "GRP"
+    : rawType.includes("service")
+    ? "SRV"
+    : rawType.includes("suppl")
+    ? "SUP"
+    : rawType.includes("finan")
+    ? "FIN"
+    : "ORG";
+  const numStr = String(id).padStart(5, "0");
+  const partyId = party.partyId || `ORG-${typePrefix}-${numStr}`;
+  const newParty: MockParty = {
+    id,
+    partyId,
+    partyType: party.partyType || "Cooperative",
+    legalName: party.legalName || "Registered Organization",
+    acronym: party.acronym || "",
+    legalForm: party.legalForm || "Registered Cooperative Society",
+    registrationNumber: party.registrationNumber || "",
+    representativeName: party.representativeName || "Authorized Representative",
+    phone: party.phone || "",
+    email: party.email || "",
+    county: party.county || "Montserrado",
+    district: party.district || "",
+    community: party.community || "",
+    memberCount: Number(party.memberCount) || 0,
+    womenMembers: Number(party.womenMembers) || 0,
+    youthMembers: Number(party.youthMembers) || 0,
+    primaryCommodity: party.primaryCommodity || "Multi-commodity",
+    verificationStatus: party.verificationStatus || "Pending verification",
+    status: party.status || "Active",
+    taxId: party.taxId || "",
+    establishedDate: party.establishedDate || "",
+    metadata: party.metadata || {},
+    relationships: Array.isArray(party.relationships) ? party.relationships : [],
+    resources: Array.isArray(party.resources) ? party.resources : [],
+    activities: Array.isArray(party.activities) ? party.activities : [],
+    documents: Array.isArray(party.documents) ? party.documents : [],
+    audits: [
+      {
+        id: 1,
+        actor: "registry.officer@moa.gov.lr",
+        action: "Organization registered",
+        details: `Initial enrollment into National Party Registry. Classification: ${party.partyType || "Cooperative"}`,
+        createdAt: new Date().toISOString().replace("T", " ").slice(0, 19),
+      },
+    ],
+    createdAt: new Date().toISOString().slice(0, 10),
+  };
+  const updated = [newParty, ...existing];
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARTIES, JSON.stringify(updated));
+      addStoredAudit({
+        actor: "registry.officer@moa.gov.lr",
+        action: "Organization registered",
+        entity: newParty.partyId,
+        details: `${newParty.legalName} (${newParty.partyType}), ${newParty.county}; Members: ${newParty.memberCount}`,
+      });
+    } catch {}
+  }
+  return newParty;
+}
+
+export function updateStoredParty(update: Partial<MockParty> & { partyId: string }): MockParty | null {
+  const existing = getStoredParties();
+  let updatedParty: MockParty | null = null;
+  const updated = existing.map((p) => {
+    if (p.partyId === update.partyId) {
+      updatedParty = { ...p, ...update };
+      return updatedParty;
+    }
+    return p;
+  });
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARTIES, JSON.stringify(updated));
+    } catch {}
+  }
+  return updatedParty;
 }
 
 export function getStoredParcels(): MockParcel[] {

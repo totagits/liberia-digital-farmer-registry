@@ -511,3 +511,104 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   .signin-footer { flex-direction: column; align-items: flex-start; }
 }
 
+/* Organization Registration Wizard Enhancements */
+.org-wizard-overlay {
+  z-index: 10000 !important;
+}
+.org-wizard > header {
+  background: linear-gradient(130deg, #0d3423 0%, #155535 55%, #1d7348 100%) !important;
+  border-bottom-color: #34d399 !important;
+}
+.org-wizard > header nav {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 8px;
+}
+.org-type-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.org-type-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  color: #1e293b;
+}
+.org-type-tile:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+.org-type-tile.selected {
+  border-color: #059669;
+  background: #ecfdf5;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.18);
+}
+.org-type-tile i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #064e3b;
+  color: #a7f3d0;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.org-type-tile.selected i {
+  background: #047857;
+  color: #ffffff;
+}
+.org-type-tile b {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  display: block;
+}
+.org-type-tile small {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+  display: block;
+}
+.org-type-tile .check-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #059669;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.compliance-highlight-panel {
+  background: #f8fafc;
+  border-left: 4px solid #059669 !important;
+}
+@media (max-width: 800px) {
+  .org-wizard > header nav {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .org-type-selection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
