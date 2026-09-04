@@ -611,4 +611,182 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   }
 }
 
+/* ==========================================================================
+   Comprehensive Modal, Form & Wizard Scrollbar and Viewport Accessibility
+   Ensures sticky headers, scrollable form body, and always-visible pinned footers
+   ========================================================================== */
+
+/* 1. Modal Overlay Containers */
+.modal-wrap,
+.modal-wrap.enrollment-overlay,
+.modal-wrap.org-wizard-overlay,
+.modal-wrap.registration-router-overlay {
+  position: fixed !important;
+  z-index: 10000 !important;
+  inset: 0 !important;
+  background: rgba(9, 30, 20, 0.72) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px 16px !important;
+  box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* 2. All Enrollment & Organization Registration Wizards */
+.enrollment-wizard,
+.org-wizard {
+  width: min(1280px, 97vw) !important;
+  max-height: calc(100vh - 48px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 auto !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  box-shadow: 0 30px 90px rgba(5, 20, 12, 0.6) !important;
+  position: relative !important;
+}
+
+.enrollment-wizard > header,
+.org-wizard > header {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+}
+
+.enrollment-wizard > main,
+.org-wizard > main {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 26px 32px 36px !important;
+  box-sizing: border-box !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #21a66d #f1f5f9 !important;
+}
+
+/* Visible modern scrollbar for wizard forms */
+.enrollment-wizard > main::-webkit-scrollbar,
+.org-wizard > main::-webkit-scrollbar {
+  width: 10px !important;
+  display: block !important;
+}
+.enrollment-wizard > main::-webkit-scrollbar-track,
+.org-wizard > main::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 6px !important;
+}
+.enrollment-wizard > main::-webkit-scrollbar-thumb,
+.org-wizard > main::-webkit-scrollbar-thumb {
+  background: #21a66d !important;
+  border-radius: 6px !important;
+  border: 2px solid #f1f5f9 !important;
+}
+.enrollment-wizard > main::-webkit-scrollbar-thumb:hover,
+.org-wizard > main::-webkit-scrollbar-thumb:hover {
+  background: #17865b !important;
+}
+
+/* Footer: Sticky, always pinned at the bottom, so Next / Submit buttons are ALWAYS visible! */
+.enrollment-wizard > footer,
+.org-wizard > footer {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 30 !important;
+  background: #ffffff !important;
+  border-top: 2px solid #e2e8f0 !important;
+  padding: 16px 30px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.enrollment-wizard > footer button,
+.org-wizard > footer button {
+  cursor: pointer !important;
+}
+
+/* 3. Compact and Standard Registration Modals */
+.register-modal,
+.party-wizard,
+.compact-modal {
+  max-height: calc(100vh - 48px) !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #21a66d #f1f5f9 !important;
+  box-sizing: border-box !important;
+}
+
+.register-modal::-webkit-scrollbar,
+.party-wizard::-webkit-scrollbar,
+.compact-modal::-webkit-scrollbar {
+  width: 8px !important;
+  display: block !important;
+}
+.register-modal::-webkit-scrollbar-track,
+.party-wizard::-webkit-scrollbar-track,
+.compact-modal::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 4px !important;
+}
+.register-modal::-webkit-scrollbar-thumb,
+.party-wizard::-webkit-scrollbar-thumb,
+.compact-modal::-webkit-scrollbar-thumb {
+  background: #21a66d !important;
+  border-radius: 4px !important;
+}
+
+/* 4. Registration Router Modal */
+.registration-router {
+  max-height: calc(100vh - 48px) !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #21a66d #f1f5f9 !important;
+}
+.registration-router::-webkit-scrollbar {
+  width: 8px !important;
+  display: block !important;
+}
+.registration-router::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+}
+.registration-router::-webkit-scrollbar-thumb {
+  background: #21a66d !important;
+  border-radius: 4px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .modal-wrap,
+  .modal-wrap.enrollment-overlay,
+  .modal-wrap.org-wizard-overlay,
+  .modal-wrap.registration-router-overlay {
+    padding: 10px 6px !important;
+  }
+  .enrollment-wizard,
+  .org-wizard {
+    width: 100vw !important;
+    max-height: calc(100vh - 20px) !important;
+    border-radius: 14px !important;
+  }
+  .enrollment-wizard > main,
+  .org-wizard > main {
+    padding: 16px 14px !important;
+  }
+  .enrollment-wizard > footer,
+  .org-wizard > footer {
+    padding: 12px 14px !important;
+  }
+}
+
+
 
