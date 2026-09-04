@@ -190,46 +190,54 @@
 
 .liberia-vector-svg {
   width: 100%;
-  height: 270px;
-  border-radius: 12px;
-  background: radial-gradient(circle at 40% 40%, #f7fbf4, #e9f0e4);
-  border: 1px solid #e1ebdf;
+  height: 390px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 40% 40%, #ffffff, #f1f6ed);
+  border: 1px solid #dce6da;
   cursor: pointer;
   overflow: visible;
+  filter: drop-shadow(0 8px 24px rgba(22, 60, 36, 0.08));
 }
 
 .county-polygon {
-  fill: #c3d9b4;
   stroke: #ffffff;
-  stroke-width: 1.5;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .county-polygon:hover {
-  fill: #85c285;
-  filter: drop-shadow(0 4px 10px rgba(22, 101, 52, 0.35));
-  stroke: #166534;
-  stroke-width: 2.5;
+  filter: brightness(1.15) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+  stroke: #ffffff;
+  stroke-width: 2.8;
+  opacity: 1 !important;
 }
 
 .county-polygon.selected {
-  fill: #15803d;
+  filter: brightness(1.2) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
   stroke: #ffffff;
-  stroke-width: 3;
-  filter: drop-shadow(0 6px 14px rgba(21, 128, 61, 0.45));
+  stroke-width: 3.2;
+  opacity: 1 !important;
 }
 
 .county-vector-label {
-  font-size: 9px;
-  font-weight: 700;
-  fill: #1e3a29;
+  font-size: 11px;
+  font-weight: 800;
+  fill: #0f172a;
   text-anchor: middle;
   pointer-events: none;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3px;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
 }
 
 .county-polygon.selected + .county-vector-label {
-  fill: #ffffff;
+  fill: #14532d;
+  font-size: 12px;
 }
 
 /* Dynamic County Hover Stats Tooltip */

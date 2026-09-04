@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { MapContainer, Marker, Polygon, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polygon, Popup, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import Link from "next/link";
 import {
@@ -23,35 +23,17 @@ import {
   RotateCcw,
   CheckCircle2,
   Lock,
+  Eye,
+  Map as MapIcon,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { COUNTIES_GEO, CountyInfo } from "./liberia-counties-data";
 
 // WGS 84 Bounds for Liberia
 const LIBERIA_BOUNDS: L.LatLngBoundsExpression = [
   [4.15, -11.65],
   [8.75, -7.25],
 ];
-
-// County Information & Demarcation Metadata (All 15 Counties)
-export interface CountyInfo {
-  name: string;
-  code: string;
-  capital: string;
-  center: [number, number];
-  zoom: number;
-  farmers: number;
-  hectares: number;
-  parcelsMapped: number;
-  commodities: string[];
-  cooperatives: number;
-  roadAccessPct: number;
-  avgMarketDistanceKm: number;
-  avgTravelTimeMins: number;
-  mechanizationPct: number;
-  irrigationPct: number;
-  svgPath: string;
-  labelCoords: [number, number];
-}
 
 export interface FarmCadastre {
   id: string;
@@ -84,294 +66,8 @@ export interface FarmCadastre {
   vertices: [number, number][];
 }
 
-// 15 Demarcated Liberian Counties with SVG Paths for the Vector Choropleth Map (viewBox: 0 0 800 650)
-const COUNTIES: CountyInfo[] = [
-  {
-    name: "Montserrado",
-    code: "MO",
-    capital: "Bensonville / Monrovia",
-    center: [6.45, -10.65],
-    zoom: 11,
-    farmers: 14280,
-    hectares: 18450,
-    parcelsMapped: 2840,
-    commodities: ["Vegetables", "Cassava", "Poultry", "Swamp Rice"],
-    cooperatives: 284,
-    roadAccessPct: 92,
-    avgMarketDistanceKm: 4.5,
-    avgTravelTimeMins: 25,
-    mechanizationPct: 38,
-    irrigationPct: 24,
-    labelCoords: [210, 395],
-    svgPath: "M 180 370 L 230 360 L 245 400 L 220 425 L 175 405 Z",
-  },
-  {
-    name: "Nimba",
-    code: "NI",
-    capital: "Sanniquellie",
-    center: [7.25, -8.72],
-    zoom: 9,
-    farmers: 24850,
-    hectares: 48200,
-    parcelsMapped: 4910,
-    commodities: ["Cocoa", "Upland Rice", "Coffee", "Plantains"],
-    cooperatives: 612,
-    roadAccessPct: 74,
-    avgMarketDistanceKm: 12.8,
-    avgTravelTimeMins: 55,
-    mechanizationPct: 42,
-    irrigationPct: 31,
-    labelCoords: [480, 230],
-    svgPath: "M 410 160 L 510 140 L 560 210 L 530 330 L 440 310 L 400 240 Z",
-  },
-  {
-    name: "Bong",
-    code: "BG",
-    capital: "Gbarnga",
-    center: [7.00, -9.60],
-    zoom: 9,
-    farmers: 21400,
-    hectares: 39500,
-    parcelsMapped: 3880,
-    commodities: ["Rice (Kpatawee)", "Cassava", "Vegetables", "Cocoa"],
-    cooperatives: 540,
-    roadAccessPct: 81,
-    avgMarketDistanceKm: 8.2,
-    avgTravelTimeMins: 38,
-    mechanizationPct: 46,
-    irrigationPct: 39,
-    labelCoords: [330, 260],
-    svgPath: "M 270 230 L 370 210 L 410 240 L 380 320 L 290 330 L 260 280 Z",
-  },
-  {
-    name: "Lofa",
-    code: "LF",
-    capital: "Voinjama",
-    center: [8.25, -9.75],
-    zoom: 9,
-    farmers: 22600,
-    hectares: 45100,
-    parcelsMapped: 4120,
-    commodities: ["Lowland Rice", "Cocoa", "Coffee", "Palm Oil"],
-    cooperatives: 590,
-    roadAccessPct: 68,
-    avgMarketDistanceKm: 14.5,
-    avgTravelTimeMins: 65,
-    mechanizationPct: 35,
-    irrigationPct: 28,
-    labelCoords: [290, 110],
-    svgPath: "M 220 70 L 330 30 L 380 90 L 370 210 L 270 230 L 220 160 Z",
-  },
-  {
-    name: "Margibi",
-    code: "MG",
-    capital: "Kakata",
-    center: [6.52, -10.30],
-    zoom: 10,
-    farmers: 12150,
-    hectares: 19800,
-    parcelsMapped: 2180,
-    commodities: ["Rubber", "Cassava", "Vegetables", "Poultry"],
-    cooperatives: 310,
-    roadAccessPct: 88,
-    avgMarketDistanceKm: 6.2,
-    avgTravelTimeMins: 30,
-    mechanizationPct: 39,
-    irrigationPct: 22,
-    labelCoords: [265, 370],
-    svgPath: "M 230 360 L 290 330 L 305 385 L 245 400 Z",
-  },
-  {
-    name: "Grand Bassa",
-    code: "GB",
-    capital: "Buchanan",
-    center: [5.95, -10.05],
-    zoom: 9,
-    farmers: 11800,
-    hectares: 18700,
-    parcelsMapped: 2050,
-    commodities: ["Cassava", "Oil Palm", "Rice", "Fisheries"],
-    cooperatives: 275,
-    roadAccessPct: 76,
-    avgMarketDistanceKm: 9.8,
-    avgTravelTimeMins: 45,
-    mechanizationPct: 29,
-    irrigationPct: 18,
-    labelCoords: [310, 425],
-    svgPath: "M 245 400 L 305 385 L 380 410 L 340 480 L 260 450 Z",
-  },
-  {
-    name: "Bomi",
-    code: "BM",
-    capital: "Tubmanburg",
-    center: [6.76, -10.85],
-    zoom: 10,
-    farmers: 7420,
-    hectares: 11200,
-    parcelsMapped: 1450,
-    commodities: ["Cassava", "Rubber", "Vegetables", "Plantains"],
-    cooperatives: 195,
-    roadAccessPct: 79,
-    avgMarketDistanceKm: 7.4,
-    avgTravelTimeMins: 35,
-    mechanizationPct: 24,
-    irrigationPct: 19,
-    labelCoords: [165, 320],
-    svgPath: "M 140 290 L 195 280 L 220 340 L 175 370 L 130 330 Z",
-  },
-  {
-    name: "Grand Cape Mount",
-    code: "CM",
-    capital: "Robertsport",
-    center: [6.95, -11.20],
-    zoom: 10,
-    farmers: 6850,
-    hectares: 10400,
-    parcelsMapped: 1290,
-    commodities: ["Cassava", "Oil Palm", "Rice", "Fish Products"],
-    cooperatives: 180,
-    roadAccessPct: 71,
-    avgMarketDistanceKm: 11.2,
-    avgTravelTimeMins: 50,
-    mechanizationPct: 22,
-    irrigationPct: 16,
-    labelCoords: [95, 275],
-    svgPath: "M 60 250 L 140 220 L 140 290 L 115 340 L 50 310 Z",
-  },
-  {
-    name: "Gbarpolu",
-    code: "GP",
-    capital: "Bopolu",
-    center: [7.50, -10.10],
-    zoom: 9,
-    farmers: 5920,
-    hectares: 8900,
-    parcelsMapped: 1050,
-    commodities: ["Cocoa", "Plantain", "Rice", "Cassava"],
-    cooperatives: 145,
-    roadAccessPct: 58,
-    avgMarketDistanceKm: 16.5,
-    avgTravelTimeMins: 75,
-    mechanizationPct: 18,
-    irrigationPct: 14,
-    labelCoords: [195, 220],
-    svgPath: "M 140 220 L 220 160 L 270 230 L 210 280 L 140 290 Z",
-  },
-  {
-    name: "Grand Gedeh",
-    code: "GG",
-    capital: "Zwedru",
-    center: [5.92, -8.22],
-    zoom: 9,
-    farmers: 7300,
-    hectares: 12600,
-    parcelsMapped: 1420,
-    commodities: ["Cocoa", "Rice", "Plantain", "Oil Palm"],
-    cooperatives: 210,
-    roadAccessPct: 63,
-    avgMarketDistanceKm: 15.0,
-    avgTravelTimeMins: 70,
-    mechanizationPct: 21,
-    irrigationPct: 17,
-    labelCoords: [540, 395],
-    svgPath: "M 480 320 L 560 310 L 610 380 L 540 450 L 470 410 Z",
-  },
-  {
-    name: "Sinoe",
-    code: "SI",
-    capital: "Greenville",
-    center: [5.35, -8.85],
-    zoom: 9,
-    farmers: 6400,
-    hectares: 11100,
-    parcelsMapped: 1180,
-    commodities: ["Oil Palm", "Cassava", "Rice", "Rubber"],
-    cooperatives: 170,
-    roadAccessPct: 59,
-    avgMarketDistanceKm: 17.2,
-    avgTravelTimeMins: 80,
-    mechanizationPct: 26,
-    irrigationPct: 15,
-    labelCoords: [430, 485],
-    svgPath: "M 380 410 L 470 410 L 490 510 L 410 540 L 355 490 Z",
-  },
-  {
-    name: "River Cess",
-    code: "RC",
-    capital: "Cestos City",
-    center: [5.75, -9.45],
-    zoom: 9,
-    farmers: 4750,
-    hectares: 7800,
-    parcelsMapped: 980,
-    commodities: ["Cassava", "Rice", "Plantains", "Fish"],
-    cooperatives: 125,
-    roadAccessPct: 54,
-    avgMarketDistanceKm: 18.0,
-    avgTravelTimeMins: 85,
-    mechanizationPct: 16,
-    irrigationPct: 12,
-    labelCoords: [350, 445],
-    svgPath: "M 340 480 L 380 410 L 355 490 L 320 500 Z",
-  },
-  {
-    name: "Maryland",
-    code: "MY",
-    capital: "Harper",
-    center: [4.55, -7.75],
-    zoom: 10,
-    farmers: 7150,
-    hectares: 13200,
-    parcelsMapped: 1380,
-    commodities: ["Oil Palm", "Rubber", "Rice", "Cassava"],
-    cooperatives: 220,
-    roadAccessPct: 72,
-    avgMarketDistanceKm: 8.5,
-    avgTravelTimeMins: 40,
-    mechanizationPct: 34,
-    irrigationPct: 25,
-    labelCoords: [640, 560],
-    svgPath: "M 580 520 L 650 510 L 680 580 L 610 610 Z",
-  },
-  {
-    name: "Grand Kru",
-    code: "GK",
-    capital: "Barclayville",
-    center: [4.75, -8.25],
-    zoom: 10,
-    farmers: 4320,
-    hectares: 6950,
-    parcelsMapped: 890,
-    commodities: ["Cassava", "Rice", "Oil Palm", "Fish"],
-    cooperatives: 115,
-    roadAccessPct: 52,
-    avgMarketDistanceKm: 19.5,
-    avgTravelTimeMins: 90,
-    mechanizationPct: 15,
-    irrigationPct: 11,
-    labelCoords: [525, 555],
-    svgPath: "M 490 510 L 560 490 L 580 560 L 500 590 Z",
-  },
-  {
-    name: "River Gee",
-    code: "RG",
-    capital: "Fish Town",
-    center: [5.25, -7.70],
-    zoom: 10,
-    farmers: 4110,
-    hectares: 6650,
-    parcelsMapped: 850,
-    commodities: ["Rice", "Cassava", "Cocoa", "Oil Palm"],
-    cooperatives: 110,
-    roadAccessPct: 56,
-    avgMarketDistanceKm: 16.8,
-    avgTravelTimeMins: 75,
-    mechanizationPct: 17,
-    irrigationPct: 13,
-    labelCoords: [595, 470],
-    svgPath: "M 540 450 L 630 430 L 650 510 L 560 490 Z",
-  },
-];
+// 15 Demarcated Liberian Counties from Official Dataset
+const COUNTIES: CountyInfo[] = COUNTIES_GEO;
 
 // Rich Georeferenced Farm Cadastral Parcels
 const SEEDED_PARCELS: FarmCadastre[] = [
@@ -802,7 +498,7 @@ function createCommodityIcon(commodity: string) {
 }
 
 export default function InteractiveMapClient() {
-  const [selectedCounty, setSelectedCounty] = useState<CountyInfo>(COUNTIES[0]);
+  const [selectedCounty, setSelectedCounty] = useState<CountyInfo>(COUNTIES.find(c => c.name === "Montserrado") || COUNTIES[0]);
   const [hoveredCounty, setHoveredCounty] = useState<CountyInfo | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<FarmCadastre | null>(SEEDED_PARCELS[0]);
@@ -810,6 +506,16 @@ export default function InteractiveMapClient() {
   const [selectedCommodity, setSelectedCommodity] = useState<string>("All");
   const [infrastructureFilter, setInfrastructureFilter] = useState<string>("All");
   const [isNationalView, setIsNationalView] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<"vector" | "raster">("vector");
+  const [geojsonData, setGeojsonData] = useState<any>(null);
+
+  // Load official GeoJSON for Leaflet boundary rendering
+  useEffect(() => {
+    fetch("/data/liberia-counties.geojson")
+      .then((r) => r.json())
+      .then((d) => setGeojsonData(d))
+      .catch(() => {});
+  }, []);
 
   // Filtered parcels based on county and filter pills
   const filteredParcels = useMemo(() => {
@@ -849,13 +555,12 @@ export default function InteractiveMapClient() {
         <div className="gis-hero-header">
           <div className="gis-hero-title">
             <div className="gis-hero-badge">
-              <span /> Tier 1 Public Cadastre · Open Spatial Infrastructure
+              <span /> Tier 1 Public Cadastre · Official UNMIL/OCHA Demarcated Boundaries
             </div>
             <h1>National Agro-Geospatial Observatory & Interactive Farmer Cadastre</h1>
             <p>
-              Explore Liberia's 15 demarcated counties, georeferenced farm parcel boundaries,
-              agro-ecological soil regimes, infrastructure connectivity (roads, markets, storage) and
-              mechanization indices in real-time.
+              Explore Liberia's 15 demarcated counties, authentic county administrative borders,
+              georeferenced farm parcel boundaries, agro-ecological regimes, and rural connectivity in real-time.
             </p>
           </div>
           <div className="gis-auth-prompt">
@@ -875,7 +580,7 @@ export default function InteractiveMapClient() {
           <div className="gis-kpi-card">
             <span>Demarcated Counties</span>
             <strong>15 of 15</strong>
-            <small>100% Territorial Coverage</small>
+            <small>Official National Cadastre</small>
           </div>
           <div className="gis-kpi-card">
             <span>Registered Farm Holdings</span>
@@ -904,7 +609,7 @@ export default function InteractiveMapClient() {
       <main className="gis-explorer-workspace">
         {/* Left Sidebar: Demarcated Vector Map & County Analytics */}
         <aside className="county-sidebar">
-          {/* SVG Vector Map with Instant Hover Statistics */}
+          {/* Authentic Map of Liberia Box */}
           <div
             className="county-vector-box"
             onMouseMove={(e) => {
@@ -914,8 +619,42 @@ export default function InteractiveMapClient() {
             onMouseLeave={() => setHoveredCounty(null)}
           >
             <header>
-              <h2>Liberia Demarcated County Map</h2>
-              <span>Hover to inspect · Click to focus</span>
+              <div>
+                <h2>Republic of Liberia</h2>
+                <small style={{ fontSize: "10px", color: "#64748b" }}>15 Official Demarcated Counties</small>
+              </div>
+              <div style={{ display: "flex", gap: "5px" }}>
+                <button
+                  onClick={() => setViewMode("vector")}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: viewMode === "vector" ? "#166534" : "#ffffff",
+                    color: viewMode === "vector" ? "#ffffff" : "#334155",
+                    borderRadius: "6px",
+                    padding: "3px 8px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Vector
+                </button>
+                <button
+                  onClick={() => setViewMode("carto")}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: viewMode === "carto" ? "#166534" : "#ffffff",
+                    color: viewMode === "carto" ? "#ffffff" : "#334155",
+                    borderRadius: "6px",
+                    padding: "3px 8px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cartography
+                </button>
+              </div>
             </header>
 
             {/* Hover Floating Card */}
@@ -928,7 +667,7 @@ export default function InteractiveMapClient() {
                 }}
               >
                 <h4>{hoveredCounty.name} County</h4>
-                <p>Capital: {hoveredCounty.capital}</p>
+                <p>Administrative Seat: {hoveredCounty.capital}</p>
                 <div className="county-hover-stats">
                   <div>
                     <span>Registered Farmers</span>
@@ -950,33 +689,49 @@ export default function InteractiveMapClient() {
               </div>
             )}
 
-            {/* Interactive Vector SVG */}
-            <svg
-              className="liberia-vector-svg"
-              viewBox="0 0 720 620"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {COUNTIES.map((county) => {
-                const isSelected = !isNationalView && selectedCounty.code === county.code;
-                return (
-                  <g key={county.code}>
-                    <path
-                      d={county.svgPath}
-                      className={`county-polygon ${isSelected ? "selected" : ""}`}
-                      onMouseEnter={() => setHoveredCounty(county)}
-                      onClick={() => handleSelectCounty(county)}
-                    />
-                    <text
-                      x={county.labelCoords[0]}
-                      y={county.labelCoords[1]}
-                      className="county-vector-label"
-                    >
-                      {county.code}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
+            {/* View Mode: Interactive Authentic Vector Map */}
+            {viewMode === "vector" ? (
+              <svg
+                className="liberia-vector-svg"
+                viewBox="0 0 760 720"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {COUNTIES.map((county) => {
+                  const isSelected = !isNationalView && selectedCounty.code === county.code;
+                  return (
+                    <g key={county.code}>
+                      <path
+                        d={county.svgPath}
+                        fill={county.color}
+                        fillOpacity={isSelected ? 1 : 0.88}
+                        className={`county-polygon ${isSelected ? "selected" : ""}`}
+                        onMouseEnter={() => setHoveredCounty(county)}
+                        onClick={() => handleSelectCounty(county)}
+                      />
+                      <text
+                        x={county.labelCoords[0]}
+                        y={county.labelCoords[1]}
+                        className="county-vector-label"
+                      >
+                        {county.name}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            ) : (
+              /* View Mode: Official Cartographic Map Image */
+              <div style={{ textAlign: "center", position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid #dce6da" }}>
+                <img
+                  src="/assets/liberia-counties-map.png"
+                  alt="Official Demarcated Counties of Liberia"
+                  style={{ width: "100%", height: "390px", objectFit: "contain", background: "#f8faf6" }}
+                />
+                <div style={{ position: "absolute", bottom: "10px", left: "10px", right: "10px", background: "rgba(15, 23, 42, 0.85)", color: "white", padding: "6px 10px", borderRadius: "6px", fontSize: "10px" }}>
+                  Official Ministry of Agriculture & LISGIS 15-County Cartographic Base
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Active County Demarcation & Infrastructure Dossier */}
@@ -1042,6 +797,9 @@ export default function InteractiveMapClient() {
                   className={!isNationalView && selectedCounty.code === c.code ? "active" : ""}
                   onClick={() => handleSelectCounty(c)}
                   title={`${c.name} - ${c.farmers.toLocaleString()} farmers`}
+                  style={{
+                    borderLeft: `4px solid ${c.color}`,
+                  }}
                 >
                   {c.name}
                 </button>
@@ -1118,7 +876,7 @@ export default function InteractiveMapClient() {
                 <ShieldCheck style={{ width: 14, height: 14 }} /> WGS 84 Cadastral Mesh
               </b>
               <span>
-                {filteredParcels.length} georeferenced parcels displayed · Click any farm to inspect dossier
+                {filteredParcels.length} georeferenced parcels displayed · Official boundaries active
               </span>
             </div>
 
@@ -1327,6 +1085,25 @@ export default function InteractiveMapClient() {
                     : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 }
               />
+
+              {/* Official County Boundary Layer on Leaflet */}
+              {geojsonData && (
+                <GeoJSON
+                  key={`geojson-${selectedCounty.code}-${isNationalView}`}
+                  data={geojsonData}
+                  style={(feature) => {
+                    const raw = feature?.properties?.shapeName;
+                    const fName = raw === "Rivercess" ? "River Cess" : raw;
+                    const isSelected = !isNationalView && fName === selectedCounty.name;
+                    return {
+                      color: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.45)",
+                      weight: isSelected ? 3 : 1.5,
+                      fillColor: isSelected ? selectedCounty.color : "transparent",
+                      fillOpacity: isSelected ? 0.18 : 0,
+                    };
+                  }}
+                />
+              )}
 
               {/* Farm Parcel Boundary Polygons */}
               {filteredParcels.map((farm) => {
