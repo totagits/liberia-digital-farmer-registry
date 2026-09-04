@@ -17,13 +17,17 @@ const features = [
     desc: "Register farmers, households, farms, parcels, cooperatives and agribusinesses once—then serve them across authorized programmes.",
     href: "/signin?redirect=/dashboard#farmers&domain=Farmer+Registry&role=Senior+enumerator&cat=field",
     clearance: "Field Registrar Clearance",
+    actionLabel: "Authenticate & Open →",
   },
   {
     num: "02",
     title: "Field-ready GIS",
-    desc: "Capture GPS points and parcel boundaries, calculate area, validate geometry and synchronize when connectivity returns.",
-    href: "/signin?redirect=/dashboard#parcels&domain=Farms+%26+GIS&role=GIS+officer&cat=field",
-    clearance: "Cadastral & GIS Clearance",
+    desc: "Explore Liberia's 15 demarcated counties, interactive vector boundaries, high-res satellite imagery, and georeferenced farm parcels.",
+    href: "/map",
+    clearance: "Public Interactive Map",
+    actionLabel: "Explore National GIS Map →",
+    secondaryHref: "/signin?redirect=/dashboard#parcels&domain=Farms+%26+GIS&role=GIS+officer&cat=field",
+    secondaryLabel: "Officer Login ↗",
   },
   {
     num: "03",
@@ -31,6 +35,7 @@ const features = [
     desc: "Secure open APIs connect agriculture, social protection, identity, statistics, land, weather and payment ecosystems.",
     href: "/signin?redirect=/dashboard#interoperability&domain=Institutional+Governance&role=System+administrator&cat=admin",
     clearance: "Systems & Interop Clearance",
+    actionLabel: "Authenticate & Open →",
   },
   {
     num: "04",
@@ -38,6 +43,7 @@ const features = [
     desc: "Verification workflows, data-quality controls, audit history and gender-, youth- and geography-disaggregated analytics.",
     href: "/signin?redirect=/dashboard#audit-evidence&domain=Audit+%26+Security&role=Security+auditor&cat=oversight",
     clearance: "Auditor & Oversight Clearance",
+    actionLabel: "Authenticate & Open →",
   },
 ];
 
@@ -45,12 +51,12 @@ export default function Home() {
   const [slide, setSlide] = useState(0);
   const [query, setQuery] = useState("");
   useEffect(() => { const id = window.setInterval(() => setSlide((v) => (v + 1) % slides.length), 5200); return () => clearInterval(id); }, []);
-  const results = useMemo(() => query.trim() ? ["Farmer registration", "Farm parcel mapping", "Programmes & services", "Data governance"].filter(x => x.toLowerCase().includes(query.toLowerCase())) : [], [query]);
+  const results = useMemo(() => query.trim() ? ["Farmer registration", "Farm parcel mapping", "Interactive GIS Map", "Programmes & services", "Data governance"].filter(x => x.toLowerCase().includes(query.toLowerCase())) : [], [query]);
   return (
     <main id="home">
       <header className="site-header glass">
         <div className="brand brand-fao"><img src="/assets/fao-logo.png" alt="FAO"/><div><strong>Digital Farmer Registry</strong><span>Republic of Liberia</span></div></div>
-        <nav aria-label="Primary navigation"><Link href="/">Home</Link><Link href="/platform">Platform</Link><Link href="/services">Services</Link><Link href="/governance">Governance</Link><Link href="/about">About</Link></nav>
+        <nav aria-label="Primary navigation"><Link href="/">Home</Link><Link href="/map">Interactive Map</Link><Link href="/platform">Platform</Link><Link href="/services">Services</Link><Link href="/governance">Governance</Link><Link href="/about">About</Link></nav>
         <div className="header-actions"><div className="brand moa"><div><span>Led by</span><strong>Ministry of Agriculture</strong></div><img src="/assets/moa-logo.png" alt="Ministry of Agriculture Liberia"/></div><Link className="signin" href="/signin">Sign in <span>↗</span></Link></div>
         <div className="site-search"><span>⌕</span><input aria-label="Search the platform" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search the registry, services, reports and help…"/><kbd>⌘ K</kbd>{results.length>0&&<div className="search-results">{results.map(r=><a key={r} href="#platform">{r}<span>→</span></a>)}</div>}</div>
       </header>
@@ -73,7 +79,7 @@ export default function Home() {
       </section>
 
       <section id="governance" className="trust-strip"><span>Government-led</span><b>•</b><span>Secure by design</span><b>•</b><span>Register once, use many times</span><b>•</b><span>Built for low connectivity</span></section>
-      <section id="platform" className="feature-section"><div className="section-heading"><div><span>National capability</span><h2>One platform. A complete view of rural livelihoods.</h2></div><p>From first registration to verified service delivery, every workflow is connected, governed and measurable.</p></div><div className="feature-grid">{features.map(f=><article className="feature-card glass" key={f.num}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}><span>{f.num}</span><span style={{ fontSize: "0.68rem", padding: "2px 7px", borderRadius: "4px", background: "rgba(34, 197, 94, 0.12)", color: "#86efac", border: "1px solid rgba(34, 197, 94, 0.25)", letterSpacing: "0.02em" }}>🔒 {f.clearance}</span></div><h3>{f.title}</h3><p>{f.desc}</p><Link href={f.href}>Authenticate & Open →</Link></article>)}</div></section>
+      <section id="platform" className="feature-section"><div className="section-heading"><div><span>National capability</span><h2>One platform. A complete view of rural livelihoods.</h2></div><p>From first registration to verified service delivery, every workflow is connected, governed and measurable.</p></div><div className="feature-grid">{features.map(f=><article className="feature-card glass" key={f.num}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}><span>{f.num}</span><span style={{ fontSize: "0.68rem", padding: "2px 7px", borderRadius: "4px", background: f.num === "02" ? "rgba(56, 189, 248, 0.15)" : "rgba(34, 197, 94, 0.12)", color: f.num === "02" ? "#0284c7" : "#86efac", border: `1px solid ${f.num === "02" ? "rgba(56, 189, 248, 0.3)" : "rgba(34, 197, 94, 0.25)"}`, letterSpacing: "0.02em" }}>{f.num === "02" ? "🌐 " : "🔒 "}{f.clearance}</span></div><h3>{f.title}</h3><p>{f.desc}</p><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "12px", borderTop: "1px solid rgba(20,76,48,0.08)" }}><Link href={f.href} style={{ fontWeight: 700, color: f.num === "02" ? "#0369a1" : "#286038" }}>{f.actionLabel || "Authenticate & Open →"}</Link>{(f as any).secondaryHref && <Link href={(f as any).secondaryHref} style={{ fontSize: "0.72rem", color: "#64748b", textDecoration: "underline" }}>{(f as any).secondaryLabel}</Link>}</div></article>)}</div></section>
       <section id="services" className="impact-section"><div className="impact-image"><img src="/assets/enumerator.jpg" alt="Enumerator mapping a Liberian farm"/><div className="map-badge glass"><strong>6.3182° N</strong><span>Verified farm location</span></div></div><div className="impact-copy"><span>From field to policy</span><h2>Designed around the realities of Liberian agriculture.</h2><p>The platform continues working when the network does not. Enumerators capture complete household and parcel records in the field, supervisors verify quality, and leaders see evidence they can act on.</p><ul><li><b>Offline-first registration</b><span>Encrypted device drafts and resilient synchronization.</span></li><li><b>Parcel-level traceability</b><span>GPS points, polygons, area and production history.</span></li><li><b>Transparent service delivery</b><span>Programmes, inputs, vouchers and payment reconciliation.</span></li></ul></div></section>
       <footer id="about"><div><img src="/assets/liberia-seal.png" alt="Republic of Liberia"/><strong>Digital Farmer Registry</strong></div><p>A Government of Liberia platform led by the Ministry of Agriculture with technical support from FAO.</p><Link href="/signin?redirect=/dashboard">Enter the platform →</Link></footer>
     </main>

@@ -6,6 +6,7 @@
 @import "./benefits.css";
 @import "./benefits-actions.css";
 @import "./grievances.css";
+@import "./interactive-map.css";
 
 .type-specific-panel{margin-top:18px;padding:16px;border:1px solid #d5e4d1;border-radius:13px;background:linear-gradient(145deg,#f4f8ef,#fff)}.type-specific-panel h4{font:700 15px Georgia;margin:0 0 13px;color:#244f34}.secondary-party-action{background:#fff!important;color:#31553b!important;border:1px solid #cedbca!important}
 

@@ -43,6 +43,7 @@ async function exportSite() {
 
   const routes = [
     "/",
+    "/map",
     "/about",
     "/platform",
     "/services",

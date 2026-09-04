@@ -1,0 +1,898 @@
+/* Public Interactive Liberia GIS Map & County Farm Cadastre Explorer */
+.public-gis-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at 15% 5%, #fbfff7 0, #f4f5ed 38%, #edf1e8 100%);
+  color: #10251d;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+}
+
+.gis-hero-banner {
+  padding: 36px 4vw 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.gis-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.gis-hero-title h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(28px, 3.2vw, 42px);
+  color: #123f2a;
+  margin: 8px 0 6px;
+  line-height: 1.15;
+}
+
+.gis-hero-title p {
+  color: #55685d;
+  font-size: 14px;
+  max-width: 720px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.gis-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+}
+
+.gis-hero-badge span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.gis-auth-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff90;
+  border: 1px solid #d5dfd3;
+  padding: 8px 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(20, 50, 30, 0.05);
+}
+
+.gis-auth-prompt span {
+  font-size: 11px;
+  color: #52665a;
+}
+
+.gis-auth-prompt a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #17432e;
+  color: #fff;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.gis-auth-prompt a:hover {
+  background: #23583d;
+}
+
+/* KPI Scorecard Strip */
+.gis-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.gis-kpi-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 10px 30px rgba(18, 63, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.gis-kpi-card span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #647a6d;
+  font-weight: 700;
+}
+
+.gis-kpi-card strong {
+  font-family: Georgia, serif;
+  font-size: 26px;
+  color: #16402d;
+  margin: 6px 0 2px;
+}
+
+.gis-kpi-card small {
+  font-size: 10px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* Main Map Explorer Workspace */
+.gis-explorer-workspace {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 20px;
+  padding: 0 4vw 48px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Left Panel: County Demarcation & Overview */
+.county-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.county-vector-box {
+  background: #ffffff;
+  border: 1px solid #dce5da;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 12px 35px rgba(18, 50, 32, 0.06);
+  position: relative;
+}
+
+.county-vector-box header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.county-vector-box header h2 {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  color: #123f2a;
+  margin: 0;
+}
+
+.county-vector-box header span {
+  font-size: 10px;
+  color: #6b8273;
+  background: #eef4ec;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+.liberia-vector-svg {
+  width: 100%;
+  height: 270px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 40% 40%, #f7fbf4, #e9f0e4);
+  border: 1px solid #e1ebdf;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.county-polygon {
+  fill: #c3d9b4;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.county-polygon:hover {
+  fill: #85c285;
+  filter: drop-shadow(0 4px 10px rgba(22, 101, 52, 0.35));
+  stroke: #166534;
+  stroke-width: 2.5;
+}
+
+.county-polygon.selected {
+  fill: #15803d;
+  stroke: #ffffff;
+  stroke-width: 3;
+  filter: drop-shadow(0 6px 14px rgba(21, 128, 61, 0.45));
+}
+
+.county-vector-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #1e3a29;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.county-polygon.selected + .county-vector-label {
+  fill: #ffffff;
+}
+
+/* Dynamic County Hover Stats Tooltip */
+.county-hover-card {
+  position: absolute;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  padding: 14px 16px;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  width: 250px;
+  transform: translate(-50%, -105%);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.county-hover-card h4 {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  margin: 0 0 2px;
+  color: #86efac;
+}
+
+.county-hover-card p {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: 0 0 10px;
+}
+
+.county-hover-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 8px;
+}
+
+.county-hover-stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.county-hover-stats span {
+  font-size: 8px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.county-hover-stats b {
+  font-size: 12px;
+  color: #ffffff;
+}
+
+/* Active County Details Card */
+.active-county-card {
+  background: #ffffff;
+  border: 1px solid #dce5da;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 12px 35px rgba(18, 50, 32, 0.06);
+}
+
+.active-county-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #edf2ea;
+  padding-bottom: 10px;
+}
+
+.active-county-header h3 {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  color: #123f2a;
+  margin: 0 0 4px;
+}
+
+.active-county-header p {
+  font-size: 11px;
+  color: #63776b;
+  margin: 0;
+}
+
+.active-county-header button {
+  background: #eef4eb;
+  border: 1px solid #cbdcc8;
+  color: #1c4b31;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.active-county-header button:hover {
+  background: #dfece0;
+}
+
+.county-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.county-metric-pill {
+  background: #f7faf5;
+  border: 1px solid #e3ebe0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.county-metric-pill span {
+  font-size: 9px;
+  color: #6a7e71;
+  text-transform: uppercase;
+}
+
+.county-metric-pill b {
+  font-size: 15px;
+  color: #153c29;
+  font-family: Georgia, serif;
+  margin: 3px 0;
+}
+
+.county-metric-pill small {
+  font-size: 9px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.commodity-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.commodity-chip {
+  font-size: 10px;
+  font-weight: 600;
+  background: #eaf3e6;
+  color: #205c38;
+  border: 1px solid #cfe0cb;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* County Quick Switcher */
+.county-list-box {
+  background: #ffffff;
+  border: 1px solid #dce5da;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 12px 35px rgba(18, 50, 32, 0.06);
+}
+
+.county-list-box h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #63776b;
+  margin: 0 0 10px;
+}
+
+.county-quick-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.county-quick-buttons button {
+  border: 1px solid #dce6db;
+  background: #f8faf6;
+  color: #2a4736;
+  border-radius: 8px;
+  padding: 7px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.county-quick-buttons button:hover {
+  background: #eaf2e7;
+  border-color: #b5ceb0;
+}
+
+.county-quick-buttons button.active {
+  background: #17432e;
+  color: #ffffff;
+  border-color: #17432e;
+}
+
+/* Right Panel: Sophisticated Leaflet Map & Cadastre */
+.map-stage-container {
+  background: #ffffff;
+  border: 1px solid #dce5da;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 45px rgba(18, 50, 32, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Map Controls Header */
+.map-control-bar {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.map-control-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-control-title svg {
+  color: #38bdf8;
+  width: 18px;
+  height: 18px;
+}
+
+.map-control-title b {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.map-control-title span {
+  font-size: 9px;
+  color: #94a3b8;
+  background: #1e293b;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.map-layer-toggles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-btn-group {
+  display: flex;
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid #334155;
+}
+
+.layer-btn-group button {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.layer-btn-group button.active {
+  background: #059669;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-pills button {
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.filter-pills button.active {
+  background: #087a54;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+/* Map Interactive Shell */
+.leaflet-map-wrapper {
+  position: relative;
+  height: 640px;
+  width: 100%;
+}
+
+.leaflet-map-wrapper .leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #1c2738;
+}
+
+/* Map Overlay Badges */
+.map-status-overlay {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 500;
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-status-overlay b {
+  font-size: 11px;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-status-overlay span {
+  font-size: 9px;
+  color: #cbd5e1;
+}
+
+.map-legend-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 14px;
+  z-index: 500;
+  background: rgba(15, 23, 42, 0.9);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-legend-overlay b {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.map-legend-items {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: #e2e8f0;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+}
+
+.legend-dot.rice { background: #10b981; }
+.legend-dot.cocoa { background: #f59e0b; }
+.legend-dot.cassava { background: #3b82f6; }
+.legend-dot.oilpalm { background: #ec4899; }
+.legend-dot.vegetables { background: #8b5cf6; }
+
+/* Farm Drill-Down Drawer / Panel */
+.farm-dossier-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 380px;
+  background: #ffffff;
+  z-index: 600;
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.25);
+  border-left: 1px solid #dce5da;
+  display: flex;
+  flex-direction: column;
+  animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.dossier-header {
+  background: #123f2a;
+  color: #ffffff;
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dossier-header h3 {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  margin: 4px 0 2px;
+  color: #ffffff;
+}
+
+.dossier-header p {
+  font-size: 11px;
+  color: #a7f3d0;
+  margin: 0;
+}
+
+.dossier-header button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 0;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dossier-header button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.dossier-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dossier-card {
+  background: #f8faf6;
+  border: 1px solid #e2ebdff0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.dossier-card h4 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #526759;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dossier-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.dossier-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.dossier-field span {
+  font-size: 8px;
+  color: #74897c;
+  text-transform: uppercase;
+}
+
+.dossier-field b {
+  font-size: 12px;
+  color: #173827;
+  margin-top: 2px;
+}
+
+.dossier-field small {
+  font-size: 9px;
+  color: #2b6b41;
+}
+
+.dossier-scorecard {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  border-bottom: 1px dashed #e3ede1;
+  padding-bottom: 5px;
+}
+
+.score-row span {
+  color: #556c5e;
+}
+
+.score-row b {
+  color: #16402d;
+}
+
+.score-badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.score-badge.good { background: #dcfce7; color: #15803d; }
+.score-badge.med { background: #fef9c3; color: #854d0e; }
+.score-badge.low { background: #fee2e2; color: #b91c1c; }
+
+.dossier-privacy-tag {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.dossier-actions {
+  margin-top: auto;
+  padding: 16px 20px;
+  background: #f1f5ee;
+  border-top: 1px solid #dce5da;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dossier-actions a {
+  background: #17432e;
+  color: #ffffff;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.dossier-actions a:hover {
+  background: #225a3d;
+}
+
+.dossier-actions button {
+  background: #ffffff;
+  border: 1px solid #c9d8c6;
+  color: #31523f;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Custom Farm Marker Styles */
+.farm-gis-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farm-gis-marker .pin-body {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.farm-gis-marker:hover .pin-body {
+  transform: rotate(-45deg) scale(1.25);
+}
+
+.farm-gis-marker .pin-inner {
+  width: 7px;
+  height: 7px;
+  background: #ffffff;
+  border-radius: 50%;
+  transform: rotate(45deg);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1200px) {
+  .gis-explorer-workspace {
+    grid-template-columns: 1fr;
+  }
+  .county-sidebar {
+    order: 2;
+  }
+  .map-stage-container {
+    order: 1;
+  }
+  .gis-kpi-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .gis-kpi-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+  .leaflet-map-wrapper {
+    height: 480px;
+  }
+  .farm-dossier-drawer {
+    width: 100%;
+  }
+  .map-control-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
