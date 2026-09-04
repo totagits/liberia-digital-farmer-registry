@@ -7,6 +7,8 @@ import {
   saveStoredFarmer,
   getStoredParties,
   getStoredParcels,
+  saveStoredParcel,
+  updateStoredParcel,
   getStoredDeliveryItems,
   getStoredSOPs,
   getStoredAudits,
@@ -143,35 +145,72 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
   // 4. GIS Parcels API: /api/parcels
   if (pathname === "/api/parcels") {
     if (method === "GET") {
-      return jsonResponse(getStoredParcels());
+      const parcels = getStoredParcels().map((p) => {
+        let v = p.vertices;
+        if (typeof v === "string") {
+          try {
+            v = JSON.parse(v);
+          } catch {
+            v = [];
+          }
+        }
+        let q = (p as any).qualityFlags;
+        if (typeof q === "string") {
+          try {
+            q = JSON.parse(q);
+          } catch {
+            q = [];
+          }
+        }
+        return {
+          ...p,
+          vertices: Array.isArray(v) ? v : [],
+          qualityFlags: Array.isArray(q) ? q : [],
+        };
+      });
+      return jsonResponse(parcels);
     }
     if (method === "POST" && init?.body) {
       const body = JSON.parse(init.body as string);
       const newPcl: MockParcel = {
         id: Date.now(),
-        parcelId: `PCL-${String(body.county || "MO").slice(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`,
+        parcelId: body.parcelId || `PCL-${String(body.county || "MO").slice(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`,
         farmerDfrId: body.farmerDfrId || "",
         farmerName: body.farmerName || "Registered Farmer",
         county: body.county || "Montserrado",
         district: body.district || "District 1",
         commodity: body.commodity || "Cassava",
         vertices: typeof body.vertices === "string" ? body.vertices : JSON.stringify(body.vertices || []),
-        areaHectares: body.areaHectares || 2.5,
-        areaAcres: body.areaAcres || 6.18,
-        perimeterMeters: body.perimeterMeters || 600,
-        centroidLat: body.centroidLat || 6.42,
-        centroidLng: body.centroidLng || -9.43,
-        gpsAccuracy: 4.5,
-        geometryStatus: "FIELD_VERIFIED",
+        areaHectares: Number(body.areaHectares) || 2.5,
+        areaAcres: Number(body.areaAcres) || 6.18,
+        perimeterMeters: Number(body.perimeterMeters) || 600,
+        centroidLat: Number(body.centroidLat) || 6.42,
+        centroidLng: Number(body.centroidLng) || -9.43,
+        gpsAccuracy: Number(body.gpsAccuracy) || 4.5,
+        geometryStatus: body.geometryStatus || "FIELD_VERIFIED",
         revision: 1,
         verifiedBy: "gis.officer@moa.gov.lr",
         verifiedAt: new Date().toISOString(),
         createdAt: new Date().toISOString().slice(0, 10),
       };
-      return jsonResponse(newPcl, 201);
+      saveStoredParcel(newPcl);
+      return jsonResponse(
+        {
+          ok: true,
+          parcelId: newPcl.parcelId,
+          ...newPcl,
+          vertices: typeof newPcl.vertices === "string" ? JSON.parse(newPcl.vertices) : newPcl.vertices,
+          qualityFlags: body.qualityFlags || [],
+        },
+        201
+      );
     }
-    if (method === "PATCH") {
-      return jsonResponse({ success: true, geometryStatus: "FIELD_VERIFIED" });
+    if (method === "PATCH" && init?.body) {
+      const body = JSON.parse(init.body as string);
+      if (body.parcelId) {
+        updateStoredParcel(body);
+      }
+      return jsonResponse({ success: true, ok: true, geometryStatus: body.geometryStatus || "FIELD_VERIFIED" });
     }
   }
 

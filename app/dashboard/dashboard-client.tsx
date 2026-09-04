@@ -23,7 +23,19 @@ import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
 import { getActiveDemoUser, setActiveDemoUser, DEMO_USERS } from "../../lib/demo-users";
-const GISWorkspace = dynamic(() => import("./gis-workspace"), { ssr: false });
+const GISWorkspace = dynamic(() => import("./gis-workspace"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ padding: "48px 24px", textAlign: "center", color: "#64748b" }}>
+      <p style={{ font: "15px Georgia, serif", color: "#0f172a", marginBottom: 6 }}>
+        National Spatial Cadastre & GIS Workspace
+      </p>
+      <p style={{ fontSize: 12, color: "#64748b" }}>
+        Loading Liberian parcel geometry and satellite layers...
+      </p>
+    </div>
+  ),
+});
 const CoverageMap = dynamic(() => import("./coverage-map"), { ssr: false });
 
 type Farmer = {

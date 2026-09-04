@@ -676,6 +676,47 @@ export function getStoredParcels(): MockParcel[] {
   }
 }
 
+export function saveStoredParcel(parcel: MockParcel): MockParcel {
+  const existing = getStoredParcels();
+  const updated = [parcel, ...existing];
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(updated));
+      addStoredAudit({
+        actor: "gis.officer@moa.gov.lr",
+        action: "Parcel boundary digitized",
+        entity: parcel.parcelId,
+        details: `${parcel.farmerName}, ${parcel.county}; Area: ${parcel.areaHectares} ha`,
+      });
+    } catch {}
+  }
+  return parcel;
+}
+
+export function updateStoredParcel(update: Partial<MockParcel> & { parcelId: string }): void {
+  const existing = getStoredParcels();
+  const updated = existing.map((p) => {
+    if (p.parcelId === update.parcelId) {
+      return {
+        ...p,
+        ...update,
+        vertices: update.vertices
+          ? typeof update.vertices === "string"
+            ? update.vertices
+            : JSON.stringify(update.vertices)
+          : p.vertices,
+        revision: (p.revision || 1) + 1,
+      };
+    }
+    return p;
+  });
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(updated));
+    } catch {}
+  }
+}
+
 export function getStoredDeliveryItems(): MockDeliveryItem[] {
   if (typeof window === "undefined") return INITIAL_DELIVERY_ITEMS;
   try {
