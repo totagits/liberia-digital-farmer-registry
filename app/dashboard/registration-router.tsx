@@ -20,7 +20,7 @@ export default function RegistrationRouter({ close, openFarmer, openOrganization
   openFarmer:(type:string)=>void;
   openOrganization:(type:string)=>void;
 }){
-  return <div className="modal-wrap registration-router-overlay" onMouseDown={e=>{if(e.currentTarget===e.target)close()}}>
+  return <div className="modal-wrap registration-router-overlay" style={{ zIndex: 10000 }} onMouseDown={e=>{if(e.currentTarget===e.target)close()}}>
     <section className="registration-router glass" role="dialog" aria-modal="true" aria-labelledby="registration-router-title">
       <header>
         <div><span>Register once, use many times</span><h2 id="registration-router-title">What would you like to register?</h2><p>Select a subject type to open the correct governed workflow.</p></div>
