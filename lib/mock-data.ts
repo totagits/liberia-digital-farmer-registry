@@ -30,6 +30,7 @@ export interface MockFarmer {
   processingTransportMode?: string;
   latitude: number | null;
   longitude: number | null;
+  photoUrl?: string;
   createdAt: string;
 }
 
@@ -155,6 +156,7 @@ const INITIAL_FARMERS: MockFarmer[] = [
     processingTransportMode: "Motorbike",
     latitude: 7.3621,
     longitude: -8.7061,
+    photoUrl: "assets/cocoa-farmers.jpg",
     createdAt: "2026-08-12 09:30:00",
   },
   {
@@ -186,6 +188,7 @@ const INITIAL_FARMERS: MockFarmer[] = [
     processingTransportMode: "Tricycle / Kehkeh",
     latitude: 6.9942,
     longitude: -9.5815,
+    photoUrl: "assets/rice-farmers.jpg",
     createdAt: "2026-08-14 11:15:00",
   },
   {

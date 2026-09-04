@@ -839,6 +839,34 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   border: 2px solid #b6e87f;
   position: relative;
   flex-shrink: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.farmer-avatar:hover {
+  transform: scale(1.04);
+  border-color: #f6c000;
+}
+.farmer-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.avatar-camera-hint {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(14, 53, 34, 0.85);
+  color: #fff;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
 }
 .verified-badge-icon {
   position: absolute;
@@ -1072,7 +1100,18 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   margin-bottom: 14px;
 }
 .liberia-crest {
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.id-card-seal-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
 }
 .card-titles {
   text-align: center;
@@ -1100,15 +1139,22 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   display: block;
 }
 .card-gov-seal {
-  font-size: 11px;
-  font-weight: 800;
-  color: #16482e;
-  border: 2px dashed #31724a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+.id-card-moa-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 56, 34, 0.15);
+  border: 1px solid #d4e5d0;
+  display: block;
 }
 .card-body-grid {
   display: grid;
@@ -1133,6 +1179,15 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   font-size: 30px;
   font-weight: 800;
   color: #245839;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.farmer-id-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .biometric-tag {
   font-size: 8px;

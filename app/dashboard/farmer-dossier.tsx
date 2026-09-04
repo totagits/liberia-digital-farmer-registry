@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from "react";
 
 export type FarmerRecord = {
   id: number;
@@ -31,7 +31,24 @@ export type FarmerRecord = {
   processingTransportMode?: string;
   latitude: number | null;
   longitude: number | null;
+  photoUrl?: string;
   createdAt?: string;
+};
+
+const getAssetUrl = (p: string) => {
+  const clean = p.startsWith("/") ? p.slice(1) : p;
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry")) {
+    return `/liberia-digital-farmer-registry/${clean}`;
+  }
+  return `/${clean}`;
+};
+
+const resolvePhotoUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return getAssetUrl(url);
 };
 
 export default function FarmerDossier({
@@ -53,6 +70,7 @@ export default function FarmerDossier({
   const [tab, setTab] = useState(initialTab);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(farmer.photoUrl || "");
   const [editForm, setEditForm] = useState({
     firstName: farmer.firstName,
     lastName: farmer.lastName,
@@ -63,6 +81,7 @@ export default function FarmerDossier({
     crop: farmer.crop,
     farmSize: farmer.farmSize,
     vulnerability: farmer.vulnerability,
+    photoUrl: farmer.photoUrl || "",
   });
 
   // Local interactive activity states
@@ -128,8 +147,22 @@ export default function FarmerDossier({
     }
   };
 
-  const handleSaveEdit = (e: FormEvent) => {
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setEditForm((prev) => ({ ...prev, photoUrl: dataUrl }));
+      setPhotoPreview(dataUrl);
+      notify("Photo selected for upload. Click 'Save Changes' to apply.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveEdit = async (e: FormEvent) => {
     e.preventDefault();
+    setBusy(true);
     const updated: FarmerRecord = {
       ...farmer,
       firstName: editForm.firstName,
@@ -141,11 +174,26 @@ export default function FarmerDossier({
       crop: editForm.crop,
       farmSize: Number(editForm.farmSize),
       vulnerability: editForm.vulnerability,
+      photoUrl: editForm.photoUrl,
     };
-    setFarmer(updated);
-    onUpdate?.(updated);
-    setEditing(false);
-    notify("Farmer profile updated successfully.");
+    try {
+      await fetch(`/api/farmers/${farmer.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      setFarmer(updated);
+      onUpdate?.(updated);
+      setEditing(false);
+      notify("Farmer profile and official ID photo updated successfully.");
+    } catch {
+      setFarmer(updated);
+      onUpdate?.(updated);
+      setEditing(false);
+      notify("Farmer profile updated locally.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleAddMemberSubmit = (e: FormEvent) => {
@@ -217,9 +265,26 @@ export default function FarmerDossier({
         {/* Header */}
         <header className="farmer-dossier-head">
           <div className="farmer-dossier-info">
-            <div className="farmer-avatar">
-              <span>{farmer.firstName.charAt(0)}{farmer.lastName.charAt(0)}</span>
+            <div
+              className="farmer-avatar"
+              onClick={() => setEditing(true)}
+              title="Click to edit profile and upload photo"
+              style={{ cursor: "pointer" }}
+            >
+              {farmer.photoUrl ? (
+                <img
+                  src={resolvePhotoUrl(farmer.photoUrl)}
+                  alt={`${farmer.firstName} ${farmer.lastName}`}
+                  className="farmer-avatar-img"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <span>{farmer.firstName.charAt(0)}{farmer.lastName.charAt(0)}</span>
+              )}
               {isVerified && <i className="verified-badge-icon" title="Officially Verified">✓</i>}
+              <span className="avatar-camera-hint" title="Upload/change photo">📷</span>
             </div>
             <div>
               <span className="farmer-pretitle">Republic of Liberia · National Farmer Registry</span>
@@ -306,6 +371,92 @@ export default function FarmerDossier({
           <section className="dossier-section edit-section">
             <form onSubmit={handleSaveEdit}>
               <h3>Edit Farmer Profile</h3>
+
+              <div className="photo-upload-box" style={{ background: "#f1f6ed", border: "1px dashed #b2cdb0", borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ width: 88, height: 100, borderRadius: 10, background: "#e0ebe0", border: "2px solid #23653d", display: "grid", placeItems: "center", overflow: "hidden", flexShrink: 0 }}>
+                    {editForm.photoUrl ? (
+                      <img src={resolvePhotoUrl(editForm.photoUrl)} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontSize: 26, fontWeight: 800, color: "#23653d" }}>
+                        {editForm.firstName.charAt(0)}{editForm.lastName.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 240 }}>
+                    <b style={{ display: "block", fontSize: 14, color: "#143e27", marginBottom: 4 }}>
+                      Farmer Biometric Photo
+                    </b>
+                    <p style={{ fontSize: 12, color: "#5a7062", margin: "0 0 10px", lineHeight: 1.4 }}>
+                      Upload an official passport-style portrait for the National Credential Card, registry account, and field verification.
+                    </p>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <label className="btn-action-primary" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, margin: 0, padding: "8px 14px", fontSize: 12 }}>
+                        📷 Upload Photo from Device
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+                      {editForm.photoUrl && (
+                        <button
+                          type="button"
+                          className="btn-action-secondary"
+                          onClick={() => {
+                            setEditForm({ ...editForm, photoUrl: "" });
+                            setPhotoPreview("");
+                          }}
+                          style={{ padding: "8px 12px", fontSize: 12, color: "#b91c1c", borderColor: "#fca5a5" }}
+                        >
+                          🗑️ Remove Photo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12, borderTop: "1px solid #dbe6d8", paddingTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <small style={{ fontSize: 11, color: "#607669", fontWeight: 600 }}>Quick sample photo presets:</small>
+                  <button
+                    type="button"
+                    className="ghost sm"
+                    onClick={() => {
+                      const url = getAssetUrl("assets/cocoa-farmers.jpg");
+                      setEditForm({ ...editForm, photoUrl: url });
+                      setPhotoPreview(url);
+                    }}
+                    style={{ fontSize: 11, padding: "4px 8px", borderRadius: 4 }}
+                  >
+                    Sample Cocoa Farmer
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost sm"
+                    onClick={() => {
+                      const url = getAssetUrl("assets/rice-farmers.jpg");
+                      setEditForm({ ...editForm, photoUrl: url });
+                      setPhotoPreview(url);
+                    }}
+                    style={{ fontSize: 11, padding: "4px 8px", borderRadius: 4 }}
+                  >
+                    Sample Rice Farmer
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost sm"
+                    onClick={() => {
+                      const url = getAssetUrl("assets/enumerator.jpg");
+                      setEditForm({ ...editForm, photoUrl: url });
+                      setPhotoPreview(url);
+                    }}
+                    style={{ fontSize: 11, padding: "4px 8px", borderRadius: 4 }}
+                  >
+                    Sample Field Officer
+                  </button>
+                </div>
+              </div>
+
               <div className="form-grid">
                 <label>
                   First Name
@@ -955,7 +1106,18 @@ export default function FarmerDossier({
                 <div className="farmer-card-front glass">
                   <div className="card-top-header">
                     <div className="liberia-crest">
-                      <span>🇱🇷</span>
+                      <img
+                        src={getAssetUrl("assets/liberia-seal.png")}
+                        alt="Liberia Coat of Arms"
+                        className="id-card-seal-logo"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.dataset.triedFallback) {
+                            target.dataset.triedFallback = "true";
+                            target.src = "/assets/liberia-seal.png";
+                          }
+                        }}
+                      />
                     </div>
                     <div className="card-titles">
                       <h4>REPUBLIC OF LIBERIA</h4>
@@ -963,14 +1125,37 @@ export default function FarmerDossier({
                       <span className="card-system-name">DIGITAL FARMER REGISTRY · OFFICIAL CREDENTIAL</span>
                     </div>
                     <div className="card-gov-seal">
-                      <span>★ MOA ★</span>
+                      <img
+                        src={getAssetUrl("assets/moa-logo.png")}
+                        alt="Ministry of Agriculture"
+                        className="id-card-moa-logo"
+                        title="Ministry of Agriculture, Republic of Liberia"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.dataset.triedFallback) {
+                            target.dataset.triedFallback = "true";
+                            target.src = "/assets/moa-logo.png";
+                          }
+                        }}
+                      />
                     </div>
                   </div>
 
                   <div className="card-body-grid">
                     <div className="card-photo-box">
                       <div className="photo-placeholder">
-                        <span>{farmer.firstName.charAt(0)}{farmer.lastName.charAt(0)}</span>
+                        {farmer.photoUrl ? (
+                          <img
+                            src={resolvePhotoUrl(farmer.photoUrl)}
+                            alt={`${farmer.firstName} ${farmer.lastName}`}
+                            className="farmer-id-photo-img"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <span>{farmer.firstName.charAt(0)}{farmer.lastName.charAt(0)}</span>
+                        )}
                       </div>
                       <span className="biometric-tag">BIOMETRIC ENROLLED</span>
                     </div>

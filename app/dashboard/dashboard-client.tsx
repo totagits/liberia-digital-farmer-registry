@@ -58,6 +58,7 @@ type Farmer = {
   vulnerability: string;
   latitude: number | null;
   longitude: number | null;
+  photoUrl?: string;
 };
 type Audit = {
   id: number;
@@ -74,6 +75,22 @@ function downloadCsv(filename:string,rows:Record<string,unknown>[]){
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
   const link=document.createElement("a");link.href=url;link.download=filename;link.click();URL.revokeObjectURL(url);
 }
+
+const getAssetUrl = (p: string) => {
+  const clean = p.startsWith("/") ? p.slice(1) : p;
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry")) {
+    return `/liberia-digital-farmer-registry/${clean}`;
+  }
+  return `/${clean}`;
+};
+
+const resolvePhotoUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return getAssetUrl(url);
+};
 
 const registrationRoles = new Set([
   "Enumerator",
@@ -1188,12 +1205,28 @@ function Registry({
             {rows.map((f) => (
               <tr key={f.id}>
                 <td>
-                  <b>
-                    {f.firstName} {f.lastName}
-                  </b>
-                  <small>
-                    {f.gender} · {f.phone}
-                  </small>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {f.photoUrl ? (
+                      <img
+                        src={resolvePhotoUrl(f.photoUrl)}
+                        alt={`${f.firstName} ${f.lastName}`}
+                        style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1.5px solid #24653e" }}
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <span style={{ width: 34, height: 34, borderRadius: "50%", background: "#e0ebe0", color: "#24653e", fontWeight: 700, fontSize: 13, display: "grid", placeItems: "center", flexShrink: 0, border: "1.5px solid #a4c4a0" }}>
+                        {f.firstName.charAt(0)}{f.lastName.charAt(0)}
+                      </span>
+                    )}
+                    <div>
+                      <b style={{ display: "block" }}>
+                        {f.firstName} {f.lastName}
+                      </b>
+                      <small style={{ color: "#64748b" }}>
+                        {f.gender} · {f.phone}
+                      </small>
+                    </div>
+                  </div>
                 </td>
                 <td>
                   <code>{f.approvedDfrId || f.dfrId}</code>
