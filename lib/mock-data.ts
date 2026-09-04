@@ -28,6 +28,17 @@ export interface MockFarmer {
   processingDistanceMiles?: number;
   processingTravelMinutes?: number;
   processingTransportMode?: string;
+  marketAccess?: string;
+  marketDistanceKm?: number;
+  marketTravelMinutes?: number;
+  storageAccess?: string;
+  storageCapacityMt?: number;
+  postHarvestLossPct?: number;
+  transportMode?: string;
+  transportOwnership?: string;
+  tillageMechanization?: string;
+  irrigationAccess?: string;
+  smartTechReadiness?: string;
   latitude: number | null;
   longitude: number | null;
   photoUrl?: string;

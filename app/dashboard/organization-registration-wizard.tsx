@@ -158,6 +158,16 @@ export default function OrganizationRegistrationWizard({
         services: draft.services || "",
         facilitySummary: draft.facilitySummary || "",
         warehouseCapacityMt: draft.warehouseCapacityMt || "0",
+        storageType: draft.storageType || "Certified Central Warehouse",
+        coldChainAccess: draft.coldChainAccess || "None",
+        transportFleetType: draft.transportFleetType || "Member-provided motorbikes",
+        transportVehicleCount: draft.transportVehicleCount || "0",
+        roadPassability: draft.roadPassability || "Laterite / gravel year-round",
+        mechanizationPool: draft.mechanizationPool || "Owns power tillers (2-wheel)",
+        machineryCount: draft.machineryCount || "0",
+        mechanizationService: draft.mechanizationService || "Internal cooperative use only",
+        marketOutlet: draft.marketOutlet || "Formal buyer contracts",
+        aggregationVolumeMt: draft.aggregationVolumeMt || "0",
         processingCapacity: draft.processingCapacity || "",
         cdaCertificate: draft.cdaCertificateNumber || "",
         businessLicense: draft.businessLicenseNumber || "",
@@ -791,10 +801,25 @@ export default function OrganizationRegistrationWizard({
               </section>
 
               <section className="enroll-panel">
-                <h3>Facilities, Infrastructure &amp; Operating Assets</h3>
+                <h3>1. Storage Infrastructure, Warehousing &amp; Cold Chain</h3>
                 <div className="enroll-grid three">
                   <label>
-                    Warehouses / Storage Capacity (Metric Tons)
+                    Primary Storage / Warehouse Structure
+                    <select
+                      name="storageType"
+                      value={draft.storageType || "Certified Central Warehouse"}
+                      onChange={(e) => updateDraft("storageType", e.target.value)}
+                    >
+                      <option>Certified Central Warehouse</option>
+                      <option>Hermetic Grain Silo / Bulk Storage</option>
+                      <option>Solar Drying Floor &amp; Parabolic Shed</option>
+                      <option>Temperature-Controlled Cold Room / Packhouse</option>
+                      <option>Community Traditional Granary Crib</option>
+                      <option>Leased Commercial Space</option>
+                    </select>
+                  </label>
+                  <label>
+                    Total Warehousing Capacity (Metric Tons)*
                     <input
                       name="warehouseCapacityMt"
                       type="number"
@@ -805,21 +830,115 @@ export default function OrganizationRegistrationWizard({
                     />
                   </label>
                   <label>
+                    Cold Chain / Temperature Control
+                    <select
+                      name="coldChainAccess"
+                      value={draft.coldChainAccess || "None"}
+                      onChange={(e) => updateDraft("coldChainAccess", e.target.value)}
+                    >
+                      <option>None / Ambient storage only</option>
+                      <option>Yes — Solar-powered cold storage (10–50 MT)</option>
+                      <option>Yes — Grid-powered walk-in cold room</option>
+                      <option>Yes — Diesel generator refrigerated container</option>
+                      <option>Planned / Seeking grant co-financing</option>
+                    </select>
+                  </label>
+                </div>
+              </section>
+
+              <section className="enroll-panel">
+                <h3>2. Logistics Fleet, Road Passability &amp; Haulage</h3>
+                <div className="enroll-grid three">
+                  <label>
+                    Primary Haulage &amp; Logistics Mode
+                    <select
+                      name="transportFleetType"
+                      value={draft.transportFleetType || "Member-provided motorbikes"}
+                      onChange={(e) => updateDraft("transportFleetType", e.target.value)}
+                    >
+                      <option>Owns commercial transport trucks (3–10 MT)</option>
+                      <option>Owns motorized tricycles / kehkehs (0.5–1 MT)</option>
+                      <option>Contracted commercial freight transporters</option>
+                      <option>Member-provided motorbikes &amp; head-load</option>
+                      <option>Watercraft / Motorized river canoes</option>
+                      <option>Buyer-provided collection at aggregation hub</option>
+                    </select>
+                  </label>
+                  <label>
+                    Vehicles Owned / Dedicated to Ag Operations
+                    <input
+                      name="transportVehicleCount"
+                      type="number"
+                      min="0"
+                      value={draft.transportVehicleCount || ""}
+                      onChange={(e) => updateDraft("transportVehicleCount", e.target.value)}
+                      placeholder="e.g. 2 trucks, 4 tricycles"
+                    />
+                  </label>
+                  <label>
+                    Hub Feeder Road Passability
+                    <select
+                      name="roadPassability"
+                      value={draft.roadPassability || "Laterite / gravel year-round"}
+                      onChange={(e) => updateDraft("roadPassability", e.target.value)}
+                    >
+                      <option>Paved / all-weather year-round</option>
+                      <option>Laterite / gravel year-round</option>
+                      <option>Seasonal / dry season only</option>
+                      <option>Frequently impassable during rainy season</option>
+                    </select>
+                  </label>
+                </div>
+              </section>
+
+              <section className="enroll-panel">
+                <h3>3. Mechanization Services, Agro-Processing &amp; Assets</h3>
+                <div className="enroll-grid three">
+                  <label>
+                    Tractor &amp; Mechanization Equipment Pool
+                    <select
+                      name="mechanizationPool"
+                      value={draft.mechanizationPool || "Owns power tillers (2-wheel)"}
+                      onChange={(e) => updateDraft("mechanizationPool", e.target.value)}
+                    >
+                      <option>Tractor Hiring Center / Custom Hire Unit (4WD Tractors)</option>
+                      <option>Owns power tillers (2-wheel walking tractors)</option>
+                      <option>Motorized processing mills (rice, cassava, palm)</option>
+                      <option>Solar-powered irrigation &amp; borehole pumps</option>
+                      <option>Manual tools only (knapsacks, cutlasses, hoes)</option>
+                    </select>
+                  </label>
+                  <label>
+                    Tractors / Farm Machinery Units
+                    <input
+                      name="machineryCount"
+                      type="number"
+                      min="0"
+                      value={draft.machineryCount || ""}
+                      onChange={(e) => updateDraft("machineryCount", e.target.value)}
+                      placeholder="e.g. 3"
+                    />
+                  </label>
+                  <label>
+                    Mechanization Service Availability
+                    <select
+                      name="mechanizationService"
+                      value={draft.mechanizationService || "Internal cooperative use only"}
+                      onChange={(e) => updateDraft("mechanizationService", e.target.value)}
+                    >
+                      <option>Subsidized hire services to enrolled members</option>
+                      <option>Commercial hiring center open to all farmers</option>
+                      <option>Internal cooperative farm operations only</option>
+                      <option>No machinery hire services offered</option>
+                    </select>
+                  </label>
+                  <label>
                     Processing Units (Tons/Day Capacity)
                     <input
                       name="processingCapacity"
                       value={draft.processingCapacity || ""}
                       onChange={(e) => updateDraft("processingCapacity", e.target.value)}
-                      placeholder="e.g. 5 MT/day rice mill"
-                    />
-                  </label>
-                  <label>
-                    Tractors / Farm Machinery Owned
-                    <input
-                      name="machineryCount"
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 2 power tillers, 1 tractor"
+                      placeholder="e.g. 5 MT/day rice mill, cassava gari press"
                     />
                   </label>
                   <label className="wide">
@@ -830,6 +949,37 @@ export default function OrganizationRegistrationWizard({
                       value={draft.facilitySummary || ""}
                       onChange={(e) => updateDraft("facilitySummary", e.target.value)}
                       placeholder="e.g. Central drying floor, solar-powered packhouse, seed storage shed, mechanical huller…"
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <section className="enroll-panel">
+                <h3>4. Commercial Off-Take Contracts &amp; Market Linkages</h3>
+                <div className="enroll-grid three">
+                  <label>
+                    Primary Off-Take / Commercial Market Channel
+                    <select
+                      name="marketOutlet"
+                      value={draft.marketOutlet || "Formal buyer contracts"}
+                      onChange={(e) => updateDraft("marketOutlet", e.target.value)}
+                    >
+                      <option>Formal buyer contracts (LACRA, Agro-processors, Exporters)</option>
+                      <option>Institutional buyer (WFP School Feeding, MoA)</option>
+                      <option>District &amp; county weekly wholesale markets</option>
+                      <option>Direct retail stalls &amp; urban supply</option>
+                      <option>Cross-border regional trade (Guinea, Sierra Leone, Ivory Coast)</option>
+                    </select>
+                  </label>
+                  <label>
+                    Annual Aggregation Volume (Metric Tons)
+                    <input
+                      name="aggregationVolumeMt"
+                      type="number"
+                      min="0"
+                      value={draft.aggregationVolumeMt || ""}
+                      onChange={(e) => updateDraft("aggregationVolumeMt", e.target.value)}
+                      placeholder="e.g. 250 MT/year"
                     />
                   </label>
                 </div>

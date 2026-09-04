@@ -29,7 +29,45 @@ export async function POST(request: NextRequest) {
   const prefix = String(body.county).slice(0,2).toUpperCase();
   const provisionalId = `PROV-${prefix}-${Date.now().toString().slice(-7)}`;
   const dfrId = provisionalId;
-  const record = { dfrId, provisionalId, approvedDfrId:"", firstName:String(body.firstName), lastName:String(body.lastName), gender:String(body.gender), phone:String(body.phone??""), county:String(body.county), district:String(body.district), community:String(body.community), crop:String(body.crop), farmSize:Number(body.farmSize??0), vulnerability:String(body.vulnerability??"Standard"), roadAccess:String(body.roadAccess??""), roadCondition:String(body.roadCondition??""), roadSeasonality:String(body.roadSeasonality??""), roadDistanceMiles:Number(body.roadDistanceMiles??0), processingAccess:String(body.processingAccess??""), processingFacilityType:String(body.processingFacilityType??""), processingFacilityName:String(body.processingFacilityName??""), processingFacilityStatus:String(body.processingFacilityStatus??""), processingDistanceMiles:Number(body.processingDistanceMiles??0), processingTravelMinutes:Number(body.processingTravelMinutes??0), processingTransportMode:String(body.processingTransportMode??""), latitude:body.latitude?Number(body.latitude):null, longitude:body.longitude?Number(body.longitude):null };
+  const record = {
+    dfrId,
+    provisionalId,
+    approvedDfrId: "",
+    firstName: String(body.firstName),
+    lastName: String(body.lastName),
+    gender: String(body.gender),
+    phone: String(body.phone ?? ""),
+    county: String(body.county),
+    district: String(body.district),
+    community: String(body.community),
+    crop: String(body.crop),
+    farmSize: Number(body.farmSize ?? 0),
+    vulnerability: String(body.vulnerability ?? "Standard"),
+    roadAccess: String(body.roadAccess ?? ""),
+    roadCondition: String(body.roadCondition ?? ""),
+    roadSeasonality: String(body.roadSeasonality ?? ""),
+    roadDistanceMiles: Number(body.roadDistanceMiles ?? 0),
+    processingAccess: String(body.processingAccess ?? ""),
+    processingFacilityType: String(body.processingFacilityType ?? ""),
+    processingFacilityName: String(body.processingFacilityName ?? ""),
+    processingFacilityStatus: String(body.processingFacilityStatus ?? ""),
+    processingDistanceMiles: Number(body.processingDistanceMiles ?? 0),
+    processingTravelMinutes: Number(body.processingTravelMinutes ?? 0),
+    processingTransportMode: String(body.processingTransportMode ?? ""),
+    marketAccess: String(body.marketAccess ?? ""),
+    marketDistanceKm: Number(body.marketDistanceKm ?? 0),
+    marketTravelMinutes: Number(body.marketTravelMinutes ?? 0),
+    storageAccess: String(body.storageAccess ?? ""),
+    storageCapacityMt: Number(body.storageCapacityMt ?? 0),
+    postHarvestLossPct: Number(body.postHarvestLossPct ?? 0),
+    transportMode: String(body.transportMode ?? ""),
+    transportOwnership: String(body.transportOwnership ?? ""),
+    tillageMechanization: String(body.tillageMechanization ?? ""),
+    irrigationAccess: String(body.irrigationAccess ?? ""),
+    smartTechReadiness: String(body.smartTechReadiness ?? ""),
+    latitude: body.latitude ? Number(body.latitude) : null,
+    longitude: body.longitude ? Number(body.longitude) : null,
+  };
   await db.insert(farmers).values(record);
   await db.insert(auditEvents).values({ actor:access.user.email, action:"Provisional registration created", entity:provisionalId, details:`${access.assignment?.role}: ${record.firstName} ${record.lastName}, ${record.county}; official DFR ID pending approval` });
   

@@ -129,6 +129,17 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
           processingDistanceMiles: Number(body.processingDistanceMiles || 1.0),
           processingTravelMinutes: Number(body.processingTravelMinutes || 15),
           processingTransportMode: body.processingTransportMode || "Motorbike",
+          marketAccess: body.marketAccess || "Periodic rural weekly market (Luma)",
+          marketDistanceKm: Number(body.marketDistanceKm || 3.5),
+          marketTravelMinutes: Number(body.marketTravelMinutes || 45),
+          storageAccess: body.storageAccess || "Hermetic storage (PICS bags / drums)",
+          storageCapacityMt: Number(body.storageCapacityMt || 0.5),
+          postHarvestLossPct: Number(body.postHarvestLossPct || 10),
+          transportMode: body.transportMode || "Motorbike / Kehkeh (Tricycle)",
+          transportOwnership: body.transportOwnership || "Hired commercial transporter",
+          tillageMechanization: body.tillageMechanization || "Manual (hoe, cutlass)",
+          irrigationAccess: body.irrigationAccess || "Rainfed only",
+          smartTechReadiness: body.smartTechReadiness || "Basic feature phone (SMS/Voice)",
           latitude: body.latitude ? Number(body.latitude) : 6.42,
           longitude: body.longitude ? Number(body.longitude) : -9.43,
         });
@@ -430,34 +441,6 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
     }
   }
 
-  // 7. Governance API: /api/governance
-  if (pathname === "/api/governance") {
-    return jsonResponse({
-      institutions: [
-        { institutionCode: "MOA", name: "Ministry of Agriculture", mandate: "National agricultural policy & registry ownership", accountRole: "Owner", scope: "National" },
-        { institutionCode: "LISGIS", name: "Liberia Institute of Statistics and Geo-Information Services", mandate: "Geospatial, statistical and boundary standards", accountRole: "Steward", scope: "National" },
-        { institutionCode: "MGCSP", name: "Ministry of Gender, Children and Social Protection", mandate: "National social protection & social registry integration", accountRole: "Partner", scope: "National" },
-        { institutionCode: "FAO", name: "Food and Agriculture Organization of the United Nations", mandate: "Technical oversight, delivery quality assurance and capacity transfer", accountRole: "Oversight", scope: "International" },
-      ],
-      datasets: [
-        { datasetCode: "DFR-PRODUCERS", title: "National Farmer & Household Master Register", domain: "Farmer Profiles", ownerInstitution: "MOA", stewardInstitution: "MOA Registry Unit", custodianInstitution: "IT Directorate", approvingAuthority: "Minister of Agriculture", sensitivity: "Restricted", accessRule: "RBAC governed", classificationStandard: "LBR-ISO-19115", version: "2.1", lastReviewedAt: "2026-08-01", nextReviewAt: "2026-11-01", status: "Active" },
-        { datasetCode: "DFR-CADASTRE", title: "Agricultural Land Cadastre & Farm Parcel Boundaries", domain: "Geospatial", ownerInstitution: "MOA / LISGIS", stewardInstitution: "GIS Unit", custodianInstitution: "National Cartographic Center", approvingAuthority: "Director General LISGIS", sensitivity: "Internal", accessRule: "Open geospatial layer", classificationStandard: "EPSG:4326 / WGS 84", version: "1.4", lastReviewedAt: "2026-08-15", nextReviewAt: "2026-11-15", status: "Active" },
-      ],
-      workflows: [
-        { id: 1, caseId: "GWF-2026-001", workflowType: "DATA_SHARING_REQUEST", title: "MGCSP Social Registry Bi-directional Interoperability Protocol", submitterInstitution: "MGCSP", currentInstitution: "MOA", stage: "IN_REVIEW", decision: "Pending", dueDate: "2026-10-15", county: "National" },
-        { id: 2, caseId: "GWF-2026-002", workflowType: "DATASET_RECLASSIFICATION", title: "Open Access Release for Agro-climatic Vulnerability Maps", submitterInstitution: "LISGIS", currentInstitution: "Data Governance Council", stage: "APPROVED", decision: "Approved", dueDate: "2026-09-20", county: "National" },
-      ],
-      decisions: [
-        { decisionCode: "NSC-DEC-2026-03", meetingType: "National Steering Committee", title: "Adoption of LADM Agricultural Land Cadastre Model", responsibleInstitution: "MOA & LISGIS", actionOwner: "Lead Systems Architect", meetingDate: "2026-08-10", dueDate: "2026-10-01", priority: "High", status: "Approved" },
-      ],
-      dataDictionary: [
-        { elementCode: "DFR-ELEM-001", name: "Approved DFR Identifier", domain: "Identity", dataType: "String(14)", allowedValues: '["LBR-CC-NNNNNN"]', standardOwner: "MOA", version: "2.0", status: "Approved" },
-        { elementCode: "DFR-ELEM-002", name: "Parcel Polygon Geometry", domain: "Geospatial", dataType: "GeoJSON Polygon", allowedValues: '["WGS 84 EPSG:4326"]', standardOwner: "LISGIS", version: "1.2", status: "Approved" },
-      ],
-      access: { canManage: true, role: "Ministry administrator" },
-    });
-  }
-
   // 8. Appendix & Controls: /api/appendix-controls
   if (pathname === "/api/appendix-controls") {
     return jsonResponse({
@@ -708,6 +691,11 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       { elementCode: "DFR.CROP.PRIMARY", name: "Primary crop code", definition: "Primary commercial or food security crop cultivated on registered parcel.", domain: "Agronomic", dataType: "Code", allowedValues: ["Rice (Oryza sativa / glaberrima)", "Cassava (Manihot esculenta)", "Cocoa (Theobroma cacao)", "Oil Palm (Elaeis guineensis)", "Rubber (Hevea brasiliensis)", "Coffee (Coffea liberica / robusta)", "Horticultural vegetables"], standardOwner: "MoA Agribusiness", version: "1.2", status: "Standard" },
       { elementCode: "DFR.LAND.TENURE", name: "Land tenure right type", definition: "Customary, statutory, or communal land right under the Land Rights Act 2018.", domain: "Tenure & Rights", dataType: "Code", allowedValues: ["Customary Land Certificate", "Statutory Fee-Simple Deed", "Registered Leasehold", "Communal Farm Agreement", "Provisional Community Allocation"], standardOwner: "Liberia Land Authority (LLA)", version: "1.0", status: "Standard" },
       { elementCode: "DFR.FIN.MOBILE", name: "Mobile money MSISDN", definition: "Normalized E.164 mobile number registered for subsidy disbursement.", domain: "Payments & Financial", dataType: "String", allowedValues: ["Lonestar Cell MTN (+23188...)", "Orange Liberia (+23177...)"], standardOwner: "Central Bank of Liberia", version: "2.0", status: "Standard" },
+      { elementCode: "DFR.INFRA.ROAD_PASSABILITY", name: "Farm-to-Market Road Passability", definition: "Physical condition and seasonal vehicular access of feeder road connecting holding to transport network.", domain: "Infrastructure & Logistics", dataType: "Code", allowedValues: ["Paved / all-weather year-round", "Laterite / gravel passable year-round", "Dry-season motorable only", "Footpath / canoe transport only", "Impassable during rainy season"], standardOwner: "Ministry of Public Works (MPW) / MoA", version: "1.0", status: "Standard" },
+      { elementCode: "DFR.INFRA.MARKET_OUTLET", name: "Primary Commercial Market Channel", definition: "Principal trading channel or aggregation point where farmer sells agricultural surplus.", domain: "Trade & Market Access", dataType: "Code", allowedValues: ["Periodic rural weekly market (Luma)", "Farmgate itinerant buyer / middleman", "District / County urban market center", "Formal commercial processor / off-taker", "Institutional procurement (WFP / MoA)"], standardOwner: "Ministry of Commerce & Industry (MoCI)", version: "1.0", status: "Standard" },
+      { elementCode: "DFR.INFRA.STORAGE_TYPE", name: "Post-Harvest Storage Facility Type", definition: "Primary storage structure utilized on holding or accessible within community.", domain: "Post-Harvest & Storage", dataType: "Code", allowedValues: ["None / Immediate farmgate distress sale", "Traditional crib / thatch granary", "Hermetic storage (PICS bags / sealed drums)", "Community / Cooperative aggregation warehouse", "Solar drying floor & parabolic shed", "Temperature-controlled / cold room storage"], standardOwner: "MoA Post-Harvest & Agro-Processing Unit", version: "1.0", status: "Standard" },
+      { elementCode: "DFR.INFRA.TRANSPORT_MODE", name: "Produce Haulage & Transport Mode", definition: "Predominant mode of physical conveyance used to haul commodities from farmgate to market.", domain: "Infrastructure & Logistics", dataType: "Code", allowedValues: ["Head-loading / Porterage", "Bicycle / Wheelbarrow", "Motorbike / Kehkeh (Tricycle)", "Light truck / 4WD pickup", "Heavy commercial lorry (> 5 MT)", "Watercraft / Canoe / Motorized boat"], standardOwner: "Ministry of Transport / MoA Logistics", version: "1.0", status: "Standard" },
+      { elementCode: "DFR.INFRA.MECHANIZATION_LEVEL", name: "Farm Mechanization & Smart Tech Level", definition: "Level of power machinery, processing equipment, and digital tools utilized on agricultural holding.", domain: "Agricultural Engineering", dataType: "Code", allowedValues: ["Manual hand-tools only", "Animal traction / draft power", "Power tiller / 2-wheel walking tractor", "4-wheel commercial tractor (owned/rented)", "Motorized processing mill (rice thresher/cassava grater)", "Solar-powered drip / sprinkler irrigation", "Digital precision / IoT soil probe & weather kit"], standardOwner: "MoA Engineering & Mechanization Directorate", version: "1.0", status: "Standard" },
     ];
 
     const defaultAgreements = [

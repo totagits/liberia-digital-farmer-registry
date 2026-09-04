@@ -1368,6 +1368,56 @@ export default function ExtensionServices({
                         />
                       </label>
                     </div>
+
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px dashed #cbd5e1" }}>
+                      <h4 style={{ fontSize: "0.9rem", color: "#1e293b", fontWeight: 700, margin: "0 0 10px" }}>
+                        Frontline Infrastructure, Feeder Road &amp; Post-Harvest Audit
+                      </h4>
+                      <div className="enroll-grid three">
+                        <label>
+                          Road Passability Observed
+                          <select
+                            name="roadConditionObserved"
+                            value={visitDraft.roadConditionObserved || "Passable year-round"}
+                            onChange={(e) => updateVisitDraft("roadConditionObserved", e.target.value)}
+                          >
+                            <option>Passable year-round (Motorable)</option>
+                            <option>Dry season motorable only</option>
+                            <option>Impassable / Flooded track</option>
+                            <option>Broken culvert / Damaged bridge</option>
+                            <option>Footpath / Canoe access only</option>
+                          </select>
+                        </label>
+                        <label>
+                          Post-Harvest Storage Condition
+                          <select
+                            name="storageConditionObserved"
+                            value={visitDraft.storageConditionObserved || "Good condition (dry, pest-free)"}
+                            onChange={(e) => updateVisitDraft("storageConditionObserved", e.target.value)}
+                          >
+                            <option>Good condition (dry, pest-free)</option>
+                            <option>Weevil / Rodent pest damage observed</option>
+                            <option>High moisture / Fungal mold risk</option>
+                            <option>No dedicated storage (distress sale)</option>
+                            <option>Hermetic PICS bags utilized</option>
+                          </select>
+                        </label>
+                        <label>
+                          Farm Machinery / Irrigation Status
+                          <select
+                            name="machineryStatusObserved"
+                            value={visitDraft.machineryStatusObserved || "Operational / In-use"}
+                            onChange={(e) => updateVisitDraft("machineryStatusObserved", e.target.value)}
+                          >
+                            <option>Operational / In-use</option>
+                            <option>Needs maintenance / spare parts</option>
+                            <option>Idle / Fuel shortage</option>
+                            <option>Manual labor only (No mechanization)</option>
+                            <option>Solar irrigation pump functional</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
                   </section>
 
                   <section className="identity-panel">

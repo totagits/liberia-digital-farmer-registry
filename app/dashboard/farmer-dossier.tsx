@@ -29,6 +29,17 @@ export type FarmerRecord = {
   processingDistanceMiles?: number;
   processingTravelMinutes?: number;
   processingTransportMode?: string;
+  marketAccess?: string;
+  marketDistanceKm?: number;
+  marketTravelMinutes?: number;
+  storageAccess?: string;
+  storageCapacityMt?: number;
+  postHarvestLossPct?: number;
+  transportMode?: string;
+  transportOwnership?: string;
+  tillageMechanization?: string;
+  irrigationAccess?: string;
+  smartTechReadiness?: string;
   latitude: number | null;
   longitude: number | null;
   photoUrl?: string;
@@ -195,6 +206,28 @@ export default function FarmerDossier({
     farmSize: farmer.farmSize,
     vulnerability: farmer.vulnerability,
     photoUrl: farmer.photoUrl || "",
+    roadAccess: farmer.roadAccess || "Motorable dirt feeder road",
+    roadCondition: farmer.roadCondition || "Fair (Graded post-rainy season)",
+    roadSeasonality: farmer.roadSeasonality || "Year-round vehicular access",
+    roadDistanceMiles: farmer.roadDistanceMiles || 1.2,
+    processingAccess: farmer.processingAccess || "Community cooperative aggregation center",
+    processingFacilityName: farmer.processingFacilityName || `${farmer.county} Agro Hub`,
+    processingFacilityType: farmer.processingFacilityType || "Solar dryer & mechanical thresher",
+    processingFacilityStatus: farmer.processingFacilityStatus || "Operational",
+    processingDistanceMiles: farmer.processingDistanceMiles || 2.5,
+    processingTravelMinutes: farmer.processingTravelMinutes || 20,
+    processingTransportMode: farmer.processingTransportMode || "Motorbike",
+    marketAccess: farmer.marketAccess || "Periodic rural weekly market (Luma)",
+    marketDistanceKm: farmer.marketDistanceKm || 4.5,
+    marketTravelMinutes: farmer.marketTravelMinutes || 40,
+    storageAccess: farmer.storageAccess || "Hermetic storage (PICS bags / drums)",
+    storageCapacityMt: farmer.storageCapacityMt || 0.8,
+    postHarvestLossPct: farmer.postHarvestLossPct || 12,
+    transportMode: farmer.transportMode || "Motorbike / Kehkeh (Tricycle)",
+    transportOwnership: farmer.transportOwnership || "Hired commercial transporter",
+    tillageMechanization: farmer.tillageMechanization || "Power tiller / 2-wheel walking tractor",
+    irrigationAccess: farmer.irrigationAccess || "Rainfed only",
+    smartTechReadiness: farmer.smartTechReadiness || "Basic 2G feature phone (SMS / Voice)",
   });
 
   // Local interactive activity states
@@ -288,6 +321,28 @@ export default function FarmerDossier({
       farmSize: Number(editForm.farmSize),
       vulnerability: editForm.vulnerability,
       photoUrl: editForm.photoUrl,
+      roadAccess: editForm.roadAccess,
+      roadCondition: editForm.roadCondition,
+      roadSeasonality: editForm.roadSeasonality,
+      roadDistanceMiles: Number(editForm.roadDistanceMiles),
+      processingAccess: editForm.processingAccess,
+      processingFacilityName: editForm.processingFacilityName,
+      processingFacilityType: editForm.processingFacilityType,
+      processingFacilityStatus: editForm.processingFacilityStatus,
+      processingDistanceMiles: Number(editForm.processingDistanceMiles),
+      processingTravelMinutes: Number(editForm.processingTravelMinutes),
+      processingTransportMode: editForm.processingTransportMode,
+      marketAccess: editForm.marketAccess,
+      marketDistanceKm: Number(editForm.marketDistanceKm),
+      marketTravelMinutes: Number(editForm.marketTravelMinutes),
+      storageAccess: editForm.storageAccess,
+      storageCapacityMt: Number(editForm.storageCapacityMt),
+      postHarvestLossPct: Number(editForm.postHarvestLossPct),
+      transportMode: editForm.transportMode,
+      transportOwnership: editForm.transportOwnership,
+      tillageMechanization: editForm.tillageMechanization,
+      irrigationAccess: editForm.irrigationAccess,
+      smartTechReadiness: editForm.smartTechReadiness,
     };
     try {
       await fetch(`/api/farmers/${farmer.id}`, {
@@ -462,7 +517,7 @@ export default function FarmerDossier({
           {[
             "Profile",
             "Farm & Crops",
-            "Supply Chain & Logistics",
+            "Infrastructure, Market & Logistics",
             "Household & Labor",
             "Subsidies & Vouchers",
             "Extension & Advisory",
@@ -483,7 +538,7 @@ export default function FarmerDossier({
         {editing && (
           <section className="dossier-section edit-section">
             <form onSubmit={handleSaveEdit}>
-              <h3>Edit Farmer Profile</h3>
+              <h3>Edit Farmer Profile & Infrastructure Baseline</h3>
 
               <div className="photo-upload-box" style={{ background: "#f1f6ed", border: "1px dashed #b2cdb0", borderRadius: 12, padding: 16, marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
@@ -644,6 +699,161 @@ export default function FarmerDossier({
                     onChange={(e) => setEditForm({ ...editForm, vulnerability: e.target.value })}
                   />
                 </label>
+                <label>
+                  Road Access at Gate
+                  <select
+                    value={editForm.roadAccess}
+                    onChange={(e) => setEditForm({ ...editForm, roadAccess: e.target.value })}
+                  >
+                    <option>Direct motorable access</option>
+                    <option>Footpath to nearest road</option>
+                    <option>Water transport only</option>
+                    <option>No practical access</option>
+                  </select>
+                </label>
+                <label>
+                  Road Seasonal Passability
+                  <select
+                    value={editForm.roadSeasonality}
+                    onChange={(e) => setEditForm({ ...editForm, roadSeasonality: e.target.value })}
+                  >
+                    <option>Year-round vehicular access</option>
+                    <option>Seasonal / dry season only</option>
+                    <option>Frequently cut off in rains</option>
+                  </select>
+                </label>
+                <label>
+                  Distance to Motorable Road (miles)
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.roadDistanceMiles}
+                    onChange={(e) => setEditForm({ ...editForm, roadDistanceMiles: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  Primary Market Outlet / Channel
+                  <select
+                    value={editForm.marketAccess}
+                    onChange={(e) => setEditForm({ ...editForm, marketAccess: e.target.value })}
+                  >
+                    <option>Periodic rural weekly market (Luma)</option>
+                    <option>Farmgate buyer / itinerant aggregator</option>
+                    <option>District / County urban central market</option>
+                    <option>Contract off-taker / commercial processor</option>
+                    <option>Institutional buyer (WFP / MoA School Feeding)</option>
+                  </select>
+                </label>
+                <label>
+                  Distance to Market (km)
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.marketDistanceKm}
+                    onChange={(e) => setEditForm({ ...editForm, marketDistanceKm: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  Travel Time to Market (minutes)
+                  <input
+                    type="number"
+                    value={editForm.marketTravelMinutes}
+                    onChange={(e) => setEditForm({ ...editForm, marketTravelMinutes: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  Storage Facility Type
+                  <select
+                    value={editForm.storageAccess}
+                    onChange={(e) => setEditForm({ ...editForm, storageAccess: e.target.value })}
+                  >
+                    <option>Hermetic storage (PICS bags / drums)</option>
+                    <option>Traditional crib / thatch granary</option>
+                    <option>Community / Cooperative shared warehouse</option>
+                    <option>Solar drying floor / parabolic drying shed</option>
+                    <option>Temperature-controlled cold room / packhouse</option>
+                    <option>None / Immediate distress sale at harvest</option>
+                  </select>
+                </label>
+                <label>
+                  Storage Capacity (MT)
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.storageCapacityMt}
+                    onChange={(e) => setEditForm({ ...editForm, storageCapacityMt: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  Estimated Post-Harvest Loss (%)
+                  <input
+                    type="number"
+                    value={editForm.postHarvestLossPct}
+                    onChange={(e) => setEditForm({ ...editForm, postHarvestLossPct: Number(e.target.value) })}
+                  />
+                </label>
+                <label>
+                  Produce Haulage Mode
+                  <select
+                    value={editForm.transportMode}
+                    onChange={(e) => setEditForm({ ...editForm, transportMode: e.target.value })}
+                  >
+                    <option>Motorbike / Kehkeh (Tricycle)</option>
+                    <option>Head-loading / Porterage</option>
+                    <option>Light pickup truck / 4WD (1–3 MT)</option>
+                    <option>Heavy commercial truck (&gt; 5 MT)</option>
+                    <option>Water canoe / motorized boat</option>
+                  </select>
+                </label>
+                <label>
+                  Vehicle Ownership
+                  <select
+                    value={editForm.transportOwnership}
+                    onChange={(e) => setEditForm({ ...editForm, transportOwnership: e.target.value })}
+                  >
+                    <option>Hired commercial transporter</option>
+                    <option>Self-owned vehicle / motorbike</option>
+                    <option>Cooperative / Group shared asset</option>
+                    <option>Buyer-provided collection at farmgate</option>
+                  </select>
+                </label>
+                <label>
+                  Tillage Mechanization Level
+                  <select
+                    value={editForm.tillageMechanization}
+                    onChange={(e) => setEditForm({ ...editForm, tillageMechanization: e.target.value })}
+                  >
+                    <option>Manual hand tools (cutlass, hoe)</option>
+                    <option>Power tiller / 2-wheel walking tractor</option>
+                    <option>4-wheel commercial tractor (rented / hired)</option>
+                    <option>4-wheel commercial tractor (owned)</option>
+                  </select>
+                </label>
+                <label>
+                  Irrigation Water Infrastructure
+                  <select
+                    value={editForm.irrigationAccess}
+                    onChange={(e) => setEditForm({ ...editForm, irrigationAccess: e.target.value })}
+                  >
+                    <option>Rainfed only</option>
+                    <option>Manual watering can / bucket from stream or well</option>
+                    <option>Solar-powered surface / submersible pump</option>
+                    <option>Motorized petrol / diesel water pump</option>
+                    <option>Gravity-fed canal / lowland swamp water control</option>
+                  </select>
+                </label>
+                <label>
+                  Digital & Phone Tech Readiness
+                  <select
+                    value={editForm.smartTechReadiness}
+                    onChange={(e) => setEditForm({ ...editForm, smartTechReadiness: e.target.value })}
+                  >
+                    <option>Basic 2G feature phone (SMS / Voice)</option>
+                    <option>Smartphone with GPS & camera</option>
+                    <option>Digital soil testing kit / NPK probe</option>
+                    <option>On-farm rain gauge / micro weather station</option>
+                  </select>
+                </label>
               </div>
               <div className="modal-actions" style={{ marginTop: 12 }}>
                 <button type="button" onClick={() => setEditing(false)}>Cancel</button>
@@ -799,57 +1009,172 @@ export default function FarmerDossier({
           </div>
         )}
 
-        {/* Tab 3: Supply Chain & Logistics */}
-        {tab === "Supply Chain & Logistics" && (
+        {/* Tab 3: Infrastructure, Market Access & Logistics */}
+        {(tab === "Infrastructure, Market & Logistics" || tab === "Supply Chain & Logistics") && (
           <div className="tab-body">
             <section className="dossier-section">
-              <h3>Road Network & Farm-to-Market Access</h3>
+              <div className="section-head-between">
+                <div>
+                  <h3>1. Farm-to-Market Road Network &amp; Physical Connectivity</h3>
+                  <p>Feeder road condition, seasonal passability, and distance to primary transport arteries</p>
+                </div>
+                <span className="status-pill verified">
+                  {farmer.roadSeasonality || "Year-round vehicular access"}
+                </span>
+              </div>
               <div className="profile-grid">
                 <div>
-                  <span>Road Classification</span>
-                  <b>{farmer.roadAccess || "Motorable dirt feeder road"}</b>
+                  <span>Road Classification at Gate</span>
+                  <b>{farmer.roadAccess || "Direct motorable access"}</b>
                 </div>
                 <div>
-                  <span>Road Condition</span>
-                  <b>{farmer.roadCondition || "Fair (Graded post-rainy season)"}</b>
+                  <span>Road Surface Condition</span>
+                  <b>{farmer.roadCondition || "Laterite / gravel — fair"}</b>
                 </div>
                 <div>
-                  <span>Road Seasonality</span>
-                  <b>{farmer.roadSeasonality || "Year-round vehicular access"}</b>
+                  <span>Seasonal Passability</span>
+                  <b style={{ color: farmer.roadSeasonality?.includes("cut off") || farmer.roadSeasonality?.includes("Seasonal") ? "#b45309" : "#166534" }}>
+                    {farmer.roadSeasonality || "Year-round vehicular access"}
+                  </b>
                 </div>
                 <div>
-                  <span>Distance to Primary Highway</span>
+                  <span>Distance to Highway / Motorable Road</span>
                   <b>{farmer.roadDistanceMiles || 1.2} miles ({((farmer.roadDistanceMiles || 1.2) * 1.609).toFixed(1)} km)</b>
                 </div>
               </div>
             </section>
 
             <section className="dossier-section">
-              <h3>Post-Harvest & Agro-Processing Access</h3>
+              <div className="section-head-between">
+                <div>
+                  <h3>2. Commercial Market Access &amp; Trade Integration</h3>
+                  <p>Primary trading channels, periodic market (Luma) proximity, and price intelligence</p>
+                </div>
+                <span className="status-pill pending">
+                  {farmer.marketAccess || "Periodic rural weekly market (Luma)"}
+                </span>
+              </div>
               <div className="profile-grid">
                 <div>
-                  <span>Processing Access Option</span>
+                  <span>Primary Sales Outlet</span>
+                  <b>{farmer.marketAccess || "Periodic rural weekly market (Luma)"}</b>
+                </div>
+                <div>
+                  <span>Distance to Primary Market</span>
+                  <b>{farmer.marketDistanceKm ? `${farmer.marketDistanceKm} km` : "4.5 km"}</b>
+                </div>
+                <div>
+                  <span>One-Way Travel Time</span>
+                  <b>{farmer.marketTravelMinutes ? `${farmer.marketTravelMinutes} minutes` : "40 minutes"}</b>
+                </div>
+                <div>
+                  <span>Market Price Information Channel</span>
+                  <b>MoA / e-Platform SMS &amp; Community Radio</b>
+                </div>
+              </div>
+            </section>
+
+            <section className="dossier-section">
+              <div className="section-head-between">
+                <div>
+                  <h3>3. Post-Harvest Storage, Cold Chain &amp; Processing</h3>
+                  <p>Storage structures, post-harvest loss risk, and agro-processing facility proximity</p>
+                </div>
+                <span className="status-pill" style={{ background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
+                  PHL: {farmer.postHarvestLossPct ? `${farmer.postHarvestLossPct}% Loss` : "12% Est. Loss"}
+                </span>
+              </div>
+              <div className="profile-grid">
+                <div>
+                  <span>Storage Facility Type</span>
+                  <b>{farmer.storageAccess || "Hermetic storage (PICS bags / drums)"}</b>
+                </div>
+                <div>
+                  <span>Dedicated Storage Capacity</span>
+                  <b>{farmer.storageCapacityMt ? `${farmer.storageCapacityMt} MT` : "0.8 Metric Tons"}</b>
+                </div>
+                <div>
+                  <span>Self-Reported Post-Harvest Loss</span>
+                  <b style={{ color: (farmer.postHarvestLossPct || 12) > 20 ? "#dc2626" : "#166534" }}>
+                    {farmer.postHarvestLossPct ? `${farmer.postHarvestLossPct}%` : "12%"}
+                  </b>
+                </div>
+                <div>
+                  <span>Agro-Processing Facility Access</span>
                   <b>{farmer.processingAccess || "Community cooperative aggregation center"}</b>
                 </div>
                 <div>
-                  <span>Facility Name</span>
+                  <span>Facility Name &amp; Operator</span>
                   <b>{farmer.processingFacilityName || `${farmer.county} Agro Hub`}</b>
                 </div>
                 <div>
-                  <span>Facility Type</span>
+                  <span>Facility Type &amp; Equipment</span>
                   <b>{farmer.processingFacilityType || "Solar dryer, fermentary & mechanical thresher"}</b>
                 </div>
                 <div>
-                  <span>Operating Status</span>
-                  <b style={{ color: "#1e6b37" }}>{farmer.processingFacilityStatus || "Operational"}</b>
+                  <span>Processing Facility Status</span>
+                  <b style={{ color: "#166534" }}>{farmer.processingFacilityStatus || "Operational"}</b>
                 </div>
                 <div>
-                  <span>Distance to Facility</span>
-                  <b>{farmer.processingDistanceMiles || 2.5} miles</b>
+                  <span>Distance &amp; Travel to Facility</span>
+                  <b>{farmer.processingDistanceMiles || 2.5} miles ({farmer.processingTravelMinutes || 20} mins)</b>
+                </div>
+              </div>
+            </section>
+
+            <section className="dossier-section">
+              <div className="section-head-between">
+                <div>
+                  <h3>4. Produce Haulage &amp; Transportation Logistics</h3>
+                  <p>Modal share for agricultural haulage, vehicle ownership, and transport economics</p>
+                </div>
+              </div>
+              <div className="profile-grid">
+                <div>
+                  <span>Primary Produce Haulage Mode</span>
+                  <b>{farmer.transportMode || "Motorbike / Kehkeh (Tricycle)"}</b>
                 </div>
                 <div>
-                  <span>Travel Time & Transport Mode</span>
-                  <b>{farmer.processingTravelMinutes || 20} mins by {farmer.processingTransportMode || "Motorbike"}</b>
+                  <span>Transport Vehicle Ownership</span>
+                  <b>{farmer.transportOwnership || "Hired commercial transporter"}</b>
+                </div>
+                <div>
+                  <span>Secondary Haulage Option</span>
+                  <b>Head-loading / Porterage for farmgate consolidation</b>
+                </div>
+                <div>
+                  <span>Logistics Reliability Rating</span>
+                  <b style={{ color: "#166534" }}>High (Active rural transporter network)</b>
+                </div>
+              </div>
+            </section>
+
+            <section className="dossier-section">
+              <div className="section-head-between">
+                <div>
+                  <h3>5. Agricultural Mechanization, Irrigation &amp; Smart Farming Tech</h3>
+                  <p>Power tillage equipment, water control infrastructure, and digital ICT readiness</p>
+                </div>
+                <span className="status-pill verified">
+                  {farmer.tillageMechanization || "Power tiller / 2-wheel walking tractor"}
+                </span>
+              </div>
+              <div className="profile-grid">
+                <div>
+                  <span>Tillage Mechanization Level</span>
+                  <b>{farmer.tillageMechanization || "Power tiller / 2-wheel walking tractor"}</b>
+                </div>
+                <div>
+                  <span>Irrigation &amp; Water Management</span>
+                  <b>{farmer.irrigationAccess || "Rainfed only"}</b>
+                </div>
+                <div>
+                  <span>Smart Farming &amp; ICT Readiness</span>
+                  <b>{farmer.smartTechReadiness || "Basic 2G feature phone (SMS / Voice)"}</b>
+                </div>
+                <div>
+                  <span>Mechanization Subsidy Priority</span>
+                  <b style={{ color: "#0369a1" }}>Tier 1 (High priority for power-tiller leasing)</b>
                 </div>
               </div>
             </section>
