@@ -180,6 +180,10 @@ function patchJsFiles(dir) {
       let content = fs.readFileSync(fullPath, "utf-8");
       content = content.replaceAll('"/assets/', `"${baseWithoutSlash}/assets/`);
       content = content.replaceAll("'/assets/", `'${baseWithoutSlash}/assets/`);
+      content = content.replaceAll('`/assets/', `\`${baseWithoutSlash}/assets/`);
+      content = content.replaceAll('"/data/', `"${baseWithoutSlash}/data/`);
+      content = content.replaceAll("'/data/", `'${baseWithoutSlash}/data/`);
+      content = content.replaceAll('`/data/', `\`${baseWithoutSlash}/data/`);
       fs.writeFileSync(fullPath, content, "utf-8");
     }
   }

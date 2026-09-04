@@ -497,6 +497,17 @@ function createCommodityIcon(commodity: string) {
   });
 }
 
+function getAssetUrl(path: string): string {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  if (typeof window !== "undefined") {
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    if (segments.length > 0 && segments[0] === "liberia-digital-farmer-registry") {
+      return `/liberia-digital-farmer-registry${p}`;
+    }
+  }
+  return p;
+}
+
 export default function InteractiveMapClient() {
   const [selectedCounty, setSelectedCounty] = useState<CountyInfo>(COUNTIES.find(c => c.name === "Montserrado") || COUNTIES[0]);
   const [hoveredCounty, setHoveredCounty] = useState<CountyInfo | null>(null);
@@ -506,12 +517,12 @@ export default function InteractiveMapClient() {
   const [selectedCommodity, setSelectedCommodity] = useState<string>("All");
   const [infrastructureFilter, setInfrastructureFilter] = useState<string>("All");
   const [isNationalView, setIsNationalView] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<"vector" | "raster">("vector");
+  const [viewMode, setViewMode] = useState<"demarcated" | "vector" | "survey">("demarcated");
   const [geojsonData, setGeojsonData] = useState<any>(null);
 
   // Load official GeoJSON for Leaflet boundary rendering
   useEffect(() => {
-    fetch("/data/liberia-counties.geojson")
+    fetch(getAssetUrl("/data/liberia-counties.geojson"))
       .then((r) => r.json())
       .then((d) => setGeojsonData(d))
       .catch(() => {});
@@ -623,7 +634,22 @@ export default function InteractiveMapClient() {
                 <h2>Republic of Liberia</h2>
                 <small style={{ fontSize: "10px", color: "#64748b" }}>15 Official Demarcated Counties</small>
               </div>
-              <div style={{ display: "flex", gap: "5px" }}>
+              <div style={{ display: "flex", gap: "4px" }}>
+                <button
+                  onClick={() => setViewMode("demarcated")}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: viewMode === "demarcated" ? "#166534" : "#ffffff",
+                    color: viewMode === "demarcated" ? "#ffffff" : "#334155",
+                    borderRadius: "6px",
+                    padding: "4px 8px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Map of Liberia
+                </button>
                 <button
                   onClick={() => setViewMode("vector")}
                   style={{
@@ -631,28 +657,28 @@ export default function InteractiveMapClient() {
                     background: viewMode === "vector" ? "#166534" : "#ffffff",
                     color: viewMode === "vector" ? "#ffffff" : "#334155",
                     borderRadius: "6px",
-                    padding: "3px 8px",
+                    padding: "4px 8px",
                     fontSize: "10px",
                     fontWeight: 700,
                     cursor: "pointer",
                   }}
                 >
-                  Vector
+                  Interactive Vector
                 </button>
                 <button
-                  onClick={() => setViewMode("carto")}
+                  onClick={() => setViewMode("survey")}
                   style={{
                     border: "1px solid #cbd5e1",
-                    background: viewMode === "carto" ? "#166534" : "#ffffff",
-                    color: viewMode === "carto" ? "#ffffff" : "#334155",
+                    background: viewMode === "survey" ? "#166534" : "#ffffff",
+                    color: viewMode === "survey" ? "#ffffff" : "#334155",
                     borderRadius: "6px",
-                    padding: "3px 8px",
+                    padding: "4px 8px",
                     fontSize: "10px",
                     fontWeight: 700,
                     cursor: "pointer",
                   }}
                 >
-                  Cartography
+                  Survey
                 </button>
               </div>
             </header>
@@ -689,8 +715,35 @@ export default function InteractiveMapClient() {
               </div>
             )}
 
-            {/* View Mode: Interactive Authentic Vector Map */}
-            {viewMode === "vector" ? (
+            {/* View Mode 1: Authentic Demarcated Map of Liberia (User Reference Image) */}
+            {viewMode === "demarcated" && (
+              <div className="county-carto-frame">
+                <img
+                  src={getAssetUrl("/assets/liberia-demarcated-counties.png")}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.dataset.tried) {
+                      target.dataset.tried = "1";
+                      target.src = "./assets/liberia-demarcated-counties.png";
+                    }
+                  }}
+                  alt="Official Demarcated Counties of Liberia"
+                  style={{ width: "100%", height: "390px", objectFit: "contain", background: "#ffffff", padding: "8px" }}
+                />
+                <div style={{ position: "absolute", bottom: "8px", left: "8px", right: "8px", background: "rgba(15, 23, 42, 0.88)", color: "white", padding: "6px 10px", borderRadius: "8px", fontSize: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Republic of Liberia · 15 Demarcated Counties</span>
+                  <button
+                    onClick={() => setViewMode("vector")}
+                    style={{ border: 0, background: "#16a34a", color: "white", borderRadius: "4px", padding: "2px 7px", fontSize: "9px", cursor: "pointer" }}
+                  >
+                    Hover Stats View →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* View Mode 2: Interactive Authentic Vector Map */}
+            {viewMode === "vector" && (
               <svg
                 className="liberia-vector-svg"
                 viewBox="0 0 760 720"
@@ -719,15 +772,24 @@ export default function InteractiveMapClient() {
                   );
                 })}
               </svg>
-            ) : (
-              /* View Mode: Official Cartographic Map Image */
-              <div style={{ textAlign: "center", position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid #dce6da" }}>
+            )}
+
+            {/* View Mode 3: Official Cartographic Survey Map */}
+            {viewMode === "survey" && (
+              <div className="county-carto-frame">
                 <img
-                  src="/assets/liberia-counties-map.png"
+                  src={getAssetUrl("/assets/liberia-counties-map.png")}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.dataset.tried) {
+                      target.dataset.tried = "1";
+                      target.src = "./assets/liberia-counties-map.png";
+                    }
+                  }}
                   alt="Official Demarcated Counties of Liberia"
                   style={{ width: "100%", height: "390px", objectFit: "contain", background: "#f8faf6" }}
                 />
-                <div style={{ position: "absolute", bottom: "10px", left: "10px", right: "10px", background: "rgba(15, 23, 42, 0.85)", color: "white", padding: "6px 10px", borderRadius: "6px", fontSize: "10px" }}>
+                <div style={{ position: "absolute", bottom: "8px", left: "8px", right: "8px", background: "rgba(15, 23, 42, 0.85)", color: "white", padding: "6px 10px", borderRadius: "6px", fontSize: "10px" }}>
                   Official Ministry of Agriculture & LISGIS 15-County Cartographic Base
                 </div>
               </div>
