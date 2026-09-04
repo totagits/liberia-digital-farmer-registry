@@ -497,10 +497,183 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
   // 10. Extension Services: /api/extension-services
   if (pathname === "/api/extension-services") {
-    return jsonResponse({
-      requests: [],
-      access: { canManage: true, role: "Ministry administrator" },
-    });
+    const STORAGE_KEY = "dfr_extension_records_v2";
+    const getStoredExtension = () => {
+      if (typeof window === "undefined") return { requests: [], visits: [] };
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      return { requests: [], visits: [] };
+    };
+    const saveStoredExtension = (data: any) => {
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch {}
+      }
+    };
+
+    if (method === "GET") {
+      const store = getStoredExtension();
+      return jsonResponse({
+        requests: store.requests || [],
+        visits: store.visits || [],
+        access: { canManage: true, role: "Extension agent" },
+      });
+    }
+
+    if (method === "POST" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        const store = getStoredExtension();
+        store.requests = store.requests || [];
+        store.visits = store.visits || [];
+
+        if (body.action === "record-visit") {
+          const reqCode = body.requestCode || `EXT-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+          const visitCode = `VIS-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+
+          const newVisit = {
+            id: Date.now(),
+            visitCode,
+            requestCode: reqCode,
+            scheduledAt: body.scheduledAt || new Date().toISOString(),
+            visitType: body.visitType || "On-farm visit",
+            officerName: body.officerName || "Dr. John Kerkulah",
+            status: body.status || "Completed",
+            location: body.location || `${body.district || ""}, ${body.county || ""}`,
+            purpose: body.purpose || "On-farm advisory encounter",
+            observations: body.observations || "",
+            advice: body.advice || "",
+            referral: body.referral || "",
+            referralStatus: body.referral ? body.referralStatus || "Referred" : "Not required",
+            outcome: body.outcome || "Field recommendations documented.",
+            nextVisitAt: body.nextVisitAt || "",
+            crop: body.crop || "Rice",
+            diagnostic: body.diagnostic || null,
+            soilTest: body.soilTest || null,
+            audioNoteUrl: body.audioNoteUrl || null,
+          };
+
+          let parentReq = store.requests.find((r: any) => r.requestCode === reqCode);
+          if (!parentReq) {
+            parentReq = {
+              requestCode: reqCode,
+              requesterName: body.farmerName || "Smallholder Producer",
+              requesterRole: "Farmer",
+              farmerDfrId: body.farmerDfrId || "",
+              county: body.county || "Bong",
+              district: body.district || "",
+              serviceType: body.serviceType || "Agronomic Diagnostics & IPM Advisory",
+              preferredDate: new Date().toISOString().slice(0, 10),
+              problemDescription: body.observations || body.purpose || "Field visit advisory",
+              urgency: body.urgency || "Normal",
+              status: "Completed",
+              assignedOfficer: body.officerName || "Dr. John Kerkulah",
+              resolutionSummary: body.advice || "",
+              followUpDate: body.nextVisitAt || "",
+              satisfaction: 5,
+              createdAt: new Date().toISOString(),
+              visits: [newVisit],
+            };
+            store.requests.unshift(parentReq);
+          } else {
+            parentReq.visits = parentReq.visits || [];
+            parentReq.visits.unshift(newVisit);
+          }
+
+          store.visits.unshift(newVisit);
+          saveStoredExtension(store);
+
+          addStoredAudit({
+            actor: "extension.agent@moa.gov.lr",
+            action: "Extension field visit recorded",
+            entity: visitCode,
+            details: `${body.farmerName || "Farmer"} (${body.farmerDfrId || "DFR"}), ${body.county || "Liberia"} · ${body.serviceType || "Advisory"}`,
+          });
+
+          return jsonResponse({ ok: true, visitCode, requestCode: reqCode }, 201);
+        }
+
+        if (body.action === "broadcast-alert") {
+          const alertId = `ALT-${Date.now().toString().slice(-4)}`;
+          addStoredAudit({
+            actor: "extension.directorate@moa.gov.lr",
+            action: "Emergency pest alert broadcast",
+            entity: alertId,
+            details: `Alert: ${body.crop || "Crops"} across ${body.county || "National"}: ${body.message || ""}`,
+          });
+          return jsonResponse({ ok: true, alertId, recipientsCount: 142 });
+        }
+
+        if (body.action === "schedule") {
+          const visitCode = `VIS-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+          const newVisit = {
+            id: Date.now(),
+            visitCode,
+            requestCode: body.requestCode,
+            scheduledAt: body.scheduledAt,
+            visitType: body.visitType || "On-farm visit",
+            officerName: body.officerName || "Extension Agent",
+            status: body.status || "Scheduled",
+            location: body.location || "",
+            purpose: body.purpose || "",
+            observations: body.observations || "",
+            advice: body.advice || "",
+            referral: body.referral || "",
+            referralStatus: body.referralStatus || "Not required",
+            outcome: body.outcome || "",
+            nextVisitAt: body.nextVisitAt || "",
+          };
+          const r = store.requests.find((x: any) => x.requestCode === body.requestCode);
+          if (r) {
+            r.visits = r.visits || [];
+            r.visits.unshift(newVisit);
+            r.status = body.requestStatus || "Visit scheduled";
+          }
+          store.visits.unshift(newVisit);
+          saveStoredExtension(store);
+          return jsonResponse({ ok: true, visitCode });
+        }
+
+        if (body.action === "feedback") {
+          const r = store.requests.find((x: any) => x.requestCode === body.requestCode);
+          if (r) {
+            r.satisfaction = Number(body.satisfaction) || 5;
+            saveStoredExtension(store);
+          }
+          return jsonResponse({ ok: true });
+        }
+
+        // Standard new service request
+        const reqCode = `EXT-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+        const newReq = {
+          requestCode: reqCode,
+          requesterName: body.requesterName || "Farmer Applicant",
+          requesterRole: body.requesterRole || "Farmer",
+          farmerDfrId: body.farmerDfrId || "",
+          county: body.county || "Bong",
+          district: body.district || "",
+          serviceType: body.serviceType || "Crop production advice",
+          preferredDate: body.preferredDate || "",
+          problemDescription: body.problemDescription || "",
+          urgency: body.urgency || "Normal",
+          status: "Pending triage",
+          assignedOfficer: "Pending assignment",
+          resolutionSummary: "",
+          followUpDate: "",
+          satisfaction: 0,
+          createdAt: new Date().toISOString(),
+          visits: [],
+        };
+        store.requests.unshift(newReq);
+        saveStoredExtension(store);
+        return jsonResponse({ ok: true, requestCode: reqCode }, 201);
+      } catch {
+        return jsonResponse({ ok: true });
+      }
+    }
   }
 
   // 11. Programme Applications: /api/programme-applications

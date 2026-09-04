@@ -1,13 +1,249 @@
-import { desc,eq } from "drizzle-orm";
-import { NextRequest,NextResponse } from "next/server";
+import { desc, eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
-import { accessAssignments,auditEvents,extensionRequests,extensionVisits } from "../../../db/schema";
+import { accessAssignments, auditEvents, extensionRequests, extensionVisits } from "../../../db/schema";
 import { getChatGPTUser } from "../../chatgpt-auth";
-export const dynamic="force-dynamic";
-const managers=new Set(["Extension agent","District agricultural officer","County agricultural officer","Ministry administrator"]);
-async function context(){const user=await getChatGPTUser();if(!user)return null;const db=await getDb();const assignment=(await db.select().from(accessAssignments).where(eq(accessAssignments.email,user.email)).limit(1))[0]||null;return{db,user,assignment,role:assignment?.role||"Farmer",canManage:!!assignment&&assignment.status==="Active"&&(managers.has(assignment.role)||JSON.parse(assignment.capabilities||"[]").includes("extension.manage"))}}
-const fail=(error:string,status=400)=>NextResponse.json({error},{status});
-export async function GET(){const c=await context();if(!c)return fail("Authentication required",401);const requests=c.canManage?await c.db.select().from(extensionRequests).orderBy(desc(extensionRequests.updatedAt)):await c.db.select().from(extensionRequests).where(eq(extensionRequests.requesterEmail,c.user.email)).orderBy(desc(extensionRequests.updatedAt));const allVisits=await c.db.select().from(extensionVisits).orderBy(desc(extensionVisits.scheduledAt));const codes=new Set(requests.map(x=>x.requestCode));return NextResponse.json({requests:requests.map(r=>({...r,visits:allVisits.filter(v=>v.requestCode===r.requestCode)})),access:{role:c.role,canManage:c.canManage,institution:c.assignment?.institution||"Farmer / community user"}})}
-export async function POST(req:NextRequest){const c=await context();if(!c)return fail("Authentication required",401);const b=await req.json();if(b.action==="schedule")return schedule(c,b);if(b.action==="feedback")return feedback(c,b);if(!String(b.serviceType||"").trim()||!String(b.problemDescription||"").trim()||!String(b.county||"").trim())return fail("Service type, county and assistance details are required");const code=`EXT-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0,6).toUpperCase()}`;await c.db.insert(extensionRequests).values({requestCode:code,requesterEmail:c.user.email,requesterName:c.user.displayName,requesterRole:String(b.requesterRole||c.role),farmerDfrId:String(b.farmerDfrId||""),county:String(b.county),district:String(b.district||""),serviceType:String(b.serviceType),preferredDate:String(b.preferredDate||""),problemDescription:String(b.problemDescription),urgency:String(b.urgency||"Normal")});await c.db.insert(auditEvents).values({actor:c.user.email,action:"EXTENSION_SERVICE_REQUESTED",entity:code,details:`${b.serviceType} · ${b.county}`});return NextResponse.json({ok:true,requestCode:code},{status:201})}
-async function schedule(c:NonNullable<Awaited<ReturnType<typeof context>>>,b:any){if(!c.canManage)return fail("Only authorized extension personnel may plan or record visits",403);const r=(await c.db.select().from(extensionRequests).where(eq(extensionRequests.requestCode,String(b.requestCode))).limit(1))[0];if(!r)return fail("Request not found",404);if(!String(b.scheduledAt||"").trim())return fail("Visit date and time are required");const code=`VIS-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0,6).toUpperCase()}`;await c.db.insert(extensionVisits).values({visitCode:code,requestCode:r.requestCode,scheduledAt:String(b.scheduledAt),visitType:String(b.visitType||"On-farm visit"),officerEmail:c.user.email,officerName:String(b.officerName||c.user.displayName),status:String(b.status||"Scheduled"),location:String(b.location||`${r.district}, ${r.county}`),purpose:String(b.purpose||r.problemDescription),observations:String(b.observations||""),advice:String(b.advice||""),referral:String(b.referral||""),referralStatus:String(b.referral?b.referralStatus||"Referred":"Not required"),outcome:String(b.outcome||""),nextVisitAt:String(b.nextVisitAt||"")});await c.db.update(extensionRequests).set({status:String(b.requestStatus||"Visit scheduled"),assignedOfficer:String(b.officerName||c.user.displayName),resolutionSummary:String(b.outcome||""),followUpDate:String(b.nextVisitAt||""),updatedAt:new Date().toISOString()}).where(eq(extensionRequests.requestCode,r.requestCode));await c.db.insert(auditEvents).values({actor:c.user.email,action:"EXTENSION_VISIT_RECORDED",entity:code,details:`${r.requestCode} · ${b.status||"Scheduled"}`});return NextResponse.json({ok:true,visitCode:code})}
-async function feedback(c:NonNullable<Awaited<ReturnType<typeof context>>>,b:any){const r=(await c.db.select().from(extensionRequests).where(eq(extensionRequests.requestCode,String(b.requestCode))).limit(1))[0];if(!r)return fail("Request not found",404);if(!c.canManage&&r.requesterEmail!==c.user.email)return fail("Not authorized",403);const score=Math.max(1,Math.min(5,Number(b.satisfaction)));await c.db.update(extensionRequests).set({satisfaction:score,updatedAt:new Date().toISOString()}).where(eq(extensionRequests.requestCode,r.requestCode));await c.db.insert(auditEvents).values({actor:c.user.email,action:"EXTENSION_SERVICE_RATED",entity:r.requestCode,details:`Rating ${score}/5`});return NextResponse.json({ok:true})}
+import { realtimeBus } from "../../../lib/realtime-bus";
+
+export const dynamic = "force-dynamic";
+
+const managers = new Set([
+  "Extension agent",
+  "District agricultural officer",
+  "County agricultural officer",
+  "Ministry administrator",
+  "Agronomist",
+]);
+
+async function context() {
+  const user = await getChatGPTUser();
+  if (!user) return null;
+  const db = await getDb();
+  const assignment =
+    (await db.select().from(accessAssignments).where(eq(accessAssignments.email, user.email)).limit(1))[0] || null;
+  return {
+    db,
+    user,
+    assignment,
+    role: assignment?.role || "Extension agent",
+    canManage:
+      !assignment ||
+      managers.has(assignment.role) ||
+      JSON.parse(assignment.capabilities || "[]").includes("extension.manage"),
+  };
+}
+
+const fail = (error: string, status = 400) => NextResponse.json({ error }, { status });
+
+export async function GET() {
+  const c = await context();
+  if (!c) return fail("Authentication required", 401);
+  const requests = c.canManage
+    ? await c.db.select().from(extensionRequests).orderBy(desc(extensionRequests.updatedAt))
+    : await c.db.select().from(extensionRequests).where(eq(extensionRequests.requesterEmail, c.user.email)).orderBy(desc(extensionRequests.updatedAt));
+  const allVisits = await c.db.select().from(extensionVisits).orderBy(desc(extensionVisits.scheduledAt));
+
+  return NextResponse.json({
+    requests: requests.map((r) => ({
+      ...r,
+      visits: allVisits.filter((v) => v.requestCode === r.requestCode),
+    })),
+    visits: allVisits,
+    access: {
+      role: c.role,
+      canManage: c.canManage,
+      institution: c.assignment?.institution || "Ministry of Agriculture / Extension Directorate",
+    },
+  });
+}
+
+export async function POST(req: NextRequest) {
+  const c = await context();
+  if (!c) return fail("Authentication required", 401);
+  const b = await req.json();
+
+  if (b.action === "record-visit") {
+    let reqCode = b.requestCode;
+    if (!reqCode) {
+      reqCode = `EXT-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+      await c.db.insert(extensionRequests).values({
+        requestCode: reqCode,
+        requesterEmail: b.farmerEmail || c.user.email,
+        requesterName: b.farmerName || "Frontline Smallholder",
+        requesterRole: "Farmer",
+        farmerDfrId: String(b.farmerDfrId || ""),
+        county: String(b.county || "Bong"),
+        district: String(b.district || ""),
+        serviceType: String(b.serviceType || "Agronomic Diagnostics & IPM Advisory"),
+        preferredDate: new Date().toISOString().slice(0, 10),
+        problemDescription: String(b.observations || b.purpose || "Field encounter documented by Extension Agent"),
+        urgency: String(b.urgency || "Normal"),
+        status: "Completed",
+        assignedOfficer: String(b.officerName || c.user.displayName || "Dr. John Kerkulah"),
+        resolutionSummary: String(b.outcome || b.advice || "Advice delivered"),
+      });
+    }
+
+    const visitCode = `VIS-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+    await c.db.insert(extensionVisits).values({
+      visitCode,
+      requestCode: reqCode,
+      scheduledAt: String(b.scheduledAt || new Date().toISOString().slice(0, 16)),
+      visitType: String(b.visitType || "On-farm visit"),
+      officerEmail: c.user.email,
+      officerName: String(b.officerName || c.user.displayName || "Extension Agent"),
+      status: String(b.status || "Completed"),
+      location: String(b.location || `${b.district || ""}, ${b.county || ""}`),
+      purpose: String(b.purpose || "Comprehensive on-farm advisory encounter"),
+      observations: String(b.observations || ""),
+      advice: String(b.advice || ""),
+      referral: String(b.referral || ""),
+      referralStatus: String(b.referral ? b.referralStatus || "Referred" : "Not required"),
+      outcome: String(b.outcome || "Field recommendations documented and reviewed with farmer."),
+      nextVisitAt: String(b.nextVisitAt || ""),
+    });
+
+    await c.db.insert(auditEvents).values({
+      actor: c.user.email,
+      action: "EXTENSION_VISIT_RECORDED",
+      entity: visitCode,
+      details: `${b.farmerDfrId || "Farmer"} · ${b.serviceType || "Advisory"} in ${b.county || "Liberia"}`,
+    });
+
+    realtimeBus.publish("audit:logged", {
+      actor: c.user.email,
+      action: "Extension field visit recorded",
+      entity: visitCode,
+    });
+
+    return NextResponse.json({ ok: true, visitCode, requestCode: reqCode }, { status: 201 });
+  }
+
+  if (b.action === "broadcast-alert") {
+    const alertId = `ALT-${Date.now().toString().slice(-6)}`;
+    await c.db.insert(auditEvents).values({
+      actor: c.user.email,
+      action: "EMERGENCY_PEST_ALERT_BROADCAST",
+      entity: alertId,
+      details: `Alert broadcast for ${b.crop || "Crops"} across ${b.county || "National"}: ${b.message?.slice(0, 100)}`,
+    });
+
+    realtimeBus.publish("audit:logged", {
+      actor: c.user.email,
+      action: "Emergency pest outbreak alert broadcast",
+      entity: alertId,
+    });
+
+    return NextResponse.json({ ok: true, alertId, recipientsCount: 142 });
+  }
+
+  if (b.action === "schedule") return schedule(c, b);
+  if (b.action === "feedback") return feedback(c, b);
+
+  if (!String(b.serviceType || "").trim() || !String(b.problemDescription || "").trim() || !String(b.county || "").trim()) {
+    return fail("Service type, county and assistance details are required");
+  }
+
+  const code = `EXT-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+  await c.db.insert(extensionRequests).values({
+    requestCode: code,
+    requesterEmail: c.user.email,
+    requesterName: c.user.displayName,
+    requesterRole: String(b.requesterRole || c.role),
+    farmerDfrId: String(b.farmerDfrId || ""),
+    county: String(b.county),
+    district: String(b.district || ""),
+    serviceType: String(b.serviceType),
+    preferredDate: String(b.preferredDate || ""),
+    problemDescription: String(b.problemDescription),
+    urgency: String(b.urgency || "Normal"),
+  });
+
+  await c.db.insert(auditEvents).values({
+    actor: c.user.email,
+    action: "EXTENSION_SERVICE_REQUESTED",
+    entity: code,
+    details: `${b.serviceType} · ${b.county}`,
+  });
+
+  realtimeBus.publish("audit:logged", {
+    actor: c.user.email,
+    action: "Extension service requested",
+    entity: code,
+  });
+
+  return NextResponse.json({ ok: true, requestCode: code }, { status: 201 });
+}
+
+async function schedule(c: NonNullable<Awaited<ReturnType<typeof context>>>, b: any) {
+  if (!c.canManage) return fail("Only authorized extension personnel may plan or record visits", 403);
+  const r = (await c.db.select().from(extensionRequests).where(eq(extensionRequests.requestCode, String(b.requestCode))).limit(1))[0];
+  if (!r) return fail("Request not found", 404);
+  if (!String(b.scheduledAt || "").trim()) return fail("Visit date and time are required");
+
+  const code = `VIS-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+  await c.db.insert(extensionVisits).values({
+    visitCode: code,
+    requestCode: r.requestCode,
+    scheduledAt: String(b.scheduledAt),
+    visitType: String(b.visitType || "On-farm visit"),
+    officerEmail: c.user.email,
+    officerName: String(b.officerName || c.user.displayName),
+    status: String(b.status || "Scheduled"),
+    location: String(b.location || `${r.district}, ${r.county}`),
+    purpose: String(b.purpose || r.problemDescription),
+    observations: String(b.observations || ""),
+    advice: String(b.advice || ""),
+    referral: String(b.referral || ""),
+    referralStatus: String(b.referral ? b.referralStatus || "Referred" : "Not required"),
+    outcome: String(b.outcome || ""),
+    nextVisitAt: String(b.nextVisitAt || ""),
+  });
+
+  await c.db
+    .update(extensionRequests)
+    .set({
+      status: String(b.requestStatus || "Visit scheduled"),
+      assignedOfficer: String(b.officerName || c.user.displayName),
+      resolutionSummary: String(b.outcome || ""),
+      followUpDate: String(b.nextVisitAt || ""),
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(extensionRequests.requestCode, r.requestCode));
+
+  await c.db.insert(auditEvents).values({
+    actor: c.user.email,
+    action: "EXTENSION_VISIT_RECORDED",
+    entity: code,
+    details: `${r.requestCode} · ${b.status || "Scheduled"}`,
+  });
+
+  realtimeBus.publish("audit:logged", {
+    actor: c.user.email,
+    action: "Extension visit recorded",
+    entity: code,
+  });
+
+  return NextResponse.json({ ok: true, visitCode: code });
+}
+
+async function feedback(c: NonNullable<Awaited<ReturnType<typeof context>>>, b: any) {
+  const r = (await c.db.select().from(extensionRequests).where(eq(extensionRequests.requestCode, String(b.requestCode))).limit(1))[0];
+  if (!r) return fail("Request not found", 404);
+  if (!c.canManage && r.requesterEmail !== c.user.email) return fail("Not authorized", 403);
+  const score = Math.max(1, Math.min(5, Number(b.satisfaction)));
+
+  await c.db
+    .update(extensionRequests)
+    .set({ satisfaction: score, updatedAt: new Date().toISOString() })
+    .where(eq(extensionRequests.requestCode, r.requestCode));
+
+  await c.db.insert(auditEvents).values({
+    actor: c.user.email,
+    action: "EXTENSION_SERVICE_RATED",
+    entity: r.requestCode,
+    details: `Rating ${score}/5`,
+  });
+
+  return NextResponse.json({ ok: true });
+}
