@@ -547,6 +547,45 @@ const crops = [
   "Other crop",
 ];
 
+const HASH_TAB_MAP: Record<string, string> = {
+  farmers: "Farmer Registry",
+  registry: "Farmer Registry",
+  farmer: "Farmer Registry",
+  gis: "Farms & GIS",
+  parcels: "Farms & GIS",
+  farms: "Farms & GIS",
+  governance: "Institutional Governance",
+  institutions: "Institutional Governance",
+  interoperability: "Institutional Governance",
+  standards: "Institutional Governance",
+  audits: "Audit & Security",
+  audit: "Audit & Security",
+  "audit-evidence": "Audit & Security",
+  security: "Audit & Security",
+  parties: "Party & Organization Registry",
+  organizations: "Party & Organization Registry",
+  cooperatives: "Party & Organization Registry",
+  households: "Households",
+  extension: "Extension Services",
+  advisory: "Extension Services",
+  field: "Field Registration",
+  "field-registration": "Field Registration",
+  verification: "Verification",
+  vouchers: "Vouchers & Inputs",
+  inputs: "Vouchers & Inputs",
+  money: "Mobile Money",
+  "mobile-money": "Mobile Money",
+  grievances: "Grievances",
+  applications: "Programme Applications",
+  programmes: "Programme Applications",
+  analytics: "Analytics",
+  counties: "County Analytics",
+  sync: "Offline Sync",
+  users: "Users & Access",
+  help: "Help Desk",
+  "help-desk": "Help Desk",
+};
+
 export default function DashboardClient({
   user,
   signOut,
@@ -558,6 +597,12 @@ export default function DashboardClient({
   canRegister: boolean;
   assignedRole: string;
 }) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return !!getActiveDemoUser();
+    }
+    return true;
+  });
   const [currentUser, setCurrentUser] = useState(() => {
     if (typeof window !== "undefined") {
       const demo = getActiveDemoUser();
@@ -638,6 +683,39 @@ export default function DashboardClient({
     onDeliveryChange: () => load(),
     onHouseholdChange: () => load(),
   });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const activeDemo = getActiveDemoUser();
+      if (!activeDemo) {
+        setIsAuthenticated(false);
+        const isGhPages = window.location.pathname.startsWith("/liberia-digital-farmer-registry");
+        const prefix = isGhPages ? "/liberia-digital-farmer-registry" : "";
+        const hash = window.location.hash || "";
+        const target = `/dashboard${hash}`;
+        window.location.href = `${prefix}/signin?redirect=${encodeURIComponent(target)}`;
+        return;
+      }
+      setIsAuthenticated(true);
+      setCurrentUser({ name: activeDemo.name, email: activeDemo.email });
+      setRoleState(activeDemo.role);
+      setActiveRole(activeDemo.role);
+
+      // Check hash for initial workspace tab
+      const hash = window.location.hash.toLowerCase().replace("#", "");
+      if (hash && HASH_TAB_MAP[hash]) {
+        setActive(HASH_TAB_MAP[hash]);
+      }
+
+      const handleHashChange = () => {
+        const h = window.location.hash.toLowerCase().replace("#", "");
+        if (h && HASH_TAB_MAP[h]) {
+          setActive(HASH_TAB_MAP[h]);
+        }
+      };
+      window.addEventListener("hashchange", handleHashChange);
+      return () => window.removeEventListener("hashchange", handleHashChange);
+    }
+  }, []);
   useEffect(() => {
     installClientApiInterceptor();
     load();
@@ -729,8 +807,53 @@ export default function DashboardClient({
   const nav = (name: string) => {
     setActive(name);
     setMobile(false);
+    if (typeof window !== "undefined") {
+      const slug = Object.entries(HASH_TAB_MAP).find(([, val]) => val === name)?.[0];
+      if (slug) {
+        window.history.replaceState(null, "", `#${slug}`);
+      }
+    }
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#081c15",
+          color: "#e2e8f0",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          flexDirection: "column",
+          gap: "14px",
+          padding: "20px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "44px",
+            height: "44px",
+            border: "3px solid rgba(34, 197, 94, 0.2)",
+            borderTopColor: "#22c55e",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600, color: "#f8fafc" }}>
+          Access Control: Authentication Required
+        </h3>
+        <p style={{ margin: 0, fontSize: "0.88rem", color: "#94a3b8", maxWidth: "420px", lineHeight: 1.5 }}>
+          Direct access to the Liberia DFR workspace requires an active authenticated session. Redirecting to the Identity &amp; Access Portal to request credentials…
+        </p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <main className="dash-shell">
       <aside className={`dash-sidebar glass ${mobile ? "open" : ""}`}>

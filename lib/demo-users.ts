@@ -191,12 +191,25 @@ export const STORAGE_KEYS = {
   ACTIVE_ROLE: "dfr_active_role_v1",
 };
 
-export function getActiveDemoUser(): DemoUser {
-  if (typeof window === "undefined") return DEMO_USERS[0];
+export function getActiveDemoUser(): DemoUser | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.ACTIVE_USER);
     if (raw) return JSON.parse(raw);
   } catch {}
+  return null;
+}
+
+export function hasActiveUserSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return !!localStorage.getItem(STORAGE_KEYS.ACTIVE_USER);
+  } catch {
+    return false;
+  }
+}
+
+export function getDefaultDemoUser(): DemoUser {
   return DEMO_USERS[0];
 }
 
