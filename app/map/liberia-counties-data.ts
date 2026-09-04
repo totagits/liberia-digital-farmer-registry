@@ -25,7 +25,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Bomi",
     "code": "BM",
     "capital": "Tubmanburg",
-    "color": "#f59e0b",
+    "color": "#7faf28",
     "center": [
       6.6909,
       -10.8243
@@ -56,7 +56,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Bong",
     "code": "BG",
     "capital": "Gbarnga",
-    "color": "#ea580c",
+    "color": "#d8671c",
     "center": [
       6.9327,
       -9.5903
@@ -87,7 +87,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Gbarpolu",
     "code": "GP",
     "capital": "Bopolu",
-    "color": "#a855f7",
+    "color": "#b73991",
     "center": [
       7.3732,
       -10.2908
@@ -118,7 +118,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Grand Bassa",
     "code": "GB",
     "capital": "Buchanan",
-    "color": "#9333ea",
+    "color": "#9d3282",
     "center": [
       6.2928,
       -9.768
@@ -149,7 +149,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Grand Cape Mount",
     "code": "CM",
     "capital": "Robertsport",
-    "color": "#0ea5e9",
+    "color": "#efb325",
     "center": [
       7.019,
       -11.1115
@@ -180,7 +180,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Grand Gedeh",
     "code": "GG",
     "capital": "Zwedru",
-    "color": "#65a30d",
+    "color": "#7faf28",
     "center": [
       6.0059,
       -8.232
@@ -211,7 +211,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Grand Kru",
     "code": "GK",
     "capital": "Barclayville",
-    "color": "#7e22ce",
+    "color": "#8baec0",
     "center": [
       4.7894,
       -8.1545
@@ -242,7 +242,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Lofa",
     "code": "LF",
     "capital": "Voinjama",
-    "color": "#dc2626",
+    "color": "#d23237",
     "center": [
       7.9617,
       -9.8691
@@ -273,7 +273,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Margibi",
     "code": "MG",
     "capital": "Kakata",
-    "color": "#e11d48",
+    "color": "#b73991",
     "center": [
       6.4896,
       -10.2539
@@ -304,7 +304,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Maryland",
     "code": "MY",
     "capital": "Harper",
-    "color": "#0284c7",
+    "color": "#e6cf33",
     "center": [
       4.7126,
       -7.7521
@@ -335,7 +335,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Montserrado",
     "code": "MO",
     "capital": "Bensonville / Monrovia",
-    "color": "#84cc16",
+    "color": "#b5ad78",
     "center": [
       6.457,
       -10.6822
@@ -366,7 +366,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Nimba",
     "code": "NI",
     "capital": "Sanniquellie",
-    "color": "#38bdf8",
+    "color": "#44abd4",
     "center": [
       6.799,
       -8.7706
@@ -397,7 +397,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "River Gee",
     "code": "RG",
     "capital": "Fish Town",
-    "color": "#991b1b",
+    "color": "#eed3a8",
     "center": [
       5.1931,
       -7.7463
@@ -428,7 +428,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "River Cess",
     "code": "RC",
     "capital": "Cestos City",
-    "color": "#eab308",
+    "color": "#a2c7c4",
     "center": [
       5.9093,
       -9.4356
@@ -459,7 +459,7 @@ export const COUNTIES_GEO: CountyInfo[] = [
     "name": "Sinoe",
     "code": "SI",
     "capital": "Greenville",
-    "color": "#c2410c",
+    "color": "#d8671c",
     "center": [
       5.3693,
       -8.7849

@@ -517,8 +517,27 @@ export default function InteractiveMapClient() {
   const [selectedCommodity, setSelectedCommodity] = useState<string>("All");
   const [infrastructureFilter, setInfrastructureFilter] = useState<string>("All");
   const [isNationalView, setIsNationalView] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<"demarcated" | "vector" | "survey">("demarcated");
+  const [viewMode, setViewMode] = useState<"vector" | "demarcated" | "survey">("vector");
   const [geojsonData, setGeojsonData] = useState<any>(null);
+
+  // Dynamic Tooltip Clamping to prevent clipping off-screen
+  const tooltipStyle = useMemo((): React.CSSProperties => {
+    if (!hoverPos) return { display: "none" };
+    // Container width is ~380px in desktop sidebar. Clamp X so 240px card stays fully visible:
+    const clampedX = Math.max(124, Math.min(hoverPos.x, 256));
+    
+    // In our 390px tall SVG canvas:
+    // If cursor Y is in the upper half (< 185px), display tooltip BELOW cursor; otherwise above.
+    const isUpperHalf = hoverPos.y < 185;
+    const top = isUpperHalf ? hoverPos.y + 16 : hoverPos.y - 12;
+    const transform = isUpperHalf ? "translate(-50%, 0)" : "translate(-50%, -100%)";
+
+    return {
+      left: `${clampedX}px`,
+      top: `${top}px`,
+      transform,
+    };
+  }, [hoverPos]);
 
   // Load official GeoJSON for Leaflet boundary rendering
   useEffect(() => {
@@ -627,7 +646,10 @@ export default function InteractiveMapClient() {
               const rect = e.currentTarget.getBoundingClientRect();
               setHoverPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
             }}
-            onMouseLeave={() => setHoveredCounty(null)}
+            onMouseLeave={() => {
+              setHoveredCounty(null);
+              setHoverPos(null);
+            }}
           >
             <header>
               <div>
@@ -635,21 +657,6 @@ export default function InteractiveMapClient() {
                 <small style={{ fontSize: "10px", color: "#64748b" }}>15 Official Demarcated Counties</small>
               </div>
               <div style={{ display: "flex", gap: "4px" }}>
-                <button
-                  onClick={() => setViewMode("demarcated")}
-                  style={{
-                    border: "1px solid #cbd5e1",
-                    background: viewMode === "demarcated" ? "#166534" : "#ffffff",
-                    color: viewMode === "demarcated" ? "#ffffff" : "#334155",
-                    borderRadius: "6px",
-                    padding: "4px 8px",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  Map of Liberia
-                </button>
                 <button
                   onClick={() => setViewMode("vector")}
                   style={{
@@ -663,7 +670,22 @@ export default function InteractiveMapClient() {
                     cursor: "pointer",
                   }}
                 >
-                  Interactive Vector
+                  Interactive Map
+                </button>
+                <button
+                  onClick={() => setViewMode("demarcated")}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: viewMode === "demarcated" ? "#166534" : "#ffffff",
+                    color: viewMode === "demarcated" ? "#ffffff" : "#334155",
+                    borderRadius: "6px",
+                    padding: "4px 8px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Demarcated Print
                 </button>
                 <button
                   onClick={() => setViewMode("survey")}
@@ -687,12 +709,14 @@ export default function InteractiveMapClient() {
             {hoveredCounty && hoverPos && (
               <div
                 className="county-hover-card"
-                style={{
-                  left: `${hoverPos.x}px`,
-                  top: `${hoverPos.y}px`,
-                }}
+                style={tooltipStyle}
               >
-                <h4>{hoveredCounty.name} County</h4>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <h4 style={{ margin: 0 }}>{hoveredCounty.name} County</h4>
+                  <span style={{ fontSize: "9px", background: hoveredCounty.color, color: "#ffffff", padding: "1px 6px", borderRadius: "4px", fontWeight: 700, textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                    {hoveredCounty.code}
+                  </span>
+                </div>
                 <p>Administrative Seat: {hoveredCounty.capital}</p>
                 <div className="county-hover-stats">
                   <div>
@@ -712,10 +736,90 @@ export default function InteractiveMapClient() {
                     <b>{hoveredCounty.mechanizationPct}% index</b>
                   </div>
                 </div>
+                <div style={{ marginTop: 6, paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.1)", fontSize: "9px", color: "#86efac", textAlign: "center" }}>
+                  Click to focus & inspect cadastral parcels →
+                </div>
               </div>
             )}
 
-            {/* View Mode 1: Authentic Demarcated Map of Liberia (User Reference Image) */}
+            {/* View Mode 1: Interactive Authentic Demarcated Vector Map */}
+            {viewMode === "vector" && (
+              <svg
+                className="liberia-vector-svg"
+                viewBox="0 0 760 720"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Background ocean/canvas hover reset */}
+                <rect
+                  x="0"
+                  y="0"
+                  width="760"
+                  height="720"
+                  fill="#f8fafc"
+                  fillOpacity="0.4"
+                  onMouseEnter={() => setHoveredCounty(null)}
+                />
+
+                {/* Neighboring Country Context Labels */}
+                <text x="140" y="80" fill="#94a3b8" fontSize="13" fontWeight="800" letterSpacing="0.12em" opacity="0.65">
+                  SIERRA LEONE
+                </text>
+                <text x="490" y="70" fill="#94a3b8" fontSize="13" fontWeight="800" letterSpacing="0.12em" opacity="0.65">
+                  GUINEA
+                </text>
+                <text x="630" y="340" fill="#94a3b8" fontSize="13" fontWeight="800" letterSpacing="0.12em" opacity="0.65">
+                  CÔTE D&apos;IVOIRE
+                </text>
+                <text x="130" y="560" fill="#64748b" fontSize="15" fontWeight="900" letterSpacing="0.14em" opacity="0.5" transform="rotate(-30 130 560)">
+                  ATLANTIC OCEAN
+                </text>
+
+                {/* Compass Rose */}
+                <g transform="translate(68, 620) scale(0.65)" opacity="0.75">
+                  <circle cx="40" cy="40" r="34" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="2 2" />
+                  <polygon points="40,8 45,36 40,32 35,36" fill="#dc2626" />
+                  <polygon points="40,72 45,44 40,48 35,44" fill="#64748b" />
+                  <polygon points="8,40 36,45 32,40 36,35" fill="#64748b" />
+                  <polygon points="72,40 44,45 48,40 44,35" fill="#64748b" />
+                  <text x="40" y="5" textAnchor="middle" fontSize="11" fontWeight="800" fill="#dc2626">N</text>
+                </g>
+
+                {/* 15 Demarcated Counties */}
+                {COUNTIES.map((county) => {
+                  const isSelected = !isNationalView && selectedCounty.code === county.code;
+                  const isHovered = hoveredCounty?.code === county.code;
+                  return (
+                    <g key={county.code}>
+                      <path
+                        d={county.svgPath}
+                        fill={county.color}
+                        fillOpacity={isSelected ? 1 : isHovered ? 1 : 0.88}
+                        stroke={isSelected ? "#0f172a" : "#ffffff"}
+                        strokeWidth={isSelected ? 3 : 1.8}
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        className={`county-polygon ${isSelected ? "selected" : ""}`}
+                        onMouseEnter={() => setHoveredCounty(county)}
+                        onClick={() => handleSelectCounty(county)}
+                        style={{
+                          cursor: "pointer",
+                          filter: isHovered ? "brightness(1.22)" : isSelected ? "drop-shadow(0 4px 10px rgba(0,0,0,0.3))" : undefined,
+                        }}
+                      />
+                      <text
+                        x={county.labelCoords[0]}
+                        y={county.labelCoords[1]}
+                        className="county-vector-label"
+                      >
+                        {county.name}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            )}
+
+            {/* View Mode 2: Authentic Demarcated Map of Liberia (User Reference Image) */}
             {viewMode === "demarcated" && (
               <div className="county-carto-frame">
                 <img
@@ -740,38 +844,6 @@ export default function InteractiveMapClient() {
                   </button>
                 </div>
               </div>
-            )}
-
-            {/* View Mode 2: Interactive Authentic Vector Map */}
-            {viewMode === "vector" && (
-              <svg
-                className="liberia-vector-svg"
-                viewBox="0 0 760 720"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {COUNTIES.map((county) => {
-                  const isSelected = !isNationalView && selectedCounty.code === county.code;
-                  return (
-                    <g key={county.code}>
-                      <path
-                        d={county.svgPath}
-                        fill={county.color}
-                        fillOpacity={isSelected ? 1 : 0.88}
-                        className={`county-polygon ${isSelected ? "selected" : ""}`}
-                        onMouseEnter={() => setHoveredCounty(county)}
-                        onClick={() => handleSelectCounty(county)}
-                      />
-                      <text
-                        x={county.labelCoords[0]}
-                        y={county.labelCoords[1]}
-                        className="county-vector-label"
-                      >
-                        {county.name}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
             )}
 
             {/* View Mode 3: Official Cartographic Survey Map */}
@@ -1151,18 +1223,35 @@ export default function InteractiveMapClient() {
               {/* Official County Boundary Layer on Leaflet */}
               {geojsonData && (
                 <GeoJSON
-                  key={`geojson-${selectedCounty.code}-${isNationalView}`}
+                  key={`geojson-${selectedCounty.code}-${hoveredCounty?.code || "none"}-${isNationalView}`}
                   data={geojsonData}
                   style={(feature) => {
                     const raw = feature?.properties?.shapeName;
                     const fName = raw === "Rivercess" ? "River Cess" : raw;
                     const isSelected = !isNationalView && fName === selectedCounty.name;
+                    const isHovered = hoveredCounty && fName === hoveredCounty.name;
                     return {
-                      color: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.45)",
-                      weight: isSelected ? 3 : 1.5,
-                      fillColor: isSelected ? selectedCounty.color : "transparent",
-                      fillOpacity: isSelected ? 0.18 : 0,
+                      color: isSelected ? "#ffffff" : isHovered ? "#22c55e" : "rgba(255, 255, 255, 0.45)",
+                      weight: isSelected ? 3.5 : isHovered ? 3 : 1.5,
+                      fillColor: isSelected ? selectedCounty.color : isHovered ? (hoveredCounty?.color || "#22c55e") : "transparent",
+                      fillOpacity: isSelected ? 0.28 : isHovered ? 0.35 : 0,
                     };
+                  }}
+                  onEachFeature={(feature, layer) => {
+                    const raw = feature?.properties?.shapeName;
+                    const fName = raw === "Rivercess" ? "River Cess" : raw;
+                    const countyData = COUNTIES.find((c) => c.name === fName);
+                    if (countyData) {
+                      layer.bindTooltip(
+                        `<b>${countyData.name} County</b><br/>${countyData.farmers.toLocaleString()} Registered Farmers<br/>${countyData.hectares.toLocaleString()} ha Cultivated`,
+                        { sticky: true, direction: "top" }
+                      );
+                      layer.on({
+                        mouseover: () => setHoveredCounty(countyData),
+                        mouseout: () => setHoveredCounty(null),
+                        click: () => handleSelectCounty(countyData),
+                      });
+                    }
                   }}
                 />
               )}

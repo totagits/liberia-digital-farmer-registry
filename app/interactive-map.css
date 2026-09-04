@@ -204,33 +204,32 @@
   stroke-width: 1.8;
   stroke-linejoin: round;
   stroke-linecap: round;
-  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .county-polygon:hover {
-  filter: brightness(1.15) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+  filter: brightness(1.22);
   stroke: #ffffff;
-  stroke-width: 2.8;
+  stroke-width: 1.8;
   opacity: 1 !important;
 }
 
 .county-polygon.selected {
-  filter: brightness(1.2) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
-  stroke: #ffffff;
-  stroke-width: 3.2;
+  stroke: #0f172a;
+  stroke-width: 2.8;
+  filter: brightness(1.15) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
   opacity: 1 !important;
 }
 
 .county-vector-label {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   fill: #0f172a;
   text-anchor: middle;
   pointer-events: none;
   paint-order: stroke;
   stroke: #ffffff;
-  stroke-width: 4px;
+  stroke-width: 3.5px;
   stroke-linecap: butt;
   stroke-linejoin: miter;
   letter-spacing: 0.02em;
@@ -238,7 +237,8 @@
 
 .county-polygon.selected + .county-vector-label {
   fill: #14532d;
-  font-size: 18px;
+  font-size: 17px;
+  stroke-width: 4px;
 }
 
 .county-carto-frame {
@@ -261,18 +261,18 @@
 /* Dynamic County Hover Stats Tooltip */
 .county-hover-card {
   position: absolute;
-  z-index: 100;
+  z-index: 1000;
   background: rgba(15, 23, 42, 0.95);
   color: #ffffff;
-  padding: 14px 16px;
-  border-radius: 14px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
+  padding: 12px 14px;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
   pointer-events: none;
-  width: 250px;
-  transform: translate(-50%, -105%);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  width: 240px;
+  max-width: calc(100% - 24px);
+  transition: opacity 0.1s ease;
 }
 
 .county-hover-card h4 {
