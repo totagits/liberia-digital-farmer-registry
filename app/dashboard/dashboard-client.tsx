@@ -22,6 +22,7 @@ import ProgrammeApplications from "./programme-applications";
 import Benefits from "./benefits";
 import GrievanceWorkspace from "./grievances";
 import FarmerDossier from "./farmer-dossier";
+import FieldRegistrationWorkspace from "./field-registration";
 import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
@@ -238,7 +239,13 @@ const menu = [
       "Enumerator",
       "Senior enumerator",
       "Extension agent",
+      "County agricultural officer",
+      "District agricultural officer",
+      "Verification officer",
       "Ministry administrator",
+      "System administrator",
+      "Program officer",
+      "Monitoring and evaluation officer",
     ],
   ],
   [
@@ -930,7 +937,22 @@ export default function DashboardClient({
             />
           )}
           {active === "Field Registration" && (
-            <FieldRegistration farmers={farmers} canRegister={canRegister && registrationRoles.has(role)} openRegistration={() => setModal(true)} notify={setNotice} />
+            <FieldRegistrationWorkspace
+              farmers={farmers}
+              role={role}
+              notify={setNotice}
+              openFarmerRegistration={() => {
+                setFarmerRegistrationType("farmer");
+                setModal(true);
+              }}
+              openOrgRegistration={() => {
+                setOrgRegistrationType("cooperative");
+                setOrgModal(true);
+              }}
+              openRegistrationRouter={() => setRouter(true)}
+              openFarmerDossier={(f) => setSelectedFarmer(f)}
+              onVerifyFarmer={verify}
+            />
           )}
           {[
             "Households",
@@ -969,7 +991,7 @@ export default function DashboardClient({
           ].includes(active) && <Module name={active} role={role} />}
         </div>
       </section>
-      {modal && canRegister && registrationRoles.has(role) && (
+      {modal && (
         <RegistrationWizard
           initialKind={farmerRegistrationType}
           close={() => setModal(false)}
@@ -977,7 +999,7 @@ export default function DashboardClient({
           refresh={load}
         />
       )}
-      {orgModal && canRegister && registrationRoles.has(role) && (
+      {orgModal && (
         <OrganizationRegistrationWizard
           initialType={orgRegistrationType}
           close={() => setOrgModal(false)}
@@ -988,7 +1010,7 @@ export default function DashboardClient({
           }}
         />
       )}
-      {router && canRegister && registrationRoles.has(role) && (
+      {router && (
         <RegistrationRouter
           close={()=>setRouter(false)}
           openFarmer={(type)=>{setFarmerRegistrationType(type);setRouter(false);setModal(true)}}
@@ -1534,11 +1556,7 @@ function AuditView({ audits }: { audits: Audit[] }) {
     </article>
   );
 }
-function FieldRegistration({farmers,canRegister,openRegistration,notify}:{farmers:Farmer[];canRegister:boolean;openRegistration:()=>void;notify:(x:string)=>void}){
-  const [queued,setQueued]=useState(0);
-  useEffect(()=>{try{setQueued(JSON.parse(localStorage.getItem("dfr-offline-queue")||"[]").length)}catch{setQueued(0)}},[]);
-  return <div className="field-workspace"><section className="workspace-hero panel"><div><span>Authorized field data collection</span><h2>Field registration and synchronization</h2><p>Capture a provisional farmer, household and farm profile with consent and location evidence, then submit it to the verification queue.</p></div><button disabled={!canRegister} onClick={openRegistration}>{canRegister?"＋ Start registration":"Registration permission required"}</button></section><div className="metric-grid"><Metric label="Provisional records" value={String(farmers.filter(f=>f.dfrId.startsWith("PROV-")).length)} delta="Awaiting governed verification" icon="⌁"/><Metric label="Device queue" value={String(queued)} delta="Records waiting to synchronize" icon="↻"/><Metric label="Needs correction" value={String(farmers.filter(f=>f.status==="Needs correction").length)} delta="Returned by a verifier" icon="!"/><Metric label="Approved records" value={String(farmers.filter(f=>f.status==="Verified").length)} delta="Official registry profiles" icon="✓"/></div><article className="panel workflow-checklist"><div><b>1</b><h3>Identify and obtain consent</h3><p>Record identity, household, vulnerability and informed-consent evidence.</p></div><div><b>2</b><h3>Profile farms and production</h3><p>Capture crops, farm access, facilities, coordinates and parcel evidence.</p></div><div><b>3</b><h3>Validate and synchronize</h3><p>Run required checks and send the record for supervisor review.</p></div><button onClick={()=>notify("Offline records remain on this device until a secure connection is available.")}>Synchronization guidance</button></article></div>
-}
+
 
 function Module({ name, role }: { name: string; role: string }) {
   const descriptions: Record<string, string> = {
