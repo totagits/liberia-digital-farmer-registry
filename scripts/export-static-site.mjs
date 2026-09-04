@@ -48,6 +48,7 @@ async function exportSite() {
     "/services",
     "/governance",
     "/dashboard",
+    "/signin",
     ...deliverables.map((d) => `/deliverables/${d.slug}`),
   ];
 
@@ -94,6 +95,7 @@ async function exportSite() {
 
     // Rewrite internal navigation links
     html = html.replaceAll('href="/dashboard"', `href="${baseWithoutSlash}/dashboard/"`);
+    html = html.replaceAll('href="/signin"', `href="${baseWithoutSlash}/signin/"`);
     html = html.replaceAll('href="/platform"', `href="${baseWithoutSlash}/platform/"`);
     html = html.replaceAll('href="/services"', `href="${baseWithoutSlash}/services/"`);
     html = html.replaceAll('href="/governance"', `href="${baseWithoutSlash}/governance/"`);

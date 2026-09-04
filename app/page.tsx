@@ -27,7 +27,7 @@ export default function Home() {
       <header className="site-header glass">
         <div className="brand brand-fao"><img src="/assets/fao-logo.png" alt="FAO"/><div><strong>Digital Farmer Registry</strong><span>Republic of Liberia</span></div></div>
         <nav aria-label="Primary navigation"><Link href="/">Home</Link><Link href="/platform">Platform</Link><Link href="/services">Services</Link><Link href="/governance">Governance</Link><Link href="/about">About</Link></nav>
-        <div className="header-actions"><div className="brand moa"><div><span>Led by</span><strong>Ministry of Agriculture</strong></div><img src="/assets/moa-logo.png" alt="Ministry of Agriculture Liberia"/></div><Link className="signin" href="/dashboard">Sign in <span>↗</span></Link></div>
+        <div className="header-actions"><div className="brand moa"><div><span>Led by</span><strong>Ministry of Agriculture</strong></div><img src="/assets/moa-logo.png" alt="Ministry of Agriculture Liberia"/></div><Link className="signin" href="/signin">Sign in <span>↗</span></Link></div>
         <div className="site-search"><span>⌕</span><input aria-label="Search the platform" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search the registry, services, reports and help…"/><kbd>⌘ K</kbd>{results.length>0&&<div className="search-results">{results.map(r=><a key={r} href="#platform">{r}<span>→</span></a>)}</div>}</div>
       </header>
 

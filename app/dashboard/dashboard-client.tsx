@@ -22,6 +22,7 @@ import GrievanceWorkspace from "./grievances";
 import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
+import { getActiveDemoUser, setActiveDemoUser, DEMO_USERS } from "../../lib/demo-users";
 const GISWorkspace = dynamic(() => import("./gis-workspace"), { ssr: false });
 const CoverageMap = dynamic(() => import("./coverage-map"), { ssr: false });
 
@@ -517,10 +518,34 @@ export default function DashboardClient({
   canRegister: boolean;
   assignedRole: string;
 }) {
-  const [role, setRoleState] = useState(() => getActiveRole(assignedRole || "Ministry administrator"));
+  const [currentUser, setCurrentUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      const demo = getActiveDemoUser();
+      if (demo) return { name: demo.name, email: demo.email };
+    }
+    return user;
+  });
+  const [role, setRoleState] = useState(() => {
+    if (typeof window !== "undefined") {
+      const demo = getActiveDemoUser();
+      if (demo) return demo.role;
+    }
+    return getActiveRole(assignedRole || "Ministry administrator");
+  });
   const setRole = (r: string) => {
     setRoleState(r);
     setActiveRole(r);
+    const matching = DEMO_USERS.find((u) => u.role === r);
+    if (matching) {
+      setCurrentUser({ name: matching.name, email: matching.email });
+      setActiveDemoUser(matching);
+    }
+  };
+  const getSignOutUrl = () => {
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry")) {
+      return "/liberia-digital-farmer-registry/signin/";
+    }
+    return "/signin/";
   };
   const [active, setActive] = useState("Home");
   const [farmers, setFarmers] = useState<Farmer[]>([]);
@@ -661,9 +686,9 @@ export default function DashboardClient({
               ♢<sup>{pending}</sup>
             </button>
             <div className="identity">
-              <span>{user.name.slice(0, 1).toUpperCase()}</span>
+              <span>{currentUser.name.slice(0, 1).toUpperCase()}</span>
               <div>
-                <b>{user.name}</b>
+                <b>{currentUser.name}</b>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
@@ -698,8 +723,24 @@ export default function DashboardClient({
                 </select>
               </div>
             </div>
-            <a href={signOut} title="Sign out">
-              ↗
+            <a
+              href={getSignOutUrl()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                background: "rgba(255,255,255,0.08)",
+                fontSize: "0.82rem",
+                textDecoration: "none",
+                color: "#94a3b8",
+                border: "1px solid rgba(255,255,255,0.15)",
+                transition: "all 0.2s",
+              }}
+              title="Switch Account / Demo Personas"
+            >
+              Accounts ↗
             </a>
           </div>
         </header>

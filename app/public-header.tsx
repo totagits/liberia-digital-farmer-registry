@@ -24,7 +24,7 @@ export default function PublicHeader() {
       </nav>
       <div className="header-actions">
         <div className="brand moa"><div><span>Led by</span><strong>Ministry of Agriculture</strong></div><img src="/assets/moa-logo.png" alt="Ministry of Agriculture Liberia" /></div>
-        <Link className="signin" href="/dashboard">Sign in <span>↗</span></Link>
+        <Link className="signin" href="/signin">Sign in <span>↗</span></Link>
       </div>
     </header>
   );
