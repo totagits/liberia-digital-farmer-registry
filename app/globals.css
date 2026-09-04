@@ -618,6 +618,7 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 
 /* 1. Modal Overlay Containers */
 .modal-wrap,
+.modal-back,
 .modal-wrap.enrollment-overlay,
 .modal-wrap.org-wizard-overlay,
 .modal-wrap.registration-router-overlay {
@@ -639,7 +640,8 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 
 /* 2. All Enrollment & Organization Registration Wizards */
 .enrollment-wizard,
-.org-wizard {
+.org-wizard,
+.ext-wizard {
   width: min(1280px, 97vw) !important;
   max-height: calc(100vh - 48px) !important;
   display: flex !important;
@@ -653,7 +655,8 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 }
 
 .enrollment-wizard > header,
-.org-wizard > header {
+.org-wizard > header,
+.ext-wizard > header {
   flex-shrink: 0 !important;
   position: sticky !important;
   top: 0 !important;
@@ -661,7 +664,8 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 }
 
 .enrollment-wizard > main,
-.org-wizard > main {
+.org-wizard > main,
+.ext-wizard > main {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   overflow-y: auto !important;
@@ -674,29 +678,34 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 
 /* Visible modern scrollbar for wizard forms */
 .enrollment-wizard > main::-webkit-scrollbar,
-.org-wizard > main::-webkit-scrollbar {
+.org-wizard > main::-webkit-scrollbar,
+.ext-wizard > main::-webkit-scrollbar {
   width: 10px !important;
   display: block !important;
 }
 .enrollment-wizard > main::-webkit-scrollbar-track,
-.org-wizard > main::-webkit-scrollbar-track {
+.org-wizard > main::-webkit-scrollbar-track,
+.ext-wizard > main::-webkit-scrollbar-track {
   background: #f1f5f9 !important;
   border-radius: 6px !important;
 }
 .enrollment-wizard > main::-webkit-scrollbar-thumb,
-.org-wizard > main::-webkit-scrollbar-thumb {
+.org-wizard > main::-webkit-scrollbar-thumb,
+.ext-wizard > main::-webkit-scrollbar-thumb {
   background: #21a66d !important;
   border-radius: 6px !important;
   border: 2px solid #f1f5f9 !important;
 }
 .enrollment-wizard > main::-webkit-scrollbar-thumb:hover,
-.org-wizard > main::-webkit-scrollbar-thumb:hover {
+.org-wizard > main::-webkit-scrollbar-thumb:hover,
+.ext-wizard > main::-webkit-scrollbar-thumb:hover {
   background: #17865b !important;
 }
 
 /* Footer: Sticky, always pinned at the bottom, so Next / Submit buttons are ALWAYS visible! */
 .enrollment-wizard > footer,
-.org-wizard > footer {
+.org-wizard > footer,
+.ext-wizard > footer {
   flex-shrink: 0 !important;
   position: sticky !important;
   bottom: 0 !important;
@@ -711,8 +720,24 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 }
 
 .enrollment-wizard > footer button,
-.org-wizard > footer button {
+.org-wizard > footer button,
+.ext-wizard > footer button {
   cursor: pointer !important;
+}
+
+.ext-wizard textarea,
+.ext-wizard select,
+.ext-wizard input {
+  color: #10251d !important;
+  background: #ffffff !important;
+  border: 1px solid #ccd8e8 !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  font-size: 11px !important;
+}
+.ext-wizard textarea {
+  min-height: 80px !important;
+  resize: vertical !important;
 }
 
 /* 3. Compact and Standard Registration Modals */

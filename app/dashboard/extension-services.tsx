@@ -84,6 +84,13 @@ const SERVICES = [
   "Cooperative strengthening",
 ];
 
+const visitStages = [
+  "Farmer & Holding Profile",
+  "Diagnostics & Pest Symptoms",
+  "Agronomic Advisory & Media",
+  "Referrals & Officer Sign-off",
+];
+
 const CABI_PEST_DATABASE = [
   {
     crop: "Rice – lowland & upland",
@@ -168,6 +175,23 @@ export default function ExtensionServices({
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState("");
   const [farmersList, setFarmersList] = useState<MockFarmer[]>([]);
+
+  // 4-Stage Enterprise Wizard state for Field Encounters
+  const [visitStep, setVisitStep] = useState(1);
+  const [visitDraft, setVisitDraft] = useState<Record<string, string>>({
+    county: "Bong",
+    status: "Completed",
+    visitType: "On-farm field inspection",
+    cropStage: "Vegetative / Tillering",
+    severity: "Moderate",
+    serviceType: "Crop production advice",
+    audioLanguage: "English",
+    referral: "",
+    referralStatus: "Not required",
+    scheduledAt: new Date().toISOString().slice(0, 16),
+    officerName: role === "Extension agent" ? "Dr. John Kerkulah" : "Agricultural Extension Officer",
+  });
+  const updateVisitDraft = (key: string, val: string) => setVisitDraft((d) => ({ ...d, [key]: val }));
 
   // Sprayer dilution calculator state
   const [calcAreaHa, setCalcAreaHa] = useState<number>(1.0);
@@ -264,11 +288,12 @@ export default function ExtensionServices({
     e.preventDefault();
     setBusy(true);
     const fd = new FormData(e.currentTarget);
-    const body: Record<string, any> = Object.fromEntries(fd.entries());
+    const fromForm = Object.fromEntries(fd.entries());
+    const body: Record<string, any> = { ...visitDraft, ...fromForm };
 
     // attach active diagnostic & soil info if available
     body.action = "record-visit";
-    body.officerName = body.officerName || (role === "Extension agent" ? "Dr. John Kerkulah" : "Agricultural Officer");
+    body.officerName = body.officerName || (role === "Extension agent" ? "Dr. John Kerkulah" : "Agricultural Extension Officer");
 
     try {
       const res = await fetch("/api/extension-services", {
@@ -1045,7 +1070,20 @@ export default function ExtensionServices({
                     </td>
                     <td>
                       <button
-                        onClick={() => setSelected(r)}
+                        onClick={() => {
+                          setVisitDraft((d) => ({
+                            ...d,
+                            farmerDfrId: r.farmerDfrId || "",
+                            farmerName: r.requesterName || "",
+                            county: r.county || "Bong",
+                            district: r.district || "",
+                            crop: "Lowland Rice",
+                            observations: `Farmer Request: ${r.serviceType} — ${r.problemDescription}`,
+                            serviceType: r.serviceType || "Crop production advice",
+                          }));
+                          setVisitStep(1);
+                          setVisitModal(true);
+                        }}
                         style={{
                           padding: "6px 12px",
                           borderRadius: "6px",
@@ -1092,192 +1130,502 @@ export default function ExtensionServices({
         </section>
       )}
 
-      {/* MODAL 1: RECORD FIELD VISIT & FARM ADVISORY */}
+      {/* MODAL 1: ENTERPRISE FIELD ENCOUNTER & ADVISORY WIZARD */}
       {visitModal && (
-        <div className="modal-back">
-          <form className="register-modal ext-form" onSubmit={submitFieldVisit} style={{ maxWidth: 740, maxHeight: "90vh", overflowY: "auto" }}>
+        <div
+          className="modal-wrap enrollment-overlay"
+          style={{ zIndex: 10000 }}
+          onMouseDown={(e) => {
+            if (e.currentTarget === e.target) setVisitModal(false);
+          }}
+        >
+          <form
+            className="enrollment-wizard ext-wizard"
+            onSubmit={submitFieldVisit}
+          >
             <header>
               <div>
-                <span style={{ color: "#4ade80", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
-                  Domain 1 & 2: ODK / CABI PlantwisePlus Integrated Encounter
-                </span>
-                <h2 style={{ margin: "4px 0 0", color: "#fff", fontSize: "1.25rem" }}>
-                  Record Extension Field Visit & Advisory
-                </h2>
+                <span>♢ &nbsp; NATIONAL AGRICULTURAL EXTENSION &amp; ADVISORY SERVICES (AEAS)</span>
+                <h2>Field Visit &amp; Agronomic Advisory Wizard</h2>
+                <p>Official frontline on-farm diagnostic recording, technical advisory prescription, and multi-agency institutional referrals.</p>
               </div>
-              <button type="button" onClick={() => setVisitModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.5rem", cursor: "pointer" }}>
+              <b>Step {visitStep} of 4</b>
+              <button type="button" onClick={() => setVisitModal(false)} aria-label="Close field encounter wizard">
                 ×
               </button>
+              <nav>
+                {visitStages.map((stage, i) => (
+                  <button
+                    type="button"
+                    key={stage}
+                    className={visitStep === i + 1 ? "active" : visitStep > i + 1 ? "done" : ""}
+                    onClick={() => setVisitStep(i + 1)}
+                  >
+                    {i + 1}. {stage}
+                  </button>
+                ))}
+              </nav>
             </header>
 
-            <div className="form-grid" style={{ padding: "16px 20px" }}>
-              {/* Farmer Selection with Autofill */}
-              <label className="wide">
-                Select Enrolled Farmer (DFR ID)
-                <select
-                  name="farmerSelect"
-                  onChange={(e) => {
-                    const sel = farmersList.find((f) => f.dfrId === e.target.value);
-                    if (sel) {
-                      const form = e.currentTarget.form;
-                      if (form) {
-                        (form.elements.namedItem("farmerDfrId") as HTMLInputElement).value = sel.dfrId;
-                        (form.elements.namedItem("farmerName") as HTMLInputElement).value = `${sel.firstName} ${sel.lastName}`;
-                        (form.elements.namedItem("county") as HTMLSelectElement).value = sel.county || "Bong";
-                        (form.elements.namedItem("district") as HTMLInputElement).value = sel.district || "";
-                        (form.elements.namedItem("crop") as HTMLInputElement).value = sel.crop || "Rice";
-                        (form.elements.namedItem("location") as HTMLInputElement).value = `${sel.community || ""}, ${sel.district || ""}, ${sel.county || ""}`;
-                      }
-                    }
-                  }}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
-                >
-                  <option value="">-- Choose from Enrolled Farmers or Enter Manually --</option>
-                  {farmersList.map((f) => (
-                    <option key={f.dfrId} value={f.dfrId}>
-                      {f.firstName} {f.lastName} ({f.dfrId}) — {f.county}, {f.crop}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <main>
+              {/* STEP 1: Farmer & Holding Profile */}
+              {visitStep === 1 && (
+                <>
+                  <section className="enroll-panel">
+                    <h3>Select Enrolled Farmer (DFR Smallholder Registry)</h3>
+                    <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 12px" }}>
+                      Choose an enrolled smallholder from the registry directory to auto-populate official identifiers, GPS coordinates, and crop value chains:
+                    </p>
+                    <label className="full-label">
+                      Farmer Directory Lookup
+                      <select
+                        name="farmerSelect"
+                        value={visitDraft.farmerDfrId || ""}
+                        onChange={(e) => {
+                          const sel = farmersList.find((f) => f.dfrId === e.target.value);
+                          if (sel) {
+                            setVisitDraft((d) => ({
+                              ...d,
+                              farmerDfrId: sel.dfrId,
+                              farmerName: `${sel.firstName} ${sel.lastName}`,
+                              county: sel.county || "Bong",
+                              district: sel.district || "",
+                              crop: sel.crop || "Rice",
+                              location: `${sel.community || ""}, ${sel.district || ""}, ${sel.county || ""}`,
+                            }));
+                          }
+                        }}
+                      >
+                        <option value="">-- Choose from Enrolled Farmers or Enter Manually --</option>
+                        {farmersList.map((f) => (
+                          <option key={f.dfrId} value={f.dfrId}>
+                            {f.firstName} {f.lastName} ({f.dfrId}) — {f.county}, {f.crop}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </section>
 
-              <label>
-                Farmer DFR ID*
-                <input name="farmerDfrId" placeholder="LBR-XX-000000" required />
-              </label>
-              <label>
-                Farmer Full Name*
-                <input name="farmerName" placeholder="Full legal name" required />
-              </label>
+                  <section className="identity-panel">
+                    <h3>♙ Enrolled Farmer &amp; Holding Profile</h3>
+                    <div className="enroll-grid three">
+                      <label>
+                        Farmer DFR ID*
+                        <input
+                          name="farmerDfrId"
+                          value={visitDraft.farmerDfrId || ""}
+                          onChange={(e) => updateVisitDraft("farmerDfrId", e.target.value)}
+                          placeholder="LBR-XX-000000"
+                          required
+                        />
+                      </label>
+                      <label>
+                        Farmer Full Name*
+                        <input
+                          name="farmerName"
+                          value={visitDraft.farmerName || ""}
+                          onChange={(e) => updateVisitDraft("farmerName", e.target.value)}
+                          placeholder="Full legal name"
+                          required
+                        />
+                      </label>
+                      <label>
+                        County*
+                        <select
+                          name="county"
+                          value={visitDraft.county || "Bong"}
+                          onChange={(e) => updateVisitDraft("county", e.target.value)}
+                          required
+                        >
+                          {COUNTIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        District &amp; Community
+                        <input
+                          name="district"
+                          value={visitDraft.district || ""}
+                          onChange={(e) => updateVisitDraft("district", e.target.value)}
+                          placeholder="e.g. Suakoko, Phebe Valley"
+                        />
+                      </label>
+                      <label>
+                        Primary Crop Observed*
+                        <input
+                          name="crop"
+                          value={visitDraft.crop || ""}
+                          onChange={(e) => updateVisitDraft("crop", e.target.value)}
+                          placeholder="e.g. Lowland Rice, Cocoa, Cassava"
+                          required
+                        />
+                      </label>
+                      <label>
+                        Service / Advisory Type*
+                        <select
+                          name="serviceType"
+                          value={visitDraft.serviceType || "Crop production advice"}
+                          onChange={(e) => updateVisitDraft("serviceType", e.target.value)}
+                          required
+                        >
+                          {SERVICES.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Encounter Date &amp; Time*
+                        <input
+                          type="datetime-local"
+                          name="scheduledAt"
+                          value={visitDraft.scheduledAt || new Date().toISOString().slice(0, 16)}
+                          onChange={(e) => updateVisitDraft("scheduledAt", e.target.value)}
+                          required
+                        />
+                      </label>
+                      <label>
+                        Encounter Type
+                        <select
+                          name="visitType"
+                          value={visitDraft.visitType || "On-farm field inspection"}
+                          onChange={(e) => updateVisitDraft("visitType", e.target.value)}
+                        >
+                          <option>On-farm field inspection</option>
+                          <option>CABI Plantwise plant clinic</option>
+                          <option>Group demonstration session</option>
+                          <option>Office advisory consultation</option>
+                          <option>Phone / Remote triage</option>
+                        </select>
+                      </label>
+                      <label>
+                        Specific Location &amp; GPS Reference
+                        <input
+                          name="location"
+                          value={visitDraft.location || ""}
+                          onChange={(e) => updateVisitDraft("location", e.target.value)}
+                          placeholder="e.g. Lowland Plot 2, Gbedin Swamp, Lat 7.362, Lng -8.706"
+                        />
+                      </label>
+                    </div>
+                  </section>
+                </>
+              )}
 
-              <label>
-                County*
-                <select name="county" required>
-                  {COUNTIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                District & Community
-                <input name="district" placeholder="e.g. Suakoko, Phebe Valley" />
-              </label>
+              {/* STEP 2: Diagnostics & Pest Symptoms */}
+              {visitStep === 2 && (
+                <>
+                  <section className="enroll-panel">
+                    <h3>Crop Growth Stage &amp; Pest Infestation Severity</h3>
+                    <div className="enroll-grid">
+                      <label>
+                        Current Crop Growth Stage
+                        <select
+                          name="cropStage"
+                          value={visitDraft.cropStage || "Vegetative / Tillering"}
+                          onChange={(e) => updateVisitDraft("cropStage", e.target.value)}
+                        >
+                          <option>Germination / Seedling emergence</option>
+                          <option>Vegetative / Tillering</option>
+                          <option>Flowering / Booting / Tasseling</option>
+                          <option>Grain filling / Tuber bulking</option>
+                          <option>Maturation / Pre-harvest</option>
+                        </select>
+                      </label>
+                      <label>
+                        Pest &amp; Disease Severity Classification*
+                        <select
+                          name="severity"
+                          value={visitDraft.severity || "Moderate"}
+                          onChange={(e) => updateVisitDraft("severity", e.target.value)}
+                          required
+                        >
+                          <option value="None">None (Healthy plot, routine visit)</option>
+                          <option value="Low">Low (Sporadic symptoms below economic threshold)</option>
+                          <option value="Moderate">Moderate (Economic injury threshold approached)</option>
+                          <option value="Severe">Severe (Critical epidemic outbreak, urgent intervention)</option>
+                        </select>
+                      </label>
+                    </div>
 
-              <label>
-                Primary Crop Observed*
-                <input name="crop" placeholder="e.g. Lowland Rice, Cocoa, Cassava" required />
-              </label>
-              <label>
-                Service / Advisory Type*
-                <select name="serviceType" required>
-                  {SERVICES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </label>
+                    <div style={{ marginTop: 16 }}>
+                      <label className="full-label">
+                        Agronomic Field Observations &amp; Diagnostic Findings*
+                        <textarea
+                          name="observations"
+                          value={visitDraft.observations || ""}
+                          onChange={(e) => updateVisitDraft("observations", e.target.value)}
+                          placeholder="Document leaf discoloration, defoliation patterns, lesion margins, insect larval instars, soil waterlogging, or nutrient chlorosis..."
+                          rows={4}
+                          required
+                        />
+                      </label>
+                    </div>
+                  </section>
 
-              <label>
-                Encounter Date & Time*
-                <input type="datetime-local" name="scheduledAt" defaultValue={new Date().toISOString().slice(0, 16)} required />
-              </label>
-              <label>
-                Encounter Type
-                <select name="visitType">
-                  <option>On-farm field inspection</option>
-                  <option>CABI Plantwise plant clinic</option>
-                  <option>Group demonstration session</option>
-                  <option>Office advisory consultation</option>
-                  <option>Phone / Remote triage</option>
-                </select>
-              </label>
+                  <section className="identity-panel">
+                    <h3>🔬 CABI PlantwisePlus IPM Diagnostic Matrix</h3>
+                    <p style={{ fontSize: "11px", color: "#506557", marginBottom: 14 }}>
+                      Select diagnosed pest or disease to attach certified FAO / CABI Integrated Pest Management protocols:
+                    </p>
+                    <div className="classification-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+                      {CABI_PEST_DATABASE.map((pest, idx) => (
+                        <label
+                          key={idx}
+                          className={visitDraft.diagnosedPest === pest.pestOrDisease ? "selected" : ""}
+                          onClick={() => {
+                            updateVisitDraft("diagnosedPest", pest.pestOrDisease);
+                            updateVisitDraft("pestSymptoms", pest.symptoms);
+                            updateVisitDraft("advice", `Cultural: ${pest.culturalControl} | Biological: ${pest.biologicalControl} | Chemical: ${pest.chemicalControl}`);
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="diagnosedPestRadio"
+                            checked={visitDraft.diagnosedPest === pest.pestOrDisease}
+                            readOnly
+                          />
+                          <i>🔬</i>
+                          <b>{pest.pestOrDisease}</b>
+                          <span>{pest.crop} · {pest.scientificName}</span>
+                        </label>
+                      ))}
+                    </div>
 
-              <label>
-                Extension Officer Name*
-                <input name="officerName" defaultValue={role === "Extension agent" ? "Dr. John Kerkulah" : "Agricultural Extension Officer"} required />
-              </label>
-              <label>
-                Encounter Status
-                <select name="status">
-                  <option value="Completed">Completed (Advice Delivered)</option>
-                  <option value="Scheduled">Scheduled</option>
-                  <option value="Follow-up required">Follow-up required</option>
-                </select>
-              </label>
+                    {visitDraft.diagnosedPest && (
+                      <div className="review-card" style={{ marginTop: 18, background: "#133827" }}>
+                        <h4 style={{ color: "#bbf7d0" }}>Attached CABI IPM Protocol: {visitDraft.diagnosedPest}</h4>
+                        <div style={{ gridTemplateColumns: "repeat(3, 1fr)", marginTop: 10 }}>
+                          <p><span style={{ color: "#86efac" }}>Cultural Controls</span><b style={{ fontSize: "9px" }}>{CABI_PEST_DATABASE.find(p => p.pestOrDisease === visitDraft.diagnosedPest)?.culturalControl || "Field hygiene"}</b></p>
+                          <p><span style={{ color: "#86efac" }}>Biological Controls</span><b style={{ fontSize: "9px" }}>{CABI_PEST_DATABASE.find(p => p.pestOrDisease === visitDraft.diagnosedPest)?.biologicalControl || "Bio-pesticides"}</b></p>
+                          <p><span style={{ color: "#86efac" }}>Chemical / Regulated</span><b style={{ fontSize: "9px" }}>{CABI_PEST_DATABASE.find(p => p.pestOrDisease === visitDraft.diagnosedPest)?.chemicalControl || "Contact CAO"}</b></p>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                </>
+              )}
 
-              <label className="wide">
-                Specific Location & GPS Reference
-                <input name="location" placeholder="e.g. Lowland Plot 2, Gbedin Swamp, Lat 7.362, Lng -8.706" />
-              </label>
+              {/* STEP 3: Agronomic Advisory & Media */}
+              {visitStep === 3 && (
+                <>
+                  <section className="enroll-panel">
+                    <h3>Official Technical Advice &amp; Agronomic Prescription*</h3>
+                    <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 12px" }}>
+                      Provide actionable, step-by-step guidance that the smallholder can implement immediately on their plot:
+                    </p>
+                    <label className="full-label">
+                      Prescribed Technical Advisory (IPM / Nutrient Management)*
+                      <textarea
+                        name="advice"
+                        value={visitDraft.advice || ""}
+                        onChange={(e) => updateVisitDraft("advice", e.target.value)}
+                        placeholder="Detail cultural practices, biological controls, safe dilution rates, planting depth, or fertilizer scheduling..."
+                        rows={5}
+                        required
+                      />
+                    </label>
+                  </section>
 
-              <label className="wide">
-                Agronomic Field Observations & Diagnosis*
-                <textarea
-                  name="observations"
-                  placeholder="Document leaf discoloration, pest infestation severity, soil moisture conditions, weed pressure, or growth stage..."
-                  rows={3}
-                  required
-                />
-              </label>
+                  <section className="identity-panel">
+                    <h3>🚜 Knapsack Sprayer Dilution &amp; Calibration Summary</h3>
+                    <p style={{ fontSize: "11px", color: "#506557", marginBottom: 14 }}>
+                      Verify correct dilution and water volume to prevent over-application or environmental runoff:
+                    </p>
+                    <div className="enroll-grid three">
+                      <label>
+                        Treated Area (ha)
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={calcAreaHa}
+                          onChange={(e) => setCalcAreaHa(Number(e.target.value) || 0.1)}
+                        />
+                      </label>
+                      <label>
+                        Tank Capacity (L)
+                        <input
+                          type="number"
+                          value={calcTankLitres}
+                          onChange={(e) => setCalcTankLitres(Number(e.target.value) || 16)}
+                        />
+                      </label>
+                      <label>
+                        Chemical Dose (mL or g/ha)
+                        <input
+                          type="number"
+                          value={calcDoseHa}
+                          onChange={(e) => setCalcDoseHa(Number(e.target.value) || 100)}
+                        />
+                      </label>
+                      <label>
+                        Water Application Rate (L/ha)
+                        <input
+                          type="number"
+                          value={calcWaterRateHa}
+                          onChange={(e) => setCalcWaterRateHa(Number(e.target.value) || 200)}
+                        />
+                      </label>
+                      <label>
+                        Total Required Water
+                        <input readOnly value={`${sprayerResults.totalWater} Litres`} />
+                      </label>
+                      <label>
+                        Calibrated Dose / Knapsack Tank
+                        <input
+                          readOnly
+                          style={{ fontWeight: 800, color: "#166534" }}
+                          value={`${sprayerResults.dosePerTank} mL (or g) across ${sprayerResults.totalTanks} tanks`}
+                        />
+                      </label>
+                    </div>
+                  </section>
 
-              <label className="wide">
-                Official Technical Advice Given to Farmer (IPM / Nutrients)*
-                <textarea
-                  name="advice"
-                  placeholder="Detail cultural practices, biological controls, safe dilution rates, planting depth, or fertilizer scheduling..."
-                  rows={3}
-                  required
-                />
-              </label>
+                  <section className="enroll-panel">
+                    <h3>🗣 Low-Literacy Vernacular Media &amp; Audio Support</h3>
+                    <div className="enroll-grid">
+                      <label>
+                        Vernacular Audio Language Note
+                        <select
+                          name="audioLanguage"
+                          value={visitDraft.audioLanguage || "English"}
+                          onChange={(e) => updateVisitDraft("audioLanguage", e.target.value)}
+                        >
+                          <option value="English">English / Liberian English</option>
+                          <option value="Kpelle">Kpelle</option>
+                          <option value="Bassa">Bassa</option>
+                          <option value="Mano">Mano</option>
+                          <option value="Gio">Gio</option>
+                          <option value="Lorma">Lorma</option>
+                        </select>
+                      </label>
+                      <label>
+                        Field Audio Capture Status
+                        <input readOnly value="Microphone Ready · 60s Voice Note Audio Protocol" style={{ color: "#08764e", fontWeight: 700 }} />
+                      </label>
+                    </div>
+                  </section>
+                </>
+              )}
 
-              {/* Institutional Referral Section */}
-              <label>
-                Institutional Referral Destination
-                <select name="referral">
-                  <option value="">None (Direct Field Resolution)</option>
-                  <option value="CARI Research — Seed Testing & Varietal Screening">CARI Research (Seed & Soil Lab)</option>
-                  <option value="MoA Crop Protection & Quarantine Unit">MoA Crop Protection (Epidemic Unit)</option>
-                  <option value="Local Agro-Dealer — Subsidized Inputs Voucher">Agro-Dealer Input Voucher Network</option>
-                  <option value="MGCSP Social Cash Transfer (SCTP) Referral">MGCSP Social Cash Transfer (SCTP)</option>
-                  <option value="Cooperative Outgrower Aggregation Hub">Cooperative Aggregator Hub</option>
-                  <option value="Liberia Land Authority (LLA) — Boundary Mediation">Liberia Land Authority (Boundary)</option>
-                </select>
-              </label>
-              <label>
-                Referral Status
-                <select name="referralStatus">
-                  <option value="Not required">Not required</option>
-                  <option value="Referred">Referred (Official Ticket Issued)</option>
-                  <option value="Accepted">Accepted by Institution</option>
-                </select>
-              </label>
+              {/* STEP 4: Referrals & Officer Sign-off */}
+              {visitStep === 4 && (
+                <>
+                  <section className="enroll-panel">
+                    <h3>🏛 Multi-Agency Institutional Referral Pipeline</h3>
+                    <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 12px" }}>
+                      Escalate cases that require specialized laboratory testing, quarantine containment, or statutory social transfers:
+                    </p>
+                    <div className="enroll-grid">
+                      <label>
+                        Institutional Referral Destination
+                        <select
+                          name="referral"
+                          value={visitDraft.referral || ""}
+                          onChange={(e) => updateVisitDraft("referral", e.target.value)}
+                        >
+                          <option value="">None (Direct Field Resolution)</option>
+                          <option value="CARI Research — Seed Testing & Varietal Screening">CARI Research (Seed & Soil Lab)</option>
+                          <option value="MoA Crop Protection & Quarantine Unit">MoA Crop Protection (Epidemic Unit)</option>
+                          <option value="Local Agro-Dealer — Subsidized Inputs Voucher">Agro-Dealer Input Voucher Network</option>
+                          <option value="MGCSP Social Cash Transfer (SCTP) Referral">MGCSP Social Cash Transfer (SCTP)</option>
+                          <option value="Cooperative Outgrower Aggregation Hub">Cooperative Aggregator Hub</option>
+                          <option value="Liberia Land Authority (LLA) — Boundary Mediation">Liberia Land Authority (Boundary)</option>
+                        </select>
+                      </label>
+                      <label>
+                        Referral Priority &amp; Status
+                        <select
+                          name="referralStatus"
+                          value={visitDraft.referralStatus || "Not required"}
+                          onChange={(e) => updateVisitDraft("referralStatus", e.target.value)}
+                        >
+                          <option value="Not required">Not required</option>
+                          <option value="Referred">Referred (Official Ticket Issued)</option>
+                          <option value="Accepted">Accepted by Institution</option>
+                        </select>
+                      </label>
+                    </div>
+                  </section>
 
-              <label>
-                Vernacular Audio Language Note
-                <select name="audioLanguage">
-                  <option value="English">English / Liberian English</option>
-                  <option value="Kpelle">Kpelle</option>
-                  <option value="Bassa">Bassa</option>
-                  <option value="Mano">Mano</option>
-                  <option value="Gio">Gio</option>
-                  <option value="Lorma">Lorma</option>
-                </select>
-              </label>
-              <label>
-                Scheduled Follow-up Date
-                <input type="date" name="nextVisitAt" />
-              </label>
-            </div>
+                  <section className="identity-panel">
+                    <h3>✍ Extension Officer Accountability &amp; Follow-up</h3>
+                    <div className="enroll-grid three">
+                      <label>
+                        Extension Officer Name*
+                        <input
+                          name="officerName"
+                          value={visitDraft.officerName || (role === "Extension agent" ? "Dr. John Kerkulah" : "Agricultural Extension Officer")}
+                          onChange={(e) => updateVisitDraft("officerName", e.target.value)}
+                          required
+                        />
+                      </label>
+                      <label>
+                        Encounter Status
+                        <select
+                          name="status"
+                          value={visitDraft.status || "Completed"}
+                          onChange={(e) => updateVisitDraft("status", e.target.value)}
+                        >
+                          <option value="Completed">Completed (Advice Delivered)</option>
+                          <option value="Scheduled">Scheduled</option>
+                          <option value="Follow-up required">Follow-up required</option>
+                        </select>
+                      </label>
+                      <label>
+                        Scheduled Follow-up Date
+                        <input
+                          type="date"
+                          name="nextVisitAt"
+                          value={visitDraft.nextVisitAt || ""}
+                          onChange={(e) => updateVisitDraft("nextVisitAt", e.target.value)}
+                        />
+                      </label>
+                    </div>
 
-            <footer style={{ display: "flex", justifyContent: "flex-end", gap: "12px", padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-              <button type="button" onClick={() => setVisitModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", background: "transparent", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>
-                Cancel
-              </button>
+                    <div className="review-card" style={{ marginTop: 22 }}>
+                      <h4>Encounter Verification Summary</h4>
+                      <div>
+                        <p><span>Smallholder</span><b>{visitDraft.farmerName || "—"} ({visitDraft.farmerDfrId || "No DFR ID"})</b></p>
+                        <p><span>Location</span><b>{visitDraft.county || "—"} ({visitDraft.district || "—"})</b></p>
+                        <p><span>Observed Crop &amp; Severity</span><b>{visitDraft.crop || "—"} · {visitDraft.severity || "None"}</b></p>
+                        <p><span>Referral Route</span><b>{visitDraft.referral || "Direct resolution"}</b></p>
+                      </div>
+                    </div>
+
+                    <label className="consent" style={{ marginTop: 16 }}>
+                      <input type="checkbox" required />
+                      I certify that this on-farm encounter was conducted in accordance with MoA/FAO standard operating procedures and logged onto the smallholder's registry record.
+                    </label>
+                  </section>
+                </>
+              )}
+            </main>
+
+            <footer>
               <button
-                disabled={busy}
-                style={{ padding: "8px 20px", borderRadius: "6px", background: "#166534", color: "#fff", border: "none", fontWeight: 700, cursor: "pointer" }}
+                type="button"
+                disabled={visitStep === 1}
+                onClick={() => setVisitStep((s) => Math.max(1, s - 1))}
               >
-                {busy ? "Saving Encounter..." : "Commit Field Visit Record"}
+                ← Previous Step
               </button>
+              {visitStep < 4 ? (
+                <button
+                  type="button"
+                  onClick={() => setVisitStep((s) => Math.min(4, s + 1))}
+                >
+                  Next Step →
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="submit-registration"
+                  disabled={busy}
+                >
+                  {busy ? "Committing Record..." : "Submit Official Field Visit Record"}
+                </button>
+              )}
             </footer>
           </form>
         </div>
@@ -1285,75 +1633,95 @@ export default function ExtensionServices({
 
       {/* MODAL 2: EMERGENCY OUTBREAK ALERT BROADCAST */}
       {broadcastModal && (
-        <div className="modal-back">
-          <form className="register-modal ext-form" onSubmit={submitBroadcast} style={{ maxWidth: 580 }}>
+        <div
+          className="modal-wrap enrollment-overlay"
+          style={{ zIndex: 10000 }}
+          onMouseDown={(e) => {
+            if (e.currentTarget === e.target) setBroadcastModal(false);
+          }}
+        >
+          <form
+            className="enrollment-wizard ext-wizard"
+            style={{ maxWidth: 880 }}
+            onSubmit={submitBroadcast}
+          >
             <header>
               <div>
-                <span style={{ color: "#fbbf24", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700 }}>
-                  Domain 4: Emergency Alert Broadcast Engine
-                </span>
-                <h2 style={{ margin: "4px 0 0", color: "#fff", fontSize: "1.2rem" }}>
-                  Broadcast Outbreak / Climate Shock Alert
-                </h2>
+                <span>♢ &nbsp; EARLY WARNING &amp; EMERGENCY OUTBREAK RESPONSE ENGINE</span>
+                <h2>Pest Outbreak &amp; Climate Shock Broadcast</h2>
+                <p>Dispatch verified phytosanitary alerts and emergency SMS/IVR advisories across registered farming communities.</p>
               </div>
-              <button type="button" onClick={() => setBroadcastModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.4rem", cursor: "pointer" }}>
+              <b>Emergency Protocol</b>
+              <button type="button" onClick={() => setBroadcastModal(false)} aria-label="Close broadcast modal">
                 ×
               </button>
             </header>
 
-            <div className="form-grid" style={{ padding: "16px 20px" }}>
-              <label>
-                Target County*
-                <select name="county" required>
-                  <option value="National">National (All 15 Counties)</option>
-                  {COUNTIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Target Crop / Commodity*
-                <input name="crop" defaultValue="Rice & Cassava" required />
-              </label>
+            <main>
+              <section className="enroll-panel">
+                <h3>Geographic Scope &amp; Value Chain</h3>
+                <div className="enroll-grid">
+                  <label>
+                    Target County*
+                    <select name="county" required>
+                      <option value="National">National (All 15 Counties)</option>
+                      {COUNTIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Target Crop / Commodity*
+                    <input name="crop" defaultValue="Rice &amp; Cassava" required />
+                  </label>
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <label className="full-label">
+                    Alert Title*
+                    <input name="title" defaultValue="Urgent Pest Advisory: Fall Armyworm Vector Detected" required />
+                  </label>
+                </div>
+              </section>
 
-              <label className="wide">
-                Alert Title*
-                <input name="title" defaultValue="Urgent Pest Advisory: Fall Armyworm Vector Detected" required />
-              </label>
+              <section className="identity-panel">
+                <h3>📢 Emergency Advisory Message &amp; Channels</h3>
+                <label className="full-label">
+                  Vernacular SMS / IVR Broadcast Message*
+                  <textarea
+                    name="message"
+                    rows={4}
+                    defaultValue="MOA / FAO URGENT ADVISORY: Fall armyworm caterpillars reported in lowland rice plots. Inspect leaf whorls immediately. Apply neem seed extract (NSKE 5%) or contact your local County Agriculture Officer. Do not spray near open water."
+                    required
+                  />
+                </label>
+                <div className="enroll-grid" style={{ marginTop: 14 }}>
+                  <label>
+                    Broadcast Channel
+                    <select name="channel">
+                      <option>SMS Broadcast + IVR Vernacular Audio</option>
+                      <option>WhatsApp Business Community Channel</option>
+                      <option>Community Radio Transcript</option>
+                    </select>
+                  </label>
+                  <label>
+                    Estimated Smallholder Reach
+                    <input readOnly value="~ 142 Smallholder Producers" style={{ opacity: 0.85, fontWeight: 700 }} />
+                  </label>
+                </div>
+              </section>
+            </main>
 
-              <label className="wide">
-                Vernacular SMS / IVR Broadcast Message*
-                <textarea
-                  name="message"
-                  rows={4}
-                  defaultValue="MOA / FAO URGENT ADVISORY: Fall armyworm caterpillars reported in lowland rice plots. Inspect leaf whorls immediately. Apply neem seed extract (NSKE 5%) or contact your local County Agriculture Officer. Do not spray near open water."
-                  required
-                />
-              </label>
-
-              <label>
-                Broadcast Channel
-                <select name="channel">
-                  <option>SMS Broadcast + IVR Vernacular Audio</option>
-                  <option>WhatsApp Business Community Channel</option>
-                  <option>Community Radio Transcript</option>
-                </select>
-              </label>
-              <label>
-                Estimated Reach
-                <input readOnly value="~ 142 Smallholder Producers" style={{ opacity: 0.8 }} />
-              </label>
-            </div>
-
-            <footer style={{ display: "flex", justifyContent: "flex-end", gap: "12px", padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-              <button type="button" onClick={() => setBroadcastModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", background: "transparent", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>
+            <footer>
+              <button type="button" onClick={() => setBroadcastModal(false)}>
                 Cancel
               </button>
               <button
+                type="submit"
+                className="submit-registration"
+                style={{ background: "#b45309", color: "#fff" }}
                 disabled={busy}
-                style={{ padding: "8px 20px", borderRadius: "6px", background: "#b45309", color: "#fff", border: "none", fontWeight: 700, cursor: "pointer" }}
               >
-                {busy ? "Broadcasting..." : "Dispatch Emergency Alert"}
+                {busy ? "Broadcasting..." : "Dispatch Emergency Alert →"}
               </button>
             </footer>
           </form>
@@ -1362,71 +1730,97 @@ export default function ExtensionServices({
 
       {/* MODAL 3: LOG FARMER SERVICE REQUEST */}
       {requestModal && (
-        <div className="modal-back">
-          <form className="register-modal ext-form" onSubmit={submitFarmerRequest} style={{ maxWidth: 620 }}>
+        <div
+          className="modal-wrap enrollment-overlay"
+          style={{ zIndex: 10000 }}
+          onMouseDown={(e) => {
+            if (e.currentTarget === e.target) setRequestModal(false);
+          }}
+        >
+          <form
+            className="enrollment-wizard ext-wizard"
+            style={{ maxWidth: 880 }}
+            onSubmit={submitFarmerRequest}
+          >
             <header>
               <div>
-                <span style={{ color: "#38bdf8", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700 }}>
-                  Farmer Request Intake
-                </span>
-                <h2 style={{ margin: "4px 0 0", color: "#fff", fontSize: "1.2rem" }}>
-                  Request Extension Assistance
-                </h2>
+                <span>♢ &nbsp; FRONTLINE ADVISORY &amp; CASELOAD INTAKE</span>
+                <h2>Farmer Extension Service Request Intake</h2>
+                <p>Register and triage smallholder requests for pest control, soil testing, and mechanization advice.</p>
               </div>
-              <button type="button" onClick={() => setRequestModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.4rem", cursor: "pointer" }}>
+              <b>Caseload Intake</b>
+              <button type="button" onClick={() => setRequestModal(false)} aria-label="Close request modal">
                 ×
               </button>
             </header>
 
-            <div className="form-grid" style={{ padding: "16px 20px" }}>
-              <label>
-                Farmer DFR ID
-                <input name="farmerDfrId" placeholder="LBR-XX-000000" />
-              </label>
-              <label>
-                Requester Full Name*
-                <input name="requesterName" required />
-              </label>
-              <label>
-                Service Required*
-                <select name="serviceType" required>
-                  {SERVICES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                County*
-                <select name="county" required>
-                  {COUNTIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                District / Community
-                <input name="district" />
-              </label>
-              <label>
-                Urgency
-                <select name="urgency">
-                  <option>Normal</option>
-                  <option>High</option>
-                  <option>Critical</option>
-                </select>
-              </label>
-              <label className="wide">
-                Problem Description*
-                <textarea name="problemDescription" rows={3} required />
-              </label>
-            </div>
+            <main>
+              <section className="enroll-panel">
+                <h3>Smallholder Identification &amp; Holding Location</h3>
+                <div className="enroll-grid three">
+                  <label>
+                    Farmer DFR ID
+                    <input name="farmerDfrId" placeholder="LBR-XX-000000" />
+                  </label>
+                  <label>
+                    Requester Full Name*
+                    <input name="requesterName" required placeholder="Legal full name" />
+                  </label>
+                  <label>
+                    County*
+                    <select name="county" required>
+                      {COUNTIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    District / Community
+                    <input name="district" placeholder="e.g. Suakoko, Phebe Valley" />
+                  </label>
+                  <label>
+                    Service Required*
+                    <select name="serviceType" required>
+                      {SERVICES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Urgency Classification
+                    <select name="urgency">
+                      <option>Normal</option>
+                      <option>High</option>
+                      <option>Critical</option>
+                    </select>
+                  </label>
+                </div>
+              </section>
 
-            <footer style={{ display: "flex", justifyContent: "flex-end", gap: "12px", padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-              <button type="button" onClick={() => setRequestModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", background: "transparent", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>
+              <section className="identity-panel">
+                <h3>Problem Description &amp; Agronomic Context</h3>
+                <label className="full-label">
+                  Detailed Description of Farm Issue*
+                  <textarea
+                    name="problemDescription"
+                    rows={4}
+                    placeholder="Describe the crop problem, symptoms observed, duration of infestation, and requested assistance..."
+                    required
+                  />
+                </label>
+              </section>
+            </main>
+
+            <footer>
+              <button type="button" onClick={() => setRequestModal(false)}>
                 Cancel
               </button>
-              <button disabled={busy} style={{ padding: "8px 20px", borderRadius: "6px", background: "#166534", color: "#fff", border: "none", fontWeight: 700, cursor: "pointer" }}>
-                {busy ? "Submitting..." : "Submit Request"}
+              <button
+                type="submit"
+                className="submit-registration"
+                disabled={busy}
+              >
+                {busy ? "Submitting..." : "Submit Caseload Request →"}
               </button>
             </footer>
           </form>
@@ -1435,83 +1829,111 @@ export default function ExtensionServices({
 
       {/* MODAL 4: PRINTABLE FARMER ADVISORY CARD */}
       {cardModal && (
-        <div className="modal-back">
-          <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "12px", maxWidth: 640, width: "100%", color: "#fff", padding: "24px", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 16, marginBottom: 16 }}>
+        <div
+          className="modal-wrap enrollment-overlay"
+          style={{ zIndex: 10000 }}
+          onMouseDown={(e) => {
+            if (e.currentTarget === e.target) setCardModal(null);
+          }}
+        >
+          <div
+            className="enrollment-wizard ext-wizard"
+            style={{ maxWidth: 760, background: "#ffffff" }}
+          >
+            <header>
               <div>
-                <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#4ade80", letterSpacing: "0.05em", fontWeight: 700 }}>
-                  Republic of Liberia · Ministry of Agriculture
-                </span>
-                <h3 style={{ margin: "4px 0 0", fontSize: "1.2rem", color: "#fff" }}>
-                  Official Farmer Field Advisory Slip
-                </h3>
+                <span>REPUBLIC OF LIBERIA · MINISTRY OF AGRICULTURE</span>
+                <h2>Official Farmer Field Advisory Slip</h2>
+                <p>Frontline Extension &amp; Advisory Services (AEAS) · Smallholder Field Record</p>
               </div>
-              <button onClick={() => setCardModal(null)} style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.5rem", cursor: "pointer" }}>
+              <b style={{ background: "#22c55e", color: "#064e3b" }}>Verified DFR Card</b>
+              <button type="button" onClick={() => setCardModal(null)} aria-label="Close card modal">
                 ×
               </button>
-            </div>
+            </header>
 
-            <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: "8px", padding: "16px", marginBottom: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "0.85rem", marginBottom: 12 }}>
-                <div><span style={{ color: "#94a3b8" }}>Encounter ID:</span> <code style={{ color: "#38bdf8", fontWeight: 700 }}>{cardModal.visitCode}</code></div>
-                <div><span style={{ color: "#94a3b8" }}>Date:</span> <strong>{new Date(cardModal.scheduledAt).toLocaleDateString()}</strong></div>
-                <div><span style={{ color: "#94a3b8" }}>Officer:</span> <strong>{cardModal.officerName}</strong></div>
-                <div><span style={{ color: "#94a3b8" }}>Location:</span> <strong>{cardModal.location}</strong></div>
-                <div><span style={{ color: "#94a3b8" }}>Crop:</span> <strong>{cardModal.crop || "Rice / Cassava"}</strong></div>
-                <div><span style={{ color: "#94a3b8" }}>Encounter Type:</span> <strong>{cardModal.visitType}</strong></div>
-              </div>
-
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, marginBottom: 12 }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase", display: "block", marginBottom: 4 }}>
-                  Field Diagnosis & Observations:
-                </span>
-                <p style={{ margin: 0, fontSize: "0.88rem", color: "#e2e8f0" }}>{cardModal.observations || cardModal.purpose}</p>
-              </div>
-
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, marginBottom: 12 }}>
-                <span style={{ fontSize: "0.75rem", color: "#86efac", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 700 }}>
-                  Recommended Action & IPM Advice:
-                </span>
-                <p style={{ margin: 0, fontSize: "0.9rem", color: "#4ade80", fontWeight: 500, lineHeight: 1.4 }}>
-                  {cardModal.advice || "Advice recorded on field card."}
-                </p>
-              </div>
-
-              {cardModal.referral && (
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, background: "rgba(56, 189, 248, 0.08)", padding: "10px", borderRadius: "6px" }}>
-                  <span style={{ fontSize: "0.75rem", color: "#38bdf8", textTransform: "uppercase", display: "block", marginBottom: 2, fontWeight: 700 }}>
-                    Official Institutional Referral:
-                  </span>
-                  <div style={{ fontSize: "0.88rem", color: "#fff", fontWeight: 600 }}>{cardModal.referral}</div>
-                  <small style={{ color: "#94a3b8" }}>Status: {cardModal.referralStatus || "Referred"}</small>
+            <main>
+              <section className="identity-panel" style={{ background: "#f8fafc", borderColor: "#cbd5e1" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "11px", marginBottom: 12 }}>
+                  <div><span style={{ color: "#64748b" }}>Encounter ID:</span> <code style={{ color: "#0284c7", fontWeight: 800 }}>{cardModal.visitCode}</code></div>
+                  <div><span style={{ color: "#64748b" }}>Encounter Date:</span> <strong>{new Date(cardModal.scheduledAt).toLocaleDateString()}</strong></div>
+                  <div><span style={{ color: "#64748b" }}>Extension Officer:</span> <strong>{cardModal.officerName}</strong></div>
+                  <div><span style={{ color: "#64748b" }}>Holding Location:</span> <strong>{cardModal.location}</strong></div>
+                  <div><span style={{ color: "#64748b" }}>Target Crop:</span> <strong>{cardModal.crop || "Lowland Rice / Cassava"}</strong></div>
+                  <div><span style={{ color: "#64748b" }}>Encounter Type:</span> <strong>{cardModal.visitType}</strong></div>
                 </div>
-              )}
-            </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 16 }}>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Vernacular Audio Note:</span>
-                <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "10px", background: "rgba(245, 158, 11, 0.2)", color: "#fbbf24" }}>
-                  Liberian Kpelle / English
-                </span>
-              </div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  onClick={() => {
-                    if (typeof window !== "undefined") window.print();
-                  }}
-                  style={{ padding: "8px 16px", borderRadius: "6px", background: "#166534", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer" }}
-                >
-                  🖨 Print / PDF Slip
-                </button>
-                <button
-                  onClick={() => setCardModal(null)}
-                  style={{ padding: "8px 16px", borderRadius: "6px", background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer" }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 14, marginBottom: 14 }}>
+                  <span style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 700 }}>
+                    Field Diagnosis &amp; Observations:
+                  </span>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#1e293b", lineHeight: 1.5 }}>
+                    {cardModal.observations || cardModal.purpose}
+                  </p>
+                </div>
+
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 14, marginBottom: 14 }}>
+                  <span style={{ fontSize: "10px", color: "#166534", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 800 }}>
+                    Prescribed Action &amp; IPM Technical Advice:
+                  </span>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#15803d", fontWeight: 600, lineHeight: 1.5 }}>
+                    {cardModal.advice || "Advice recorded on field card."}
+                  </p>
+                </div>
+
+                {cardModal.referral && (
+                  <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 14, background: "#f0f9ff", padding: "12px", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+                    <span style={{ fontSize: "10px", color: "#0369a1", textTransform: "uppercase", display: "block", marginBottom: 3, fontWeight: 800 }}>
+                      Official Institutional Referral:
+                    </span>
+                    <div style={{ fontSize: "12px", color: "#0c4a6e", fontWeight: 700 }}>{cardModal.referral}</div>
+                    <small style={{ color: "#64748b" }}>Status: {cardModal.referralStatus || "Referred"}</small>
+                  </div>
+                )}
+              </section>
+
+              <section className="enroll-panel" style={{ marginTop: 16 }}>
+                <h3>Farmer Pictographic &amp; Vernacular Instructions</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", textAlign: "center" }}>
+                  <div style={{ padding: "12px 6px", background: "#f1f5f9", borderRadius: "10px" }}>
+                    <span style={{ fontSize: "22px", display: "block" }}>🌿</span>
+                    <b style={{ fontSize: "10px", color: "#1e293b" }}>Weed Control</b>
+                    <span style={{ fontSize: "8px", color: "#64748b", display: "block" }}>2x Manual Hoeing</span>
+                  </div>
+                  <div style={{ padding: "12px 6px", background: "#f1f5f9", borderRadius: "10px" }}>
+                    <span style={{ fontSize: "22px", display: "block" }}>💧</span>
+                    <b style={{ fontSize: "10px", color: "#1e293b" }}>Water Level</b>
+                    <span style={{ fontSize: "8px", color: "#64748b", display: "block" }}>5cm Bund Retention</span>
+                  </div>
+                  <div style={{ padding: "12px 6px", background: "#f1f5f9", borderRadius: "10px" }}>
+                    <span style={{ fontSize: "22px", display: "block" }}>🛡</span>
+                    <b style={{ fontSize: "10px", color: "#1e293b" }}>Sprayer PPE</b>
+                    <span style={{ fontSize: "8px", color: "#64748b", display: "block" }}>Mask + Gloves</span>
+                  </div>
+                  <div style={{ padding: "12px 6px", background: "#f1f5f9", borderRadius: "10px" }}>
+                    <span style={{ fontSize: "22px", display: "block" }}>🎙</span>
+                    <b style={{ fontSize: "10px", color: "#1e293b" }}>Vernacular Audio</b>
+                    <span style={{ fontSize: "8px", color: "#b45309", display: "block" }}>Kpelle / Liberian English</span>
+                  </div>
+                </div>
+              </section>
+            </main>
+
+            <footer>
+              <button type="button" onClick={() => setCardModal(null)}>
+                Close
+              </button>
+              <button
+                type="button"
+                className="submit-registration"
+                style={{ background: "#166534", color: "#fff" }}
+                onClick={() => {
+                  if (typeof window !== "undefined") window.print();
+                }}
+              >
+                🖨 Print / PDF Advisory Slip
+              </button>
+            </footer>
           </div>
         </div>
       )}
