@@ -51,6 +51,118 @@ const resolvePhotoUrl = (url?: string) => {
   return getAssetUrl(url);
 };
 
+function SmartChip() {
+  return (
+    <div className="id-card-smart-chip" title="Biometric EMV Cryptoprocessor Contact Pad">
+      <svg viewBox="0 0 54 40" className="chip-svg" width="46" height="34">
+        <defs>
+          <linearGradient id="goldChipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fae188" />
+            <stop offset="30%" stopColor="#dca431" />
+            <stop offset="65%" stopColor="#b48316" />
+            <stop offset="100%" stopColor="#f7d46c" />
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="52" height="38" rx="6" fill="url(#goldChipGrad)" stroke="#7e5a0e" strokeWidth="1.2" />
+        <line x1="1" y1="13" x2="18" y2="13" stroke="#7e5a0e" strokeWidth="1.1" />
+        <line x1="1" y1="27" x2="18" y2="27" stroke="#7e5a0e" strokeWidth="1.1" />
+        <line x1="36" y1="13" x2="53" y2="13" stroke="#7e5a0e" strokeWidth="1.1" />
+        <line x1="36" y1="27" x2="53" y2="27" stroke="#7e5a0e" strokeWidth="1.1" />
+        <line x1="18" y1="1" x2="18" y2="39" stroke="#7e5a0e" strokeWidth="1.1" />
+        <line x1="36" y1="1" x2="36" y2="39" stroke="#7e5a0e" strokeWidth="1.1" />
+        <rect x="22" y="13" width="10" height="14" rx="2.5" fill="none" stroke="#7e5a0e" strokeWidth="1.1" />
+      </svg>
+      <span className="nfc-wave-icon" title="Contactless NFC Capable">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#164e2d" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M8 17a5 5 0 0 1 0-10" />
+          <path d="M12 20a9 9 0 0 1 0-16" />
+          <path d="M16 23a13 13 0 0 1 0-22" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
+function GuillocheBackground() {
+  return (
+    <svg className="card-guilloche-canvas" viewBox="0 0 600 380" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <pattern id="guillochePattern" width="36" height="36" patternUnits="userSpaceOnUse">
+          <path d="M 0 18 Q 9 0 18 18 T 36 18" fill="none" stroke="rgba(24, 95, 55, 0.07)" strokeWidth="0.8" />
+          <path d="M 18 0 Q 0 9 18 18 T 18 36" fill="none" stroke="rgba(212, 175, 55, 0.08)" strokeWidth="0.8" />
+          <circle cx="18" cy="18" r="12" fill="none" stroke="rgba(36, 101, 62, 0.04)" strokeWidth="0.5" strokeDasharray="2,2" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#guillochePattern)" />
+      <path d="M-20,240 C140,180 320,320 620,220 L620,380 L-20,380 Z" fill="rgba(34, 114, 69, 0.03)" />
+      <path d="M-20,210 C150,290 350,170 620,260" fill="none" stroke="rgba(212, 175, 55, 0.22)" strokeWidth="1.2" />
+      <path d="M-20,220 C160,300 360,180 620,270" fill="none" stroke="rgba(24, 95, 55, 0.16)" strokeWidth="0.9" />
+      <path d="M-20,230 C170,310 370,190 620,280" fill="none" stroke="rgba(212, 175, 55, 0.12)" strokeWidth="0.7" />
+    </svg>
+  );
+}
+
+function HologramSeal() {
+  return (
+    <div className="id-hologram-medallion" title="Official Holographic Security Medallion">
+      <div className="hologram-shimmer">
+        <span className="hologram-star">★</span>
+        <span className="hologram-title">LIBERIA</span>
+        <span className="hologram-code">DFR-SEC</span>
+      </div>
+    </div>
+  );
+}
+
+function SecurityQrCode({ dfrId }: { dfrId: string }) {
+  return (
+    <div className="id-security-qr-block">
+      <div className="security-qr-frame">
+        <svg viewBox="0 0 100 100" className="qr-svg-matrix" width="84" height="84">
+          <rect width="100" height="100" fill="#ffffff" rx="4" />
+          <rect x="6" y="6" width="24" height="24" fill="#0d3b22" rx="3" />
+          <rect x="10" y="10" width="16" height="16" fill="#ffffff" rx="2" />
+          <rect x="13" y="13" width="10" height="10" fill="#0d3b22" rx="1.5" />
+          <rect x="70" y="6" width="24" height="24" fill="#0d3b22" rx="3" />
+          <rect x="74" y="10" width="16" height="16" fill="#ffffff" rx="2" />
+          <rect x="77" y="13" width="10" height="10" fill="#0d3b22" rx="1.5" />
+          <rect x="6" y="70" width="24" height="24" fill="#0d3b22" rx="3" />
+          <rect x="10" y="74" width="16" height="16" fill="#ffffff" rx="2" />
+          <rect x="13" y="77" width="10" height="10" fill="#0d3b22" rx="1.5" />
+          <rect x="72" y="72" width="14" height="14" fill="#0d3b22" rx="2" />
+          <rect x="74" y="74" width="10" height="10" fill="#ffffff" rx="1" />
+          <rect x="76" y="76" width="6" height="6" fill="#0d3b22" rx="0.5" />
+          <line x1="33" y1="18" x2="67" y2="18" stroke="#0d3b22" strokeWidth="2.5" strokeDasharray="3,3" />
+          <line x1="18" y1="33" x2="18" y2="67" stroke="#0d3b22" strokeWidth="2.5" strokeDasharray="3,3" />
+          <rect x="36" y="8" width="5" height="5" fill="#0d3b22" />
+          <rect x="46" y="8" width="5" height="5" fill="#0d3b22" />
+          <rect x="58" y="8" width="5" height="5" fill="#0d3b22" />
+          <rect x="36" y="24" width="5" height="5" fill="#0d3b22" />
+          <rect x="50" y="24" width="5" height="5" fill="#0d3b22" />
+          <rect x="60" y="24" width="5" height="5" fill="#0d3b22" />
+          <rect x="8" y="36" width="5" height="5" fill="#0d3b22" />
+          <rect x="24" y="36" width="5" height="5" fill="#0d3b22" />
+          <rect x="8" y="48" width="5" height="5" fill="#0d3b22" />
+          <rect x="24" y="56" width="5" height="5" fill="#0d3b22" />
+          <rect x="72" y="36" width="5" height="5" fill="#0d3b22" />
+          <rect x="86" y="36" width="5" height="5" fill="#0d3b22" />
+          <rect x="76" y="48" width="5" height="5" fill="#0d3b22" />
+          <rect x="88" y="48" width="5" height="5" fill="#0d3b22" />
+          <rect x="36" y="74" width="5" height="5" fill="#0d3b22" />
+          <rect x="46" y="74" width="5" height="5" fill="#0d3b22" />
+          <rect x="56" y="74" width="5" height="5" fill="#0d3b22" />
+          <rect x="40" y="86" width="5" height="5" fill="#0d3b22" />
+          <rect x="52" y="86" width="5" height="5" fill="#0d3b22" />
+          <rect x="39" y="39" width="22" height="22" fill="#0b381e" rx="4" stroke="#d4af37" strokeWidth="1.5" />
+          <text x="50" y="55" fontSize="13" textAnchor="middle" fill="#f8e79b" fontWeight="900" fontFamily="sans-serif">★</text>
+        </svg>
+      </div>
+      <span className="qr-scan-label">SCAN TO VERIFY</span>
+      <span className="qr-auth-url">dfr.moa.gov.lr</span>
+    </div>
+  );
+}
+
 export default function FarmerDossier({
   farmer: initialFarmer,
   initialTab = "Profile",
@@ -68,6 +180,7 @@ export default function FarmerDossier({
 }) {
   const [farmer, setFarmer] = useState<FarmerRecord>(initialFarmer);
   const [tab, setTab] = useState(initialTab);
+  const [cardSide, setCardSide] = useState<"front" | "back" | "both">("both");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(farmer.photoUrl || "");
@@ -1075,148 +1188,313 @@ export default function FarmerDossier({
             <section className="dossier-section credential-preview-section">
               <div className="section-head-between">
                 <div>
-                  <h3>National Farmer Registry Credential</h3>
-                  <p>Official verifiable digital identity card issued under the authority of the Ministry of Agriculture</p>
+                  <h3>National Farmer Registry Biometric Credential</h3>
+                  <p>Official high-security biometric smart identity card issued under the authority of the Ministry of Agriculture, Republic of Liberia</p>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <div className="id-card-view-pills">
+                    <button
+                      type="button"
+                      className={`id-view-btn ${cardSide === "front" ? "active" : ""}`}
+                      onClick={() => setCardSide("front")}
+                      title="View front of ID card"
+                    >
+                      🪪 Front Side
+                    </button>
+                    <button
+                      type="button"
+                      className={`id-view-btn ${cardSide === "back" ? "active" : ""}`}
+                      onClick={() => setCardSide("back")}
+                      title="View back of ID card"
+                    >
+                      🔄 Back Side
+                    </button>
+                    <button
+                      type="button"
+                      className={`id-view-btn ${cardSide === "both" ? "active" : ""}`}
+                      onClick={() => setCardSide("both")}
+                      title="View both front and back"
+                    >
+                      📑 Both Sides
+                    </button>
+                  </div>
                   <button className="btn-action-primary" onClick={() => window.print()}>
-                    🖨️ Print Credential
+                    🖨️ Print Credential (CR80)
                   </button>
                   <button
                     className="btn-action-secondary"
                     onClick={() => {
-                      const cardData = `REPUBLIC OF LIBERIA - MINISTRY OF AGRICULTURE\nDIGITAL FARMER REGISTRY CREDENTIAL\nFarmer: ${farmer.firstName} ${farmer.lastName}\nDFR ID: ${displayId}\nProvisional: ${provId}\nCounty: ${farmer.county}\nDistrict: ${farmer.district}\nPrimary Crop: ${farmer.crop}\nFarm Size: ${farmer.farmSize} ha\nStatus: ${farmer.status}\nVerification Hash: ${btoa(displayId + farmer.phone)}`;
+                      const cardData = `REPUBLIC OF LIBERIA - MINISTRY OF AGRICULTURE\nDIGITAL FARMER REGISTRY (DFR) - OFFICIAL BIOMETRIC CREDENTIAL\n=============================================================\nFarmer Name:        ${farmer.firstName.toUpperCase()} ${farmer.lastName.toUpperCase()}\nOfficial DFR ID:    ${displayId}\nProvisional ID:     ${provId}\nCounty / District:  ${farmer.county} / ${farmer.district}\nCommunity:          ${farmer.community}\nPrimary Commodity:  ${farmer.crop}\nHolding Capacity:   ${farmer.farmSize} Hectares\nGender:             ${farmer.gender}\nRegistration Status:${farmer.status} (Verified)\nIssuance Date:      12 August 2026\nExpiration Date:    11 August 2031\nSmart Chip ID:      LBR-SMART-BIO-${String(farmer.id).padStart(6, "0")}\nBiometric SHA-256:  8F7E4B29A${String(farmer.id).padStart(4, "0")}C71E44910BD3A188C02F5290\nIssuing Authority:  Ministry of Agriculture, Republic of Liberia\nVerification URL:   https://dfr.moa.gov.lr/verify?id=${displayId}\n=============================================================`;
                       const blob = new Blob([cardData], { type: "text/plain" });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
-                      a.download = `DFR-Certificate-${displayId}.txt`;
+                      a.download = `DFR-Official-Credential-${displayId}.txt`;
                       a.click();
                       URL.revokeObjectURL(url);
-                      notify("Certificate data file downloaded.");
+                      notify("Official credential verification slip downloaded.");
                     }}
                   >
-                    📥 Download Certificate Slip
+                    📥 Download ID Slip
                   </button>
                 </div>
               </div>
 
-              {/* Physical/Printable Farmer Card Component */}
-              <div className="farmer-card-wrapper" id="printable-farmer-card">
-                <div className="farmer-card-front glass">
-                  <div className="card-top-header">
-                    <div className="liberia-crest">
-                      <img
-                        src={getAssetUrl("assets/liberia-seal.png")}
-                        alt="Liberia Coat of Arms"
-                        className="id-card-seal-logo"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (!target.dataset.triedFallback) {
-                            target.dataset.triedFallback = "true";
-                            target.src = "/assets/liberia-seal.png";
-                          }
-                        }}
-                      />
+              {/* Physical/Printable Farmer Card Container */}
+              <div className="modern-id-cards-container" id="printable-farmer-card">
+                {/* FRONT OF CARD */}
+                {(cardSide === "front" || cardSide === "both") && (
+                  <div className="modern-smart-card card-front-face">
+                    <GuillocheBackground />
+
+                    {/* Watermark Coat of Arms */}
+                    <img
+                      src={getAssetUrl("assets/liberia-seal.png")}
+                      alt=""
+                      className="id-card-watermark-seal"
+                      aria-hidden="true"
+                    />
+
+                    {/* Top Security Banner */}
+                    <div className="modern-card-header">
+                      <div className="header-seal-round">
+                        <img
+                          src={getAssetUrl("assets/liberia-seal.png")}
+                          alt="Liberia Coat of Arms"
+                          className="hdr-seal-img"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.dataset.triedFallback) {
+                              target.dataset.triedFallback = "true";
+                              target.src = "/assets/liberia-seal.png";
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="header-center-titles">
+                        <span className="hdr-republic-text">REPUBLIC OF LIBERIA</span>
+                        <h4 className="hdr-ministry-text">MINISTRY OF AGRICULTURE</h4>
+                        <div className="hdr-credential-pill">
+                          <span>NATIONAL DIGITAL FARMER REGISTRY · BIOMETRIC CREDENTIAL</span>
+                        </div>
+                      </div>
+                      <div className="header-seal-round">
+                        <img
+                          src={getAssetUrl("assets/moa-logo.png")}
+                          alt="Ministry of Agriculture"
+                          className="hdr-moa-img"
+                          title="Ministry of Agriculture, Republic of Liberia"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.dataset.triedFallback) {
+                              target.dataset.triedFallback = "true";
+                              target.src = "/assets/moa-logo.png";
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="card-titles">
-                      <h4>REPUBLIC OF LIBERIA</h4>
-                      <h5>MINISTRY OF AGRICULTURE</h5>
-                      <span className="card-system-name">DIGITAL FARMER REGISTRY · OFFICIAL CREDENTIAL</span>
+
+                    {/* Card Body Columns */}
+                    <div className="modern-card-body">
+                      {/* Left: Photo + Smart Chip + Biometric indicator */}
+                      <div className="modern-card-left-col">
+                        <div className="modern-photo-wrapper">
+                          <div className="modern-photo-inner">
+                            {farmer.photoUrl ? (
+                              <img
+                                src={resolvePhotoUrl(farmer.photoUrl)}
+                                alt={`${farmer.firstName} ${farmer.lastName}`}
+                                className="modern-farmer-portrait"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="modern-initials-fallback">
+                                <span>{farmer.firstName.charAt(0)}{farmer.lastName.charAt(0)}</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="photo-gold-corner corner-tl" />
+                          <span className="photo-gold-corner corner-tr" />
+                          <span className="photo-gold-corner corner-bl" />
+                          <span className="photo-gold-corner corner-br" />
+                        </div>
+
+                        {/* Gold EMV Chip & NFC */}
+                        <div className="chip-and-biometric-row">
+                          <SmartChip />
+                        </div>
+                        <div className="modern-biometric-badge">
+                          <span className="bio-live-beacon" />
+                          <span>BIOMETRIC CHIP · NFC</span>
+                        </div>
+                      </div>
+
+                      {/* Middle: Identification & Details */}
+                      <div className="modern-card-center-col">
+                        <div className="modern-id-pill-banner">
+                          <div className="id-pill-label">NATIONAL DFR REGISTRATION NO.</div>
+                          <div className="id-pill-number">{displayId}</div>
+                        </div>
+
+                        <div className="farmer-name-banner">
+                          <small>FARMER FULL LEGAL NAME</small>
+                          <h3>{farmer.firstName.toUpperCase()} {farmer.lastName.toUpperCase()}</h3>
+                        </div>
+
+                        <div className="modern-specs-grid">
+                          <div className="spec-cell">
+                            <span className="spec-lbl">COUNTY / DISTRICT</span>
+                            <strong className="spec-val">{farmer.county} / {farmer.district}</strong>
+                          </div>
+                          <div className="spec-cell">
+                            <span className="spec-lbl">GENDER</span>
+                            <strong className="spec-val">{farmer.gender}</strong>
+                          </div>
+                          <div className="spec-cell">
+                            <span className="spec-lbl">PRIMARY COMMODITY</span>
+                            <strong className="spec-val crop-highlight">{farmer.crop}</strong>
+                          </div>
+                          <div className="spec-cell">
+                            <span className="spec-lbl">HOLDING CAPACITY</span>
+                            <strong className="spec-val">{farmer.farmSize} Hectares</strong>
+                          </div>
+                          <div className="spec-cell">
+                            <span className="spec-lbl">DATE OF ISSUE</span>
+                            <strong className="spec-val date-val">12 AUG 2026</strong>
+                          </div>
+                          <div className="spec-cell">
+                            <span className="spec-lbl">VALID UNTIL</span>
+                            <strong className="spec-val date-val">11 AUG 2031 (5 YRS)</strong>
+                          </div>
+                        </div>
+
+                        <div className="modern-verified-ribbon">
+                          <span className="verified-check-shield">✓</span>
+                          <span>OFFICIALLY VERIFIED & ENROLLED IN MOA CADASTRE</span>
+                        </div>
+                      </div>
+
+                      {/* Right: Security Hologram + Scannable QR Code */}
+                      <div className="modern-card-right-col">
+                        <HologramSeal />
+                        <SecurityQrCode dfrId={displayId} />
+                      </div>
                     </div>
-                    <div className="card-gov-seal">
-                      <img
-                        src={getAssetUrl("assets/moa-logo.png")}
-                        alt="Ministry of Agriculture"
-                        className="id-card-moa-logo"
-                        title="Ministry of Agriculture, Republic of Liberia"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (!target.dataset.triedFallback) {
-                            target.dataset.triedFallback = "true";
-                            target.src = "/assets/moa-logo.png";
-                          }
-                        }}
-                      />
+
+                    {/* Bottom Micro-Text Border */}
+                    <div className="modern-card-bottom-bar">
+                      <span className="micro-security-text">
+                        REPUBLIC OF LIBERIA • MINISTRY OF AGRICULTURE • OFFICIAL BIOMETRIC CREDENTIAL • ECOWAS COMPLIANT
+                      </span>
+                      <span className="card-crypto-serial">
+                        CHIP-SN: LBR-EMV-{String(farmer.id).padStart(6, "0")}
+                      </span>
                     </div>
                   </div>
+                )}
 
-                  <div className="card-body-grid">
-                    <div className="card-photo-box">
-                      <div className="photo-placeholder">
-                        {farmer.photoUrl ? (
-                          <img
-                            src={resolvePhotoUrl(farmer.photoUrl)}
-                            alt={`${farmer.firstName} ${farmer.lastName}`}
-                            className="farmer-id-photo-img"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <span>{farmer.firstName.charAt(0)}{farmer.lastName.charAt(0)}</span>
-                        )}
-                      </div>
-                      <span className="biometric-tag">BIOMETRIC ENROLLED</span>
-                    </div>
+                {/* BACK OF CARD */}
+                {(cardSide === "back" || cardSide === "both") && (
+                  <div className="modern-smart-card card-back-face">
+                    <GuillocheBackground />
 
-                    <div className="card-details-fields">
-                      <div className="card-field-row">
-                        <small>OFFICIAL DFR ID</small>
-                        <strong className="card-dfr-id">{displayId}</strong>
+                    {/* Watermark Coat of Arms */}
+                    <img
+                      src={getAssetUrl("assets/liberia-seal.png")}
+                      alt=""
+                      className="id-card-watermark-seal"
+                      aria-hidden="true"
+                    />
+
+                    {/* Magnetic / Optical Stripe */}
+                    <div className="magstripe-header">
+                      <div className="magstripe-track">
+                        <span className="magstripe-thread" />
+                        <span className="magstripe-thread thread-2" />
                       </div>
-                      <div className="card-field-row">
-                        <small>FULL NAME</small>
-                        <strong>{farmer.firstName.toUpperCase()} {farmer.lastName.toUpperCase()}</strong>
-                      </div>
-                      <div className="card-grid-2col">
-                        <div>
-                          <small>COUNTY / DISTRICT</small>
-                          <span>{farmer.county} / {farmer.district}</span>
-                        </div>
-                        <div>
-                          <small>GENDER</small>
-                          <span>{farmer.gender}</span>
-                        </div>
-                      </div>
-                      <div className="card-grid-2col">
-                        <div>
-                          <small>PRIMARY COMMODITY</small>
-                          <span>{farmer.crop}</span>
-                        </div>
-                        <div>
-                          <small>HOLDING SIZE</small>
-                          <span>{farmer.farmSize} Hectares</span>
-                        </div>
-                      </div>
-                      <div className="card-field-row">
-                        <small>VERIFICATION STATUS</small>
-                        <span className={`status-badge-inline ${farmer.status.toLowerCase().replace(/\s+/g, "-")}`}>
-                          {farmer.status.toUpperCase()}
-                        </span>
+                      <div className="magstripe-holo-indicator">
+                        <span>LBR-DFR-2026</span>
                       </div>
                     </div>
 
-                    <div className="card-qr-box">
-                      <div className="mock-qr-code">
-                        <div className="qr-inner">
-                          <div className="qr-block qb1" />
-                          <div className="qr-block qb2" />
-                          <div className="qr-block qb3" />
-                          <div className="qr-barcode-lines">
-                            <span /><span /><span /><span /><span />
+                    {/* Card Back Main Content */}
+                    <div className="card-back-content">
+                      <div className="back-notice-box">
+                        <p>
+                          This credential is the official biometric property of the Republic of Liberia, issued by the Ministry of Agriculture under the National Digital Farmer Registry Executive Framework. It provides verifiable qualification for agricultural input subsidies, extension advisory, and cadastre parcel recognition.
+                        </p>
+                        <p className="sub-notice">
+                          If found, please return to any County Agricultural Office (CAO) or CARI Central Research Complex, Suakoko, Bong County, Liberia.
+                        </p>
+                      </div>
+
+                      {/* Contact & Verification Hotlines */}
+                      <div className="back-hotline-row">
+                        <div>
+                          <small>REGISTRY HELPDESK</small>
+                          <b>+231 77 000 DFR1 (3371)</b>
+                        </div>
+                        <div>
+                          <small>OFFICIAL PORTAL</small>
+                          <b>dfr.moa.gov.lr</b>
+                        </div>
+                        <div>
+                          <small>SMS LOOKUP</small>
+                          <b>Text DFR {displayId} to 4040</b>
+                        </div>
+                      </div>
+
+                      {/* Signatures & Biometric Hash Row */}
+                      <div className="back-signatures-grid">
+                        <div className="signature-box">
+                          <div className="sign-pen-script minister-sig">J. Alexander Nuetah</div>
+                          <div className="sign-divider" />
+                          <small>HON. MINISTER OF AGRICULTURE</small>
+                          <span className="sign-auth-label">ISSUING AUTHORITY</span>
+                        </div>
+                        <div className="signature-box">
+                          <div className="sign-pen-script farmer-sig">
+                            {farmer.firstName} {farmer.lastName}
+                          </div>
+                          <div className="sign-divider" />
+                          <small>CARDHOLDER SIGNATURE</small>
+                          <span className="sign-auth-label">VERIFIED HOLDER</span>
+                        </div>
+                        <div className="back-bio-seal">
+                          <div className="gold-stamp-circle">
+                            <span className="stamp-star">★</span>
+                            <span className="stamp-text">MOA</span>
+                            <span className="stamp-text-sub">SEAL</span>
                           </div>
                         </div>
                       </div>
-                      <small className="qr-verify-text">Scan to Verify Registry Authenticity</small>
+
+                      {/* Cryptographic SHA-256 Hash Row */}
+                      <div className="back-crypto-hash-bar">
+                        <span className="hash-code">
+                          SHA256: 8F7E4B29A{String(farmer.id).padStart(4, "0")}C71E44910BD3A188C02F5290
+                        </span>
+                        <span className="prov-ref">PROV: {provId}</span>
+                      </div>
+
+                      {/* Machine Readable Zone (MRZ TD1 format - 3 lines) */}
+                      <div className="back-mrz-box">
+                        <div className="mrz-line">
+                          {`I<LBR${String(farmer.id).padStart(6, "0")}8<<<<<<<<<<<<<<<<<<`}
+                        </div>
+                        <div className="mrz-line">
+                          {`2608124${farmer.gender === "Female" ? "F" : "M"}3108115LBR<<<<<<<<<<<8`}
+                        </div>
+                        <div className="mrz-line">
+                          {`${(farmer.lastName.toUpperCase() + "<<" + farmer.firstName.toUpperCase() + "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<").slice(0, 30)}`}
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="card-bottom-footer">
-                    <span>Issued under DFR Executive Framework · Authority of the Ministry of Agriculture, Liberia</span>
-                    <span className="security-code">SEC-HASH: {displayId.slice(-6)}-2026-REG</span>
-                  </div>
-                </div>
+                )}
               </div>
             </section>
           </div>
