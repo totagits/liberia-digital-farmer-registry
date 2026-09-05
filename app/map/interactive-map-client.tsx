@@ -77,16 +77,29 @@ function getAssetUrl(path: string): string {
 }
 
 export default function InteractiveMapClient() {
-  const [selectedCounty, setSelectedCounty] = useState<CountyInfo>(COUNTIES.find(c => c.name === "Montserrado") || COUNTIES[0]);
+  const [selectedCounty, setSelectedCounty] = useState<CountyInfo>(() => COUNTIES.find(c => c.name === "Montserrado") || COUNTIES[0]);
   const [hoveredCounty, setHoveredCounty] = useState<CountyInfo | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
-  const [selectedFarm, setSelectedFarm] = useState<FarmCadastre | null>(SEEDED_PARCELS[0]);
+  const [selectedFarmId, setSelectedFarmId] = useState<string>("PCL-MO-00412");
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(true);
   const [baseLayer, setBaseLayer] = useState<"satellite" | "street">("satellite");
   const [selectedCommodity, setSelectedCommodity] = useState<string>("All");
   const [infrastructureFilter, setInfrastructureFilter] = useState<string>("All");
   const [isNationalView, setIsNationalView] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"vector" | "demarcated" | "survey">("vector");
   const [geojsonData, setGeojsonData] = useState<any>(null);
+
+  // All parcels belonging to the actively selected county
+  const countyParcels = useMemo(() => {
+    return SEEDED_PARCELS.filter((p) => p.county === selectedCounty.name);
+  }, [selectedCounty]);
+
+  // Effective selected farm: guaranteed to belong to selectedCounty and never an unrelated county
+  const effectiveFarm = useMemo(() => {
+    if (isNationalView || !isDrawerOpen) return null;
+    const found = countyParcels.find((p) => p.id === selectedFarmId);
+    return found || countyParcels[0] || null;
+  }, [countyParcels, selectedFarmId, isNationalView, isDrawerOpen]);
 
   // Dynamic Tooltip Clamping to prevent clipping off-screen
   const tooltipStyle = useMemo((): React.CSSProperties => {
@@ -131,15 +144,18 @@ export default function InteractiveMapClient() {
   const handleSelectCounty = (county: CountyInfo) => {
     setSelectedCounty(county);
     setIsNationalView(false);
-    // Directly sync first farm parcel in the selected county
+    setIsDrawerOpen(true);
+    // Find first farm in this county
     const farmInCounty = SEEDED_PARCELS.find((p) => p.county === county.name);
-    setSelectedFarm(farmInCounty || null);
+    if (farmInCounty) {
+      setSelectedFarmId(farmInCounty.id);
+    }
   };
 
   // Reset to national view
   const handleResetNational = () => {
     setIsNationalView(true);
-    setSelectedFarm(null);
+    setIsDrawerOpen(false);
   };
 
   const mapCenter: [number, number] = isNationalView ? [6.45, -9.45] : selectedCounty.center;
@@ -604,17 +620,44 @@ export default function InteractiveMapClient() {
             </div>
 
             {/* Farm Drill-Down Drawer */}
-            {selectedFarm && (
+            {effectiveFarm && (
               <div className="farm-dossier-drawer">
                 <div className="dossier-header">
                   <div>
                     <span style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#a7f3d0" }}>
                       Parcel Cadastre Record
                     </span>
-                    <h3>{selectedFarm.id}</h3>
-                    <p>{selectedFarm.county} County · {selectedFarm.district} District</p>
+                    <h3>{effectiveFarm.id}</h3>
+                    <p>{effectiveFarm.county} County · {effectiveFarm.district} District</p>
+
+                    {/* Multi-Holding Selector for Counties with multiple parcels */}
+                    {countyParcels.length > 1 && (
+                      <div style={{ display: "flex", gap: "6px", marginTop: "8px", flexWrap: "wrap" }}>
+                        {countyParcels.map((cp, idx) => (
+                          <button
+                            key={cp.id}
+                            onClick={() => {
+                              setSelectedFarmId(cp.id);
+                              setIsDrawerOpen(true);
+                            }}
+                            style={{
+                              background: cp.id === effectiveFarm.id ? "#166534" : "rgba(255,255,255,0.15)",
+                              color: "#ffffff",
+                              border: cp.id === effectiveFarm.id ? "1px solid #86efac" : "1px solid rgba(255,255,255,0.25)",
+                              borderRadius: "6px",
+                              padding: "3px 8px",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Holding {idx + 1}: {cp.commodity}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <button onClick={() => setSelectedFarm(null)} aria-label="Close dossier">
+                  <button onClick={() => setIsDrawerOpen(false)} aria-label="Close dossier">
                     ✕
                   </button>
                 </div>
@@ -634,21 +677,21 @@ export default function InteractiveMapClient() {
                     <div className="dossier-grid-2">
                       <div className="dossier-field">
                         <span>Holder</span>
-                        <b>{selectedFarm.maskedHolder}</b>
+                        <b>{effectiveFarm.maskedHolder}</b>
                       </div>
                       <div className="dossier-field">
                         <span>Community</span>
-                        <b>{selectedFarm.community}</b>
+                        <b>{effectiveFarm.community}</b>
                       </div>
                       <div className="dossier-field">
                         <span>Centroid GPS</span>
                         <b>
-                          {selectedFarm.centroid[0].toFixed(4)}°N, {selectedFarm.centroid[1].toFixed(4)}°W
+                          {effectiveFarm.centroid[0].toFixed(4)}°N, {effectiveFarm.centroid[1].toFixed(4)}°W
                         </b>
                       </div>
                       <div className="dossier-field">
                         <span>GPS Precision</span>
-                        <small>±{selectedFarm.accuracyM} m RTK</small>
+                        <small>±{effectiveFarm.accuracyM} m RTK</small>
                       </div>
                     </div>
                   </div>
@@ -661,20 +704,20 @@ export default function InteractiveMapClient() {
                     <div className="dossier-grid-2">
                       <div className="dossier-field">
                         <span>Cultivated Land</span>
-                        <b>{selectedFarm.areaHa} Hectares</b>
-                        <small>{selectedFarm.areaAcres} Acres</small>
+                        <b>{effectiveFarm.areaHa} Hectares</b>
+                        <small>{effectiveFarm.areaAcres} Acres</small>
                       </div>
                       <div className="dossier-field">
                         <span>Perimeter</span>
-                        <b>{selectedFarm.perimeterM} meters</b>
+                        <b>{effectiveFarm.perimeterM} meters</b>
                       </div>
                       <div className="dossier-field">
                         <span>Primary Crop</span>
-                        <b>{selectedFarm.commodity}</b>
+                        <b>{effectiveFarm.commodity}</b>
                       </div>
                       <div className="dossier-field">
                         <span>Variety</span>
-                        <b>{selectedFarm.variety}</b>
+                        <b>{effectiveFarm.variety}</b>
                       </div>
                     </div>
                   </div>
@@ -687,25 +730,25 @@ export default function InteractiveMapClient() {
                     <div className="dossier-scorecard">
                       <div className="score-row">
                         <span>Road Access:</span>
-                        <b>{selectedFarm.roadAccess} ({selectedFarm.roadDistanceMi} mi)</b>
+                        <b>{effectiveFarm.roadAccess} ({effectiveFarm.roadDistanceMi} mi)</b>
                       </div>
                       <div className="score-row">
                         <span>Road Condition:</span>
-                        <span className={`score-badge ${selectedFarm.roadCondition === "Good" || selectedFarm.roadCondition === "Excellent" ? "good" : "med"}`}>
-                          {selectedFarm.roadCondition}
+                        <span className={`score-badge ${effectiveFarm.roadCondition === "Good" || effectiveFarm.roadCondition === "Excellent" ? "good" : "med"}`}>
+                          {effectiveFarm.roadCondition}
                         </span>
                       </div>
                       <div className="score-row">
                         <span>Nearest Aggregation Market:</span>
-                        <b>{selectedFarm.nearestMarket}</b>
+                        <b>{effectiveFarm.nearestMarket}</b>
                       </div>
                       <div className="score-row">
                         <span>Market Distance & Transit:</span>
-                        <b>{selectedFarm.marketDistanceKm} km ({selectedFarm.marketTravelMins} mins)</b>
+                        <b>{effectiveFarm.marketDistanceKm} km ({effectiveFarm.marketTravelMins} mins)</b>
                       </div>
                       <div className="score-row">
                         <span>Processing Mill:</span>
-                        <b>{selectedFarm.processingFacility}</b>
+                        <b>{effectiveFarm.processingFacility}</b>
                       </div>
                     </div>
                   </div>
@@ -718,23 +761,23 @@ export default function InteractiveMapClient() {
                     <div className="dossier-scorecard">
                       <div className="score-row">
                         <span>Post-Harvest Storage:</span>
-                        <b>{selectedFarm.storageType}</b>
+                        <b>{effectiveFarm.storageType}</b>
                       </div>
                       <div className="score-row">
                         <span>Storage Capacity:</span>
-                        <b>{selectedFarm.storageCapacityMt} Metric Tons</b>
+                        <b>{effectiveFarm.storageCapacityMt} Metric Tons</b>
                       </div>
                       <div className="score-row">
                         <span>Tillage Mechanization:</span>
-                        <b>{selectedFarm.mechanizationMode}</b>
+                        <b>{effectiveFarm.mechanizationMode}</b>
                       </div>
                       <div className="score-row">
                         <span>Irrigation Infrastructure:</span>
-                        <b>{selectedFarm.irrigationStatus}</b>
+                        <b>{effectiveFarm.irrigationStatus}</b>
                       </div>
                       <div className="score-row">
                         <span>Smart Tech Readiness:</span>
-                        <b>{selectedFarm.smartReadiness}</b>
+                        <b>{effectiveFarm.smartReadiness}</b>
                       </div>
                     </div>
                   </div>
@@ -746,7 +789,7 @@ export default function InteractiveMapClient() {
                       <div>
                         <b style={{ fontSize: "11px", color: "#065f46" }}>Official Cadastral Verification</b>
                         <p style={{ margin: 0, fontSize: "9px", color: "#047857" }}>
-                          Demarcated and verified by Ministry of Agriculture GIS Unit on {selectedFarm.verifiedDate}.
+                          Demarcated and verified by Ministry of Agriculture GIS Unit on {effectiveFarm.verifiedDate}.
                         </p>
                       </div>
                     </div>
@@ -754,10 +797,10 @@ export default function InteractiveMapClient() {
                 </div>
 
                 <div className="dossier-actions">
-                  <Link href={`/signin?redirect=${encodeURIComponent(`/dashboard#parcels&parcel=${selectedFarm.id}`)}&domain=Farms+%26+GIS&role=GIS+officer&cat=field`}>
+                  <Link href={`/signin?redirect=${encodeURIComponent(`/dashboard#parcels&parcel=${effectiveFarm.id}`)}&domain=Farms+%26+GIS&role=GIS+officer&cat=field`}>
                     Authenticate as GIS Officer to Edit Geometry →
                   </Link>
-                  <button onClick={() => setSelectedFarm(null)}>Close Farm Dossier</button>
+                  <button onClick={() => setIsDrawerOpen(false)}>Close Farm Dossier</button>
                 </div>
               </div>
             )}
@@ -831,7 +874,7 @@ export default function InteractiveMapClient() {
                 else if (farm.commodity.includes("Palm")) strokeColor = "#ec4899";
                 else if (farm.commodity.includes("Vegetable")) strokeColor = "#8b5cf6";
 
-                const isSelected = selectedFarm?.id === farm.id;
+                const isSelected = effectiveFarm?.id === farm.id;
 
                 return (
                   <Polygon
@@ -845,7 +888,10 @@ export default function InteractiveMapClient() {
                       dashArray: isSelected ? "4 4" : undefined,
                     }}
                     eventHandlers={{
-                      click: () => setSelectedFarm(farm),
+                      click: () => {
+                        setSelectedFarmId(farm.id);
+                        setIsDrawerOpen(true);
+                      },
                     }}
                   >
                     <Popup>
@@ -863,7 +909,10 @@ export default function InteractiveMapClient() {
                           🛣️ {farm.roadAccess} ({farm.roadDistanceMi} mi)
                         </div>
                         <button
-                          onClick={() => setSelectedFarm(farm)}
+                          onClick={() => {
+                            setSelectedFarmId(farm.id);
+                            setIsDrawerOpen(true);
+                          }}
                           style={{
                             marginTop: "8px",
                             width: "100%",
@@ -891,7 +940,10 @@ export default function InteractiveMapClient() {
                   position={farm.centroid}
                   icon={createCommodityIcon(farm.commodity)}
                   eventHandlers={{
-                    click: () => setSelectedFarm(farm),
+                    click: () => {
+                      setSelectedFarmId(farm.id);
+                      setIsDrawerOpen(true);
+                    },
                   }}
                 />
               ))}
