@@ -718,7 +718,7 @@
   margin: 0;
 }
 
-.dossier-header button {
+.dossier-header .dossier-close {
   background: rgba(255, 255, 255, 0.15);
   border: 0;
   color: #ffffff;
@@ -729,10 +729,78 @@
   place-items: center;
   cursor: pointer;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
-.dossier-header button:hover {
+.dossier-header .dossier-close:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+/* Dedicated Multi-Holding Selector Bar */
+.dossier-holdings-bar {
+  background: #0d2f1f;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dossier-holdings-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #86efac;
+  font-weight: 700;
+}
+
+.dossier-holdings-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.holding-tab-chip {
+  all: unset;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.holding-tab-chip:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: #86efac;
+}
+
+.holding-tab-chip.active {
+  background: #15803d;
+  border-color: #4ade80;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.holding-tab-chip .holding-badge {
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #bbf7d0;
 }
 
 .dossier-body {

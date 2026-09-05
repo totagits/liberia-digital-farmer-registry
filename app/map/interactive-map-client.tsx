@@ -629,38 +629,37 @@ export default function InteractiveMapClient() {
                     </span>
                     <h3>{effectiveFarm.id}</h3>
                     <p>{effectiveFarm.county} County · {effectiveFarm.district} District</p>
-
-                    {/* Multi-Holding Selector for Counties with multiple parcels */}
-                    {countyParcels.length > 1 && (
-                      <div style={{ display: "flex", gap: "6px", marginTop: "8px", flexWrap: "wrap" }}>
-                        {countyParcels.map((cp, idx) => (
-                          <button
-                            key={cp.id}
-                            onClick={() => {
-                              setSelectedFarmId(cp.id);
-                              setIsDrawerOpen(true);
-                            }}
-                            style={{
-                              background: cp.id === effectiveFarm.id ? "#166534" : "rgba(255,255,255,0.15)",
-                              color: "#ffffff",
-                              border: cp.id === effectiveFarm.id ? "1px solid #86efac" : "1px solid rgba(255,255,255,0.25)",
-                              borderRadius: "6px",
-                              padding: "3px 8px",
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                            }}
-                          >
-                            Holding {idx + 1}: {cp.commodity}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                  <button onClick={() => setIsDrawerOpen(false)} aria-label="Close dossier">
+                  <button className="dossier-close" onClick={() => setIsDrawerOpen(false)} aria-label="Close dossier">
                     ✕
                   </button>
                 </div>
+
+                {/* Dedicated Multi-Holding Selector for Counties with multiple parcels */}
+                {countyParcels.length > 1 && (
+                  <div className="dossier-holdings-bar">
+                    <div className="dossier-holdings-title">
+                      <span>Registered Cadastral Plots ({countyParcels.length})</span>
+                      <span style={{ color: "#a7f3d0", fontWeight: 500 }}>Select plot to inspect</span>
+                    </div>
+                    <div className="dossier-holdings-tabs">
+                      {countyParcels.map((cp, idx) => (
+                        <button
+                          key={cp.id}
+                          type="button"
+                          className={`holding-tab-chip ${cp.id === effectiveFarm.id ? "active" : ""}`}
+                          onClick={() => {
+                            setSelectedFarmId(cp.id);
+                            setIsDrawerOpen(true);
+                          }}
+                        >
+                          <span className="holding-badge">Plot {idx + 1}</span>
+                          <span>{cp.commodity.split(" ")[0]} ({cp.areaHa} ha)</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="dossier-body">
                   {/* Privacy Badge */}
