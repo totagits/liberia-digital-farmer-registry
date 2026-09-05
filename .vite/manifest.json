@@ -1,0 +1,226 @@
+{
+  "_compass-B0-FjHtB.js": {
+    "file": "assets/compass-B0-FjHtB.js",
+    "name": "compass",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "_demo-users-pEsIOHTN.js": {
+    "file": "assets/demo-users-pEsIOHTN.js",
+    "name": "demo-users"
+  },
+  "_dynamic-ubnswsCs.js": {
+    "file": "assets/dynamic-ubnswsCs.js",
+    "name": "dynamic",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "_framework-CXnKph_e.js": {
+    "file": "assets/framework-CXnKph_e.js",
+    "name": "framework",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js"
+    ]
+  },
+  "_leaflet-DMFBSjWh.js": {
+    "file": "assets/leaflet-DMFBSjWh.js",
+    "name": "leaflet",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js"
+    ],
+    "css": [
+      "assets/leaflet-vh-t_kPv.css"
+    ]
+  },
+  "_leaflet-vh-t_kPv.css": {
+    "file": "assets/leaflet-vh-t_kPv.css",
+    "src": "_leaflet-vh-t_kPv.css"
+  },
+  "_rolldown-runtime-S-ySWqyJ.js": {
+    "file": "assets/rolldown-runtime-S-ySWqyJ.js",
+    "name": "rolldown-runtime"
+  },
+  "_shield-check-DzW7PA_Q.js": {
+    "file": "assets/shield-check-DzW7PA_Q.js",
+    "name": "shield-check",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_leaflet-DMFBSjWh.js",
+      "_compass-B0-FjHtB.js",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "app/dashboard/coverage-map.tsx": {
+    "file": "assets/coverage-map-CXqVIxLJ.js",
+    "name": "coverage-map",
+    "src": "app/dashboard/coverage-map.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_leaflet-DMFBSjWh.js",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "app/dashboard/dashboard-client.tsx": {
+    "file": "assets/dashboard-client-0y6284HY.js",
+    "name": "dashboard-client",
+    "src": "app/dashboard/dashboard-client.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "virtual:vinext-app-browser-entry",
+      "_demo-users-pEsIOHTN.js",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js",
+      "_dynamic-ubnswsCs.js"
+    ],
+    "dynamicImports": [
+      "app/dashboard/gis-workspace.tsx",
+      "app/dashboard/coverage-map.tsx"
+    ]
+  },
+  "app/dashboard/gis-workspace.tsx": {
+    "file": "assets/gis-workspace-BDrAnEcE.js",
+    "name": "gis-workspace",
+    "src": "app/dashboard/gis-workspace.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_leaflet-DMFBSjWh.js",
+      "_compass-B0-FjHtB.js",
+      "_shield-check-DzW7PA_Q.js",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "app/map/interactive-map-client.tsx": {
+    "file": "assets/interactive-map-client-CqQdEIvw.js",
+    "name": "interactive-map-client",
+    "src": "app/map/interactive-map-client.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_leaflet-DMFBSjWh.js",
+      "_compass-B0-FjHtB.js",
+      "_shield-check-DzW7PA_Q.js",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js"
+    ]
+  },
+  "app/map/page.tsx": {
+    "file": "assets/page-3fsiPt8a.js",
+    "name": "page",
+    "src": "app/map/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "virtual:vinext-app-browser-entry",
+      "app/public-header.tsx",
+      "_compass-B0-FjHtB.js",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js",
+      "_dynamic-ubnswsCs.js"
+    ],
+    "dynamicImports": [
+      "app/map/interactive-map-client.tsx"
+    ]
+  },
+  "app/page.tsx": {
+    "file": "assets/page-DoEbMMNz.js",
+    "name": "page",
+    "src": "app/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js"
+    ]
+  },
+  "app/public-header.tsx": {
+    "file": "assets/public-header-DbyYuLcH.js",
+    "name": "public-header",
+    "src": "app/public-header.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js"
+    ]
+  },
+  "app/signin/page.tsx": {
+    "file": "assets/page-BUXVk0IF.js",
+    "name": "page",
+    "src": "app/signin/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_demo-users-pEsIOHTN.js",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js"
+    ]
+  },
+  "node_modules/vinext/dist/shims/layout-segment-context.js": {
+    "file": "assets/layout-segment-context-Cib3AcI5.js",
+    "name": "layout-segment-context",
+    "src": "node_modules/vinext/dist/shims/layout-segment-context.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "node_modules/vinext/dist/shims/link.js": {
+    "file": "assets/link-BwbTEryy.js",
+    "name": "link",
+    "src": "node_modules/vinext/dist/shims/link.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-CXnKph_e.js"
+    ],
+    "dynamicImports": [
+      "node_modules/vinext/dist/shims/router.js"
+    ]
+  },
+  "node_modules/vinext/dist/shims/router.js": {
+    "file": "assets/router-C7rwZ6uf.js",
+    "name": "router",
+    "src": "node_modules/vinext/dist/shims/router.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-CXnKph_e.js",
+      "node_modules/vinext/dist/shims/link.js"
+    ],
+    "dynamicImports": [
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "virtual:vinext-app-browser-entry": {
+    "file": "assets/index-DRLIzKQo.js",
+    "name": "index",
+    "src": "virtual:vinext-app-browser-entry",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js"
+    ],
+    "dynamicImports": [
+      "node_modules/vinext/dist/shims/layout-segment-context.js",
+      "virtual:vinext-app-browser-entry",
+      "app/page.tsx",
+      "app/map/page.tsx",
+      "app/public-header.tsx",
+      "app/dashboard/dashboard-client.tsx",
+      "node_modules/vinext/dist/shims/link.js",
+      "app/signin/page.tsx"
+    ]
+  }
+}
