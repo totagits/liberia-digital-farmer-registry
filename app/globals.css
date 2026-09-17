@@ -1952,3 +1952,116 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   align-items: center !important;
   box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08) !important;
 }
+
+/* ==========================================================================
+   GIS CADASTRAL DIGITIZING & DRAWING TOOL
+   ========================================================================== */
+.leaflet-map.drawing-active,
+.leaflet-map.drawing-active .leaflet-container {
+  cursor: crosshair !important;
+}
+
+.digitize-banner {
+  left: 65px !important;
+  top: 12px !important;
+  background: rgba(16, 25, 47, 0.94) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1.5px solid #38bdf8 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+  z-index: 1000 !important;
+}
+.digitize-banner b {
+  font-size: 11px !important;
+  color: #38bdf8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.digitize-banner span {
+  font-size: 10px !important;
+  color: #e2e8f0 !important;
+}
+.digitize-banner button {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 5px 10px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.digitize-banner button:hover {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+.digitize-banner button.finish-btn {
+  background: #16a34a !important;
+  border-color: #4ade80 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+.digitize-banner button.finish-btn:hover {
+  background: #15803d !important;
+}
+.digitize-banner button.sample-btn {
+  background: #0284c7 !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+}
+
+.dfr-vertex-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.vertex-pin {
+  width: 22px;
+  height: 22px;
+  background: #0284c7;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: grab;
+  position: relative;
+  transition: transform 0.15s;
+}
+.vertex-pin:hover {
+  transform: scale(1.25);
+}
+.vertex-pin.first {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px #4ade80, 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+.close-pulse {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #22c55e;
+  color: #ffffff;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+}
+
+.parcel-form button:disabled {
+  background: #334155 !important;
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  border-color: #475569 !important;
+}

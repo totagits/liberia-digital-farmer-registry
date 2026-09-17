@@ -1,6 +1,15 @@
 "use client";
 import React, { Component, useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, Marker, Polygon, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Polygon,
+  Polyline,
+  Popup,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import L from "leaflet";
 import {
   CheckCircle2,
@@ -16,6 +25,10 @@ import {
   Upload,
   AlertTriangle,
   RefreshCw,
+  Sparkles,
+  Undo2,
+  Trash2,
+  Check,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
@@ -53,6 +66,18 @@ const markerIcon = L.divIcon({
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 });
+
+function createVertexIcon(index: number, isFirst: boolean, canClose: boolean) {
+  return L.divIcon({
+    className: "dfr-vertex-marker",
+    html: `<div class="vertex-pin ${isFirst ? "first" : ""}">
+      <span>${index + 1}</span>
+      ${canClose && isFirst ? '<div class="close-pulse" title="Click to close boundary ring">✓</div>' : ""}
+    </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+}
 
 function parseVertices(val: any): Point[] {
   if (Array.isArray(val)) {
@@ -163,14 +188,57 @@ function bboxOverlap(a: Point[], b: Point[]) {
   return x.minLat <= y.maxLat && x.maxLat >= y.minLat && x.minLng <= y.maxLng && x.maxLng >= y.minLng;
 }
 
-function MapClick({ drawing, add }: { drawing: boolean; add: (p: Point) => void }) {
+function MapDrawingController({
+  drawing,
+  draft,
+  onAddVertex,
+  onFinish,
+  mousePos,
+  setMousePos,
+}: {
+  drawing: boolean;
+  draft: Point[];
+  onAddVertex: (p: Point) => void;
+  onFinish: () => void;
+  mousePos: Point | null;
+  setMousePos: (p: Point | null) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    const container = map.getContainer();
+    if (drawing) {
+      container.classList.add("drawing-active");
+    } else {
+      container.classList.remove("drawing-active");
+    }
+  }, [map, drawing]);
+
   useMapEvents({
     click: (e) => {
-      if (drawing && Number.isFinite(e.latlng.lat) && Number.isFinite(e.latlng.lng)) {
-        add([e.latlng.lat, e.latlng.lng]);
+      if (!drawing) return;
+      if (Number.isFinite(e.latlng.lat) && Number.isFinite(e.latlng.lng)) {
+        onAddVertex([e.latlng.lat, e.latlng.lng]);
+      }
+    },
+    mousemove: (e) => {
+      if (!drawing || draft.length === 0) {
+        if (mousePos) setMousePos(null);
+        return;
+      }
+      if (Number.isFinite(e.latlng.lat) && Number.isFinite(e.latlng.lng)) {
+        setMousePos([e.latlng.lat, e.latlng.lng]);
+      }
+    },
+    dblclick: (e) => {
+      if (drawing && draft.length >= 3) {
+        L.DomEvent.stopPropagation(e as any);
+        onFinish();
       }
     },
   });
+
   return null;
 }
 
@@ -226,6 +294,7 @@ class GISErrorBoundary extends Component<
 function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [draft, setDraft] = useState<Point[]>([]);
+  const [mousePos, setMousePos] = useState<Point | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [base, setBase] = useState<"satellite" | "street">("satellite");
   const [ndvi, setNdvi] = useState(false);
@@ -241,6 +310,27 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
   const [revision, setRevision] = useState<Parcel | null>(null);
   const [certificate, setCertificate] = useState<Parcel | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const addSampleParcel = () => {
+    // Generate a clean 2.4 ha quad polygon near central Liberia
+    const centerLat = 6.42;
+    const centerLng = -9.43;
+    const offset = 0.0025;
+    const sample: Point[] = [
+      [centerLat + offset, centerLng - offset],
+      [centerLat + offset * 0.9, centerLng + offset * 1.1],
+      [centerLat - offset, centerLng + offset],
+      [centerLat - offset * 1.1, centerLng - offset * 0.9],
+    ];
+    setDraft(sample);
+    setForm((prev) => ({
+      ...prev,
+      farmerName: prev.farmerName || "Kollie Flomo",
+      commodity: prev.commodity || "Cassava & Lowland Rice",
+      district: prev.district || "Sanniquellie-Mahn",
+    }));
+    notify("Sample 2.40 ha field parcel placed on map. Review boundaries or click Save.");
+  };
 
   const load = async () => {
     try {
@@ -589,19 +679,32 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                 url="https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_16Day/default/2026-07-12/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png"
               />
             )}
-            <MapClick drawing={drawing} add={(p) => setDraft((v) => [...v, p])} />
+            <MapDrawingController
+              drawing={drawing}
+              draft={draft}
+              onAddVertex={(p) => setDraft((v) => [...v, p])}
+              onFinish={() => {
+                setDrawing(false);
+                notify("Boundary polygon finished! Complete farmer details and click Save.");
+              }}
+              mousePos={mousePos}
+              setMousePos={setMousePos}
+            />
+
+            {/* Existing verified and unverified cadastral parcels */}
             {parcels
               .filter((p) => Array.isArray(p.vertices) && p.vertices.length >= 3)
               .map((p) => (
                 <Polygon
                   key={p.parcelId}
                   positions={p.vertices}
+                  interactive={!drawing}
                   pathOptions={{
                     color: isVerified(p.geometryStatus) ? "#22c55e" : "#f59e0b",
                     weight: 3,
                     fillOpacity: 0.24,
                   }}
-                  eventHandlers={{ click: () => setSelected(p) }}
+                  eventHandlers={{ click: () => !drawing && setSelected(p) }}
                 >
                   <Popup>
                     <b>{p.parcelId}</b>
@@ -612,33 +715,154 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                   </Popup>
                 </Polygon>
               ))}
+
+            {/* In-progress drawing: line between first 2 vertices */}
+            {draft.length === 2 && (
+              <Polyline
+                positions={draft}
+                pathOptions={{
+                  color: "#38bdf8",
+                  weight: 3,
+                  dashArray: "6 6",
+                }}
+              />
+            )}
+
+            {/* In-progress drawing: polygon when 3+ vertices */}
             {draft.length >= 3 && (
               <Polygon
                 positions={draft}
                 pathOptions={{
-                  color: draftFlags.length ? "#ef4444" : "#38bdf8",
-                  dashArray: "7 6",
+                  color: draftFlags.length ? "#ef4444" : "#22c55e",
+                  dashArray: drawing ? "6 6" : undefined,
                   weight: 3,
-                  fillOpacity: 0.25,
+                  fillOpacity: 0.28,
                 }}
               />
             )}
+
+            {/* Live rubberband line to cursor while digitizing */}
+            {drawing && draft.length >= 1 && mousePos && (
+              <Polyline
+                positions={[draft[draft.length - 1], mousePos]}
+                pathOptions={{
+                  color: "#38bdf8",
+                  weight: 2,
+                  dashArray: "4 4",
+                  opacity: 0.85,
+                }}
+              />
+            )}
+
+            {/* Closing guide line back to first vertex when 2+ vertices placed */}
+            {drawing && draft.length >= 2 && mousePos && (
+              <Polyline
+                positions={[mousePos, draft[0]]}
+                pathOptions={{
+                  color: "#a855f7",
+                  weight: 1.5,
+                  dashArray: "2 4",
+                  opacity: 0.65,
+                }}
+              />
+            )}
+
+            {/* Draggable vertices with corner numbers */}
             {draft.map((p, i) => (
-              <Marker key={i} position={p} icon={markerIcon}>
+              <Marker
+                key={`v-${i}`}
+                position={p}
+                icon={createVertexIcon(i, i === 0, draft.length >= 3)}
+                draggable={drawing}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const marker = e.target;
+                    const pos = marker.getLatLng();
+                    setDraft((prev) => {
+                      const next = [...prev];
+                      next[i] = [pos.lat, pos.lng];
+                      return next;
+                    });
+                  },
+                  click: (e) => {
+                    if (drawing && i === 0 && draft.length >= 3) {
+                      L.DomEvent.stopPropagation(e as any);
+                      setDrawing(false);
+                      notify("Boundary closed! Review area metrics and save.");
+                    }
+                  },
+                }}
+              >
                 <Popup>
-                  Vertex {i + 1}
+                  <b>Corner Vertex #{i + 1}</b>
                   <br />
-                  {p[0].toFixed(6)}, {p[1].toFixed(6)}
+                  Lat: {p[0].toFixed(6)}°N, Lng: {p[1].toFixed(6)}°W
+                  {drawing && (
+                    <>
+                      <br />
+                      <small style={{ color: "#0284c7" }}>
+                        {i === 0 && draft.length >= 3
+                          ? "Click this vertex to close ring!"
+                          : "Drag this pin to adjust corner"}
+                      </small>
+                    </>
+                  )}
                 </Popup>
               </Marker>
             ))}
           </MapContainer>
           {drawing && (
             <div className="digitize-banner">
-              <b>Digitizing mode</b>
-              <span>Click satellite imagery to add WGS 84 vertices · {draft.length} vertices</span>
-              <button onClick={() => setDraft((v) => v.slice(0, -1))}>Undo</button>
-              <button onClick={() => setDraft([])}>Clear</button>
+              <b>
+                <Edit3 style={{ width: 14, height: 14 }} /> Digitizing mode:
+              </b>
+              <span>
+                {draft.length === 0
+                  ? "Click satellite imagery to place corner #1"
+                  : draft.length === 1
+                  ? "Click map to add corner #2"
+                  : draft.length === 2
+                  ? "Click map to add corner #3 (forms polygon)"
+                  : `✓ ${draft.length} corners · ${(m.areaHectares || 0).toFixed(2)} ha (Click corner #1 to close)`}
+              </span>
+              {draft.length >= 3 && (
+                <button
+                  type="button"
+                  className="finish-btn"
+                  onClick={() => {
+                    setDrawing(false);
+                    notify("Boundary polygon finished! Complete farmer details and click Save.");
+                  }}
+                >
+                  <Check style={{ width: 12, height: 12, display: "inline" }} /> Finish
+                </button>
+              )}
+              {draft.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDraft((v) => v.slice(0, -1))}
+                  title="Undo last vertex"
+                >
+                  <Undo2 style={{ width: 12, height: 12, display: "inline" }} /> Undo
+                </button>
+              )}
+              {draft.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDraft([])}
+                  title="Clear all points"
+                >
+                  <Trash2 style={{ width: 12, height: 12, display: "inline" }} /> Clear
+                </button>
+              )}
+              <button
+                type="button"
+                className="sample-btn"
+                onClick={addSampleParcel}
+                title="Quickly populate a 2.4 ha sample parcel"
+              >
+                <Sparkles style={{ width: 12, height: 12, display: "inline" }} /> Sample 2.4ha
+              </button>
             </div>
           )}
           {ndvi && (
@@ -726,12 +950,56 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                 value={form.commodity}
                 onChange={(e) => setForm({ ...form, commodity: e.target.value })}
               />
-              <button
-                disabled={draft.length < 3 || draftFlags.includes("SELF_INTERSECTION")}
-                onClick={save}
-              >
-                <ShieldCheck /> Save for validation
-              </button>
+              <div style={{ marginTop: "12px" }}>
+                <button
+                  disabled={draft.length < 3 || draftFlags.includes("SELF_INTERSECTION")}
+                  onClick={save}
+                  style={{
+                    width: "100%",
+                    background:
+                      draft.length >= 3 && !draftFlags.includes("SELF_INTERSECTION")
+                        ? "#078458"
+                        : "#334155",
+                    color: "#ffffff",
+                    opacity:
+                      draft.length >= 3 && !draftFlags.includes("SELF_INTERSECTION") ? 1 : 0.6,
+                    cursor:
+                      draft.length >= 3 && !draftFlags.includes("SELF_INTERSECTION")
+                        ? "pointer"
+                        : "not-allowed",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "11px 14px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow:
+                      draft.length >= 3 ? "0 2px 10px rgba(7, 132, 88, 0.4)" : "none",
+                  }}
+                >
+                  <ShieldCheck style={{ width: 16, height: 16 }} />
+                  {draft.length >= 3
+                    ? `Save Parcel (${(m.areaHectares || 0).toFixed(2)} ha)`
+                    : `Save for validation (${draft.length}/3 vertices)`}
+                </button>
+                {draft.length < 3 && (
+                  <small
+                    style={{
+                      display: "block",
+                      textAlign: "center",
+                      color: "#94a3b8",
+                      fontSize: "10px",
+                      marginTop: "6px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    Click satellite imagery to add at least 3 vertices (or use <b>Sample 2.4ha</b>).
+                  </small>
+                )}
+              </div>
             </div>
           )}
         </aside>
