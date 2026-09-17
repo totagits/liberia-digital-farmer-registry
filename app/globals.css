@@ -2027,6 +2027,88 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   border-color: #38bdf8 !important;
   color: #ffffff !important;
 }
+.digitize-banner button.gps-btn {
+  background: #059669 !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.digitize-banner button.gps-btn:hover {
+  background: #047857 !important;
+}
+.digitize-banner button.walk-btn {
+  background: #d97706 !important;
+  border-color: #fcd34d !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.digitize-banner button.walk-btn:hover {
+  background: #b45309 !important;
+}
+
+.gis-toolbar button.walk-btn {
+  background: #25334d;
+  border-color: #f59e0b;
+  color: #fef3c7;
+}
+.gis-toolbar button.walk-btn.active,
+.gis-toolbar button.walk-btn:hover {
+  background: #b45309 !important;
+  border-color: #fbbf24 !important;
+  color: #ffffff !important;
+}
+
+.table-delete-btn {
+  border: 1px solid #fca5a5 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border-radius: 6px !important;
+  padding: 5px 8px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background 0.15s ease !important;
+}
+.table-delete-btn:hover {
+  background: #fee2e2 !important;
+}
+
+.popup-del-btn {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.popup-del-btn:hover {
+  background: #fee2e2;
+}
+.popup-rev-btn {
+  background: #087a54;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.popup-rev-btn:hover {
+  background: #065f42;
+}
+
+.review-del-btn {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #b91c1c !important;
+}
+.review-del-btn:hover {
+  background: #b91c1c !important;
+}
 
 /* Center crosshair reticle for precise parcel digitizing */
 .center-reticle {

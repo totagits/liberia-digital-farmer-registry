@@ -654,6 +654,22 @@ export function updateStoredParcel(update: Partial<MockParcel> & { parcelId: str
   }
 }
 
+export function deleteStoredParcel(parcelId: string): void {
+  const existing = getStoredParcels();
+  const updated = existing.filter((p) => p.parcelId !== parcelId);
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(updated));
+      addStoredAudit({
+        actor: "gis.officer@moa.gov.lr",
+        action: "Parcel boundary deleted",
+        entity: parcelId,
+        details: `Deleted parcel ${parcelId} from spatial cadastre`,
+      });
+    } catch {}
+  }
+}
+
 export function getStoredDeliveryItems(): MockDeliveryItem[] {
   purgeLegacyMockStorage();
   let list: MockDeliveryItem[] = INITIAL_DELIVERY_ITEMS;

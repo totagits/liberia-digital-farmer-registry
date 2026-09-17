@@ -12,6 +12,7 @@ import {
   getStoredParcels,
   saveStoredParcel,
   updateStoredParcel,
+  deleteStoredParcel,
   getStoredDeliveryItems,
   INITIAL_DELIVERY_TEMPLATES,
   getStoredHouseholds,
@@ -290,6 +291,13 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
         updateStoredParcel(body);
       }
       return jsonResponse({ success: true, ok: true, geometryStatus: body.geometryStatus || "FIELD_VERIFIED" });
+    }
+    if (method === "DELETE") {
+      const parcelId = parsedUrl.searchParams.get("parcelId");
+      if (parcelId) {
+        deleteStoredParcel(parcelId);
+      }
+      return jsonResponse({ success: true, ok: true, deleted: parcelId });
     }
   }
 

@@ -29,6 +29,8 @@ import {
   Undo2,
   Trash2,
   Check,
+  Footprints,
+  LocateFixed,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
@@ -373,6 +375,91 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
     notify("Sample 2.40 ha field parcel placed on map. Review boundaries or click Save.");
   };
 
+  const [walking, setWalking] = useState(false);
+  const walkIntervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    };
+  }, []);
+
+  const recordGpsCorner = () => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      notify("Geolocation is not supported by your browser or device.");
+      return;
+    }
+    notify("Acquiring high-accuracy GPS coordinates from device...");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const acc = pos.coords.accuracy;
+        setDraft((prev) => [...prev, [lat, lng]]);
+        setDrawing(true);
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([lat, lng], 17);
+        }
+        notify(`📍 Corner #${draft.length + 1} captured via GPS (Accuracy: ±${acc.toFixed(1)}m).`);
+      },
+      (err) => {
+        console.warn("GPS error", err);
+        notify("Could not acquire device GPS coordinates. Check browser location permissions.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const simulatePerimeterWalk = () => {
+    if (walking) {
+      if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+      setWalking(false);
+      notify("Perimeter walk demarcation paused.");
+      return;
+    }
+    setDraft([]);
+    setDrawing(true);
+    setWalking(true);
+    notify("🚶 Starting enumerator perimeter walk (Bong County, 1.8 ha farm parcel)...");
+
+    // Realistic smallholder farm boundary in central Liberia
+    const walkCoords: Point[] = [
+      [6.4225, -9.4310],
+      [6.4239, -9.4282],
+      [6.4216, -9.4265],
+      [6.4192, -9.4285],
+      [6.4201, -9.4312],
+    ];
+
+    let step = 0;
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView(walkCoords[0], 16);
+    }
+
+    walkIntervalRef.current = setInterval(() => {
+      if (step < walkCoords.length) {
+        const pt = walkCoords[step];
+        setDraft((prev) => [...prev, pt]);
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.panTo(pt);
+        }
+        notify(`🚶 Corner #${step + 1} demarcated (Lat: ${pt[0].toFixed(4)}°, Lng: ${pt[1].toFixed(4)}°)`);
+        step++;
+      } else {
+        clearInterval(walkIntervalRef.current);
+        setWalking(false);
+        setForm((prev) => ({
+          ...prev,
+          farmerName: prev.farmerName || "Kollie Yamah",
+          county: "Bong",
+          district: "Suakoko",
+          commodity: "Cocoa & Plantain",
+        }));
+        notify("✓ Perimeter walk complete! 5 boundary corner posts logged. Review parcel metrics & save.");
+      }
+    }, 1300);
+  };
+
   const load = async () => {
     try {
       const res = await fetch("/api/parcels");
@@ -503,6 +590,31 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
       await load();
     } catch {
       notify("Failed to verify parcel.");
+    }
+  }
+
+  async function deleteParcel(p: Parcel) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete cadastral parcel ${p.parcelId} (${p.farmerName})?\n\nThis will remove the polygon from the national digital registry.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/parcels?parcelId=${encodeURIComponent(p.parcelId)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        notify(`Parcel ${p.parcelId} deleted from cadastre.`);
+        setSelected(null);
+        setParcels((prev) => prev.filter((item) => item.parcelId !== p.parcelId));
+        await load();
+      } else {
+        notify("Failed to delete parcel.");
+      }
+    } catch {
+      notify("Network error deleting parcel.");
     }
   }
 
@@ -684,6 +796,13 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
           <Download /> Export GeoJSON
         </button>
         <button
+          className={walking ? "active walk-btn" : "walk-btn"}
+          onClick={simulatePerimeterWalk}
+          title="Demarcate boundary by walking the perimeter using GPS"
+        >
+          <Footprints /> {walking ? "Stop walk" : "Walk boundary (GPS)"}
+        </button>
+        <button
           className="primary-map"
           onClick={() => {
             setDrawing(!drawing);
@@ -757,6 +876,22 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                     {p.farmerName}
                     <br />
                     {(p.areaHectares || 0).toFixed(3)} ha · {p.geometryStatus}
+                    <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
+                      <button
+                        type="button"
+                        className="popup-rev-btn"
+                        onClick={() => setSelected(p)}
+                      >
+                        Review details
+                      </button>
+                      <button
+                        type="button"
+                        className="popup-del-btn"
+                        onClick={() => deleteParcel(p)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </Popup>
                 </Polygon>
               ))}
@@ -856,6 +991,22 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                   <Check style={{ width: 12, height: 12, display: "inline" }} /> Finish
                 </button>
               )}
+              <button
+                type="button"
+                className="gps-btn"
+                onClick={recordGpsCorner}
+                title="Capture your device physical GPS position as a corner vertex"
+              >
+                <LocateFixed style={{ width: 12, height: 12, display: "inline" }} /> GPS Point
+              </button>
+              <button
+                type="button"
+                className="walk-btn"
+                onClick={simulatePerimeterWalk}
+                title="Demonstrate an enumerator walking the parcel boundary"
+              >
+                <Footprints style={{ width: 12, height: 12, display: "inline" }} /> {walking ? "Pause Walk" : "Walk Demo"}
+              </button>
               <button
                 type="button"
                 className="place-reticle-btn"
@@ -1125,7 +1276,17 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                     </span>
                   </td>
                   <td>
-                    <button onClick={() => setSelected(p)}>Review</button>
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <button onClick={() => setSelected(p)}>Review</button>
+                      <button
+                        type="button"
+                        className="table-delete-btn"
+                        onClick={() => deleteParcel(p)}
+                        title={`Delete parcel ${p.parcelId}`}
+                      >
+                        <Trash2 style={{ width: 12, height: 12 }} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -1166,6 +1327,13 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
             </div>
             <pre>{JSON.stringify(selected.vertices, null, 2)}</pre>
             <footer>
+              <button
+                type="button"
+                className="review-del-btn"
+                onClick={() => deleteParcel(selected)}
+              >
+                <Trash2 /> Delete parcel
+              </button>
               <button onClick={() => setRevision(selected)}>
                 <Edit3 /> Controlled revision
               </button>
