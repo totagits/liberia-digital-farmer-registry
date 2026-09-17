@@ -193,52 +193,93 @@ function MapDrawingController({
   draft,
   onAddVertex,
   onFinish,
-  mousePos,
-  setMousePos,
 }: {
   drawing: boolean;
   draft: Point[];
   onAddVertex: (p: Point) => void;
   onFinish: () => void;
-  mousePos: Point | null;
-  setMousePos: (p: Point | null) => void;
 }) {
   const map = useMap();
+  const drawingRef = useRef(drawing);
+  drawingRef.current = drawing;
+  const onAddVertexRef = useRef(onAddVertex);
+  onAddVertexRef.current = onAddVertex;
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
 
   useEffect(() => {
     if (!map) return;
     const container = map.getContainer();
+
     if (drawing) {
       container.classList.add("drawing-active");
+      map.doubleClickZoom.disable();
     } else {
       container.classList.remove("drawing-active");
+      map.doubleClickZoom.enable();
     }
-  }, [map, drawing]);
 
-  useMapEvents({
-    click: (e) => {
-      if (!drawing) return;
-      if (Number.isFinite(e.latlng.lat) && Number.isFinite(e.latlng.lng)) {
-        onAddVertex([e.latlng.lat, e.latlng.lng]);
+    let lastAddedTime = 0;
+    const addPt = (lat: number, lng: number) => {
+      const now = Date.now();
+      if (now - lastAddedTime < 250) return; // Debounce dual-fire
+      lastAddedTime = now;
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        onAddVertexRef.current([lat, lng]);
       }
-    },
-    mousemove: (e) => {
-      if (!drawing || draft.length === 0) {
-        if (mousePos) setMousePos(null);
+    };
+
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      if (!drawingRef.current) return;
+      if (e?.latlng) {
+        addPt(e.latlng.lat, e.latlng.lng);
+      }
+    };
+
+    const handleContainerClick = (e: MouseEvent) => {
+      if (!drawingRef.current) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest(".digitize-banner, .leaflet-control, .leaflet-popup, .dfr-vertex-marker, button, input, select")) {
         return;
       }
-      if (Number.isFinite(e.latlng.lat) && Number.isFinite(e.latlng.lng)) {
-        setMousePos([e.latlng.lat, e.latlng.lng]);
-      }
-    },
-    dblclick: (e) => {
-      if (drawing && draft.length >= 3) {
-        L.DomEvent.stopPropagation(e as any);
-        onFinish();
-      }
-    },
-  });
+      try {
+        const latlng = (map as any).mouseEventToLatLng(e);
+        if (latlng && Number.isFinite(latlng.lat) && Number.isFinite(latlng.lng)) {
+          addPt(latlng.lat, latlng.lng);
+        }
+      } catch {}
+    };
 
+    const handleDblClick = (e: L.LeafletMouseEvent) => {
+      if (!drawingRef.current) return;
+      if (draftRef.current.length >= 3) {
+        L.DomEvent.stopPropagation(e as any);
+        onFinishRef.current();
+      }
+    };
+
+    map.on("click", handleMapClick);
+    map.on("dblclick", handleDblClick);
+    container.addEventListener("click", handleContainerClick, true);
+
+    return () => {
+      map.off("click", handleMapClick);
+      map.off("dblclick", handleDblClick);
+      container.removeEventListener("click", handleContainerClick, true);
+    };
+  }, [map, drawing]);
+
+  return null;
+}
+
+function MapControllerBridge({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    if (map) onReady(map);
+  }, [map, onReady]);
   return null;
 }
 
@@ -294,7 +335,7 @@ class GISErrorBoundary extends Component<
 function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [draft, setDraft] = useState<Point[]>([]);
-  const [mousePos, setMousePos] = useState<Point | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [base, setBase] = useState<"satellite" | "street">("satellite");
   const [ndvi, setNdvi] = useState(false);
@@ -655,6 +696,11 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
 
       <section className="gis-stage">
         <div className="map-shell">
+          {drawing && (
+            <div className="center-reticle" aria-hidden="true">
+              <div className="center-reticle-dot" />
+            </div>
+          )}
           <MapContainer
             center={[6.42, -9.43]}
             zoom={7}
@@ -679,6 +725,7 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                 url="https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_16Day/default/2026-07-12/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png"
               />
             )}
+            <MapControllerBridge onReady={(m) => { mapInstanceRef.current = m; }} />
             <MapDrawingController
               drawing={drawing}
               draft={draft}
@@ -687,8 +734,6 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                 setDrawing(false);
                 notify("Boundary polygon finished! Complete farmer details and click Save.");
               }}
-              mousePos={mousePos}
-              setMousePos={setMousePos}
             />
 
             {/* Existing verified and unverified cadastral parcels */}
@@ -737,32 +782,6 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                   dashArray: drawing ? "6 6" : undefined,
                   weight: 3,
                   fillOpacity: 0.28,
-                }}
-              />
-            )}
-
-            {/* Live rubberband line to cursor while digitizing */}
-            {drawing && draft.length >= 1 && mousePos && (
-              <Polyline
-                positions={[draft[draft.length - 1], mousePos]}
-                pathOptions={{
-                  color: "#38bdf8",
-                  weight: 2,
-                  dashArray: "4 4",
-                  opacity: 0.85,
-                }}
-              />
-            )}
-
-            {/* Closing guide line back to first vertex when 2+ vertices placed */}
-            {drawing && draft.length >= 2 && mousePos && (
-              <Polyline
-                positions={[mousePos, draft[0]]}
-                pathOptions={{
-                  color: "#a855f7",
-                  weight: 1.5,
-                  dashArray: "2 4",
-                  opacity: 0.65,
                 }}
               />
             )}
@@ -837,6 +856,21 @@ function GISWorkspaceInner({ notify }: { notify: (s: string) => void }) {
                   <Check style={{ width: 12, height: 12, display: "inline" }} /> Finish
                 </button>
               )}
+              <button
+                type="button"
+                className="place-reticle-btn"
+                onClick={() => {
+                  if (mapInstanceRef.current) {
+                    const c = mapInstanceRef.current.getCenter();
+                    if (Number.isFinite(c.lat) && Number.isFinite(c.lng)) {
+                      setDraft((v) => [...v, [c.lat, c.lng]]);
+                    }
+                  }
+                }}
+                title="Drop a corner vertex at the screen center crosshair"
+              >
+                <Plus style={{ width: 12, height: 12, display: "inline" }} /> Place Point at Reticle
+              </button>
               {draft.length > 0 && (
                 <button
                   type="button"

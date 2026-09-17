@@ -1957,7 +1957,10 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
    GIS CADASTRAL DIGITIZING & DRAWING TOOL
    ========================================================================== */
 .leaflet-map.drawing-active,
-.leaflet-map.drawing-active .leaflet-container {
+.leaflet-container.drawing-active,
+.drawing-active,
+.drawing-active .leaflet-interactive,
+.drawing-active .leaflet-pane {
   cursor: crosshair !important;
 }
 
@@ -1974,6 +1977,7 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   gap: 10px !important;
   align-items: center !important;
   z-index: 1000 !important;
+  flex-wrap: wrap;
 }
 .digitize-banner b {
   font-size: 11px !important;
@@ -2009,10 +2013,62 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
 .digitize-banner button.finish-btn:hover {
   background: #15803d !important;
 }
+.digitize-banner button.place-reticle-btn {
+  background: #0f766e !important;
+  border-color: #2dd4bf !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.digitize-banner button.place-reticle-btn:hover {
+  background: #115e59 !important;
+}
 .digitize-banner button.sample-btn {
   background: #0284c7 !important;
   border-color: #38bdf8 !important;
   color: #ffffff !important;
+}
+
+/* Center crosshair reticle for precise parcel digitizing */
+.center-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.center-reticle::before,
+.center-reticle::after {
+  content: "";
+  position: absolute;
+  background: rgba(56, 189, 248, 0.85);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+.center-reticle::before {
+  top: 0;
+  bottom: 0;
+  left: 19px;
+  width: 2px;
+}
+.center-reticle::after {
+  left: 0;
+  right: 0;
+  top: 19px;
+  height: 2px;
+}
+.center-reticle-dot {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #0284c7;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+  z-index: 2;
 }
 
 .dfr-vertex-marker {
