@@ -1061,21 +1061,24 @@ export default function DashboardClient({
               className="identity"
               style={{
                 cursor: "pointer",
-                padding: "4px 8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "2px 6px",
                 borderRadius: "10px",
-                transition: "background 0.2s",
+                maxHeight: "58px",
               }}
               title="Click to view & edit your profile, phone number, and photo"
               onClick={() => setProfileModalOpen(true)}
             >
-              <div style={{ position: "relative" }}>
+              <div style={{ position: "relative", width: "38px", height: "38px", flexShrink: 0 }}>
                 {currentUser.photoUrl ? (
                   <img
                     src={currentUser.photoUrl}
                     alt={currentUser.name}
                     style={{
-                      width: "36px",
-                      height: "36px",
+                      width: "100%",
+                      height: "100%",
                       borderRadius: "50%",
                       objectFit: "cover",
                       border: "2px solid #22c55e",
@@ -1084,7 +1087,21 @@ export default function DashboardClient({
                     }}
                   />
                 ) : (
-                  <span>{currentUser.name.slice(0, 1).toUpperCase()}</span>
+                  <span
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      background: "#ddebcd",
+                      color: "#244b31",
+                      borderRadius: "50%",
+                      display: "grid",
+                      placeItems: "center",
+                      fontWeight: 800,
+                      fontSize: "14px",
+                    }}
+                  >
+                    {currentUser.name.slice(0, 1).toUpperCase()}
+                  </span>
                 )}
                 <span
                   style={{
@@ -1106,22 +1123,39 @@ export default function DashboardClient({
                   ✎
                 </span>
               </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <b>{currentUser.name}</b>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 0, lineHeight: 1.15 }}>
+                <b
+                  style={{
+                    fontSize: "13.5px",
+                    color: "#0f172a",
+                    lineHeight: "1.2",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: "165px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    margin: 0,
+                    padding: 0,
+                  }}
+                >
+                  <span>{currentUser.name}</span>
                   <span
                     style={{
-                      fontSize: "0.68rem",
-                      background: "rgba(34, 197, 94, 0.15)",
-                      color: "#166534",
+                      fontSize: "10px",
+                      background: "#dcfce7",
+                      color: "#15803d",
                       padding: "1px 5px",
                       borderRadius: "4px",
-                      fontWeight: 700,
+                      fontWeight: 750,
+                      display: "inline-block",
+                      lineHeight: "1.2",
                     }}
                   >
-                    Edit
+                    Edit ✎
                   </span>
-                </div>
+                </b>
                 <select
                   value={role}
                   onClick={(e) => e.stopPropagation()}
