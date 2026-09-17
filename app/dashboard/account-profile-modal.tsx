@@ -149,21 +149,42 @@ export default function AccountProfileModal({
   return (
     <div
       className="modal-wrap enrollment-overlay"
-      style={{ zIndex: 10000 }}
+      style={{
+        zIndex: 10000,
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px",
+        background: "rgba(9, 30, 20, 0.65)",
+        backdropFilter: "blur(4px)",
+      }}
       onMouseDown={(e) => {
         if (e.currentTarget === e.target) onClose();
       }}
     >
       <div
         className="enrollment-wizard ext-wizard"
-        style={{ maxWidth: 840, background: "#ffffff", borderRadius: "16px", overflow: "hidden" }}
+        style={{
+          width: "100%",
+          maxWidth: "840px",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          background: "#ffffff",
+          borderRadius: "16px",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.35)",
+          overflow: "hidden",
+        }}
       >
         <header
           style={{
             position: "relative",
+            flexShrink: 0,
             background: "#0e3120",
             color: "#ffffff",
-            padding: "24px 28px",
+            padding: "20px 24px",
             borderBottom: "4px solid #22c55e",
           }}
         >
@@ -224,8 +245,17 @@ export default function AccountProfileModal({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit}>
-          <main style={{ padding: "26px 28px", maxHeight: "75vh", overflowY: "auto" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+          <main style={{ padding: "22px 24px", flex: 1, minHeight: 0, overflowY: "auto" }}>
             {/* SECTION 1: PROFILE PHOTO / BIOMETRIC AVATAR */}
             <section
               style={{
@@ -568,12 +598,15 @@ export default function AccountProfileModal({
 
           <footer
             style={{
+              flexShrink: 0,
               padding: "16px 28px",
               background: "#f8fafc",
-              borderTop: "1px solid #e2e8f0",
+              borderTop: "2px solid #e2e8f0",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              boxShadow: "0 -4px 14px rgba(0, 0, 0, 0.04)",
+              zIndex: 10,
             }}
           >
             <button
