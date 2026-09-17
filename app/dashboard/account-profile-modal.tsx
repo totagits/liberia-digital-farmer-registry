@@ -148,114 +148,108 @@ export default function AccountProfileModal({
 
   return (
     <div
-      className="modal-wrap enrollment-overlay"
-      style={{
-        zIndex: 10000,
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-        background: "rgba(9, 30, 20, 0.65)",
-        backdropFilter: "blur(4px)",
-      }}
+      className="modal-wrap account-profile-overlay"
       onMouseDown={(e) => {
         if (e.currentTarget === e.target) onClose();
       }}
     >
-      <div
-        className="enrollment-wizard ext-wizard"
-        style={{
-          width: "100%",
-          maxWidth: "840px",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-          background: "#ffffff",
-          borderRadius: "16px",
-          boxShadow: "0 25px 60px rgba(0,0,0,0.35)",
-          overflow: "hidden",
-        }}
+      <form
+        className="account-profile-dialog"
+        onSubmit={handleSubmit}
       >
         <header
           style={{
-            position: "relative",
+            position: "sticky",
+            top: 0,
+            zIndex: 40,
             flexShrink: 0,
             background: "#0e3120",
             color: "#ffffff",
-            padding: "20px 24px",
+            padding: "16px 24px",
             borderBottom: "4px solid #22c55e",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
           }}
         >
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <span
               style={{
                 color: "#86efac",
                 fontWeight: 700,
-                fontSize: "11px",
+                fontSize: "10px",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
               }}
             >
               ♢ &nbsp; NATIONAL DIGITAL FARMER REGISTRY — ACCOUNT SETTINGS
             </span>
-            <h2 style={{ margin: "6px 0 4px", fontSize: "1.65rem", fontFamily: "Georgia, serif" }}>
+            <h2 style={{ margin: "4px 0 2px", fontSize: "1.45rem", fontFamily: "Georgia, serif", lineHeight: 1.2 }}>
               My Account &amp; Profile Information
             </h2>
-            <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.85rem" }}>
+            <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.8rem" }}>
               Update your contact details, mobile money number for input subsidies, and personal biometric profile photo.
             </p>
           </div>
-          <b
-            style={{
-              position: "absolute",
-              right: "68px",
-              top: "24px",
-              background: "#166534",
-              border: "1px solid #4ade80",
-              color: "#ffffff",
-              padding: "6px 14px",
-              borderRadius: "8px",
-              fontSize: "11px",
-              fontWeight: 700,
-            }}
-          >
-            {role}
-          </b>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close modal"
-            style={{
-              position: "absolute",
-              right: "20px",
-              top: "22px",
-              background: "rgba(255,255,255,0.15)",
-              border: "none",
-              color: "#ffffff",
-              width: "34px",
-              height: "34px",
-              borderRadius: "50%",
-              fontSize: "18px",
-              cursor: "pointer",
-            }}
-          >
-            ×
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+            <span
+              style={{
+                background: "#166534",
+                border: "1px solid #4ade80",
+                color: "#ffffff",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "11px",
+                fontWeight: 700,
+              }}
+            >
+              {role}
+            </span>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                background: "#22c55e",
+                color: "#052e16",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontSize: "12px",
+                fontWeight: 800,
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+              title="Save all changes"
+            >
+              {isSubmitting ? "Saving…" : "💾 Save Changes"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close modal"
+              style={{
+                background: "rgba(255,255,255,0.18)",
+                border: "none",
+                color: "#ffffff",
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                fontSize: "18px",
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              ×
+            </button>
+          </div>
         </header>
 
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            minHeight: 0,
-            overflow: "hidden",
-          }}
-        >
-          <main style={{ padding: "22px 24px", flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <main style={{ padding: "22px 24px", flex: "1 1 auto", minHeight: 0, overflowY: "auto" }}>
             {/* SECTION 1: PROFILE PHOTO / BIOMETRIC AVATAR */}
             <section
               style={{
@@ -596,55 +590,59 @@ export default function AccountProfileModal({
             </section>
           </main>
 
-          <footer
+        <footer
+          style={{
+            flexShrink: 0,
+            position: "sticky",
+            bottom: 0,
+            zIndex: 40,
+            padding: "14px 24px",
+            background: "#ffffff",
+            borderTop: "2px solid #e2e8f0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            boxShadow: "0 -4px 16px rgba(0, 0, 0, 0.08)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
             style={{
-              flexShrink: 0,
-              padding: "16px 28px",
-              background: "#f8fafc",
-              borderTop: "2px solid #e2e8f0",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              boxShadow: "0 -4px 14px rgba(0, 0, 0, 0.04)",
-              zIndex: 10,
+              background: "#ffffff",
+              color: "#334155",
+              border: "1.5px solid #cbd5e1",
+              borderRadius: "8px",
+              padding: "10px 20px",
+              fontWeight: 600,
+              fontSize: "0.88rem",
+              cursor: "pointer",
             }}
           >
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: "#ffffff",
-                color: "#475569",
-                border: "1px solid #cbd5e1",
-                borderRadius: "8px",
-                padding: "9px 18px",
-                fontWeight: 600,
-                fontSize: "0.85rem",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                background: "#166534",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 22px",
-                fontWeight: 700,
-                fontSize: "0.85rem",
-                cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(22, 101, 52, 0.3)",
-              }}
-            >
-              {isSubmitting ? "Saving Changes…" : "💾 Save Account Changes"}
-            </button>
-          </footer>
-        </form>
-      </div>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            style={{
+              background: "#166534",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              padding: "11px 26px",
+              fontWeight: 700,
+              fontSize: "0.92rem",
+              cursor: isSubmitting ? "not-allowed" : "pointer",
+              boxShadow: "0 2px 10px rgba(22, 101, 52, 0.35)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            {isSubmitting ? "Saving Changes…" : "💾 Save Account Changes"}
+          </button>
+        </footer>
+      </form>
     </div>
   );
 }
