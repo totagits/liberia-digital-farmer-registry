@@ -13,6 +13,10 @@ export interface DemoUser {
   badgeColor: string;
   category: "admin" | "field" | "extension" | "producer" | "oversight";
   avatar: string;
+  photoUrl?: string;
+  phone?: string;
+  language?: string;
+  nin?: string;
 }
 
 export const DEMO_USERS: DemoUser[] = [
@@ -29,6 +33,9 @@ export const DEMO_USERS: DemoUser[] = [
     badgeColor: "#22c55e",
     category: "admin",
     avatar: "AN",
+    phone: "+231 886 512 300",
+    language: "English",
+    nin: "NIN-LR-100201",
   },
   {
     id: "farmer-1",
@@ -43,6 +50,9 @@ export const DEMO_USERS: DemoUser[] = [
     badgeColor: "#eab308",
     category: "producer",
     avatar: "KF",
+    phone: "+231 770 449 102",
+    language: "English / Kpelle",
+    nin: "NIN-LR-883921",
   },
   {
     id: "coop-1",
@@ -230,3 +240,35 @@ export function clearActiveDemoUser(): void {
     } catch {}
   }
 }
+
+export function updateActiveDemoUser(updates: Partial<DemoUser>): DemoUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const current = getActiveDemoUser() || getDefaultDemoUser();
+    const updated: DemoUser = { ...current, ...updates };
+    setActiveDemoUser(updated);
+
+    // Also persist in persistent custom profiles map keyed by id / email
+    const PROFILES_KEY = "dfr_user_profiles_v1";
+    const profilesRaw = localStorage.getItem(PROFILES_KEY);
+    const profiles = profilesRaw ? JSON.parse(profilesRaw) : {};
+    profiles[updated.id || updated.email] = updated;
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+    return updated;
+  } catch {}
+  return null;
+}
+
+export function getStoredUserProfile(userIdOrEmail: string): Partial<DemoUser> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const PROFILES_KEY = "dfr_user_profiles_v1";
+    const profilesRaw = localStorage.getItem(PROFILES_KEY);
+    if (profilesRaw) {
+      const profiles = JSON.parse(profilesRaw);
+      return profiles[userIdOrEmail] || null;
+    }
+  } catch {}
+  return null;
+}
+

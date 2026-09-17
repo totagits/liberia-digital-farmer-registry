@@ -23,10 +23,18 @@ import Benefits from "./benefits";
 import GrievanceWorkspace from "./grievances";
 import FarmerDossier from "./farmer-dossier";
 import FieldRegistrationWorkspace from "./field-registration";
+import AccountProfileModal from "./account-profile-modal";
 import dynamic from "next/dynamic";
 import { installClientApiInterceptor } from "../../lib/api-client-interceptor";
 import { getActiveRole, setActiveRole } from "../../lib/mock-data";
-import { getActiveDemoUser, setActiveDemoUser, clearActiveDemoUser, DEMO_USERS } from "../../lib/demo-users";
+import {
+  getActiveDemoUser,
+  setActiveDemoUser,
+  clearActiveDemoUser,
+  updateActiveDemoUser,
+  getStoredUserProfile,
+  DEMO_USERS,
+} from "../../lib/demo-users";
 import { useRealtime } from "../../lib/use-realtime";
 const GISWorkspace = dynamic(() => import("./gis-workspace"), {
   ssr: false,
@@ -603,13 +611,40 @@ export default function DashboardClient({
     }
     return true;
   });
-  const [currentUser, setCurrentUser] = useState(() => {
+  const [currentUser, setCurrentUser] = useState<{
+    name: string;
+    email: string;
+    photoUrl?: string;
+    phone?: string;
+    county?: string;
+    district?: string;
+    language?: string;
+    bio?: string;
+    nin?: string;
+    id?: string;
+  }>(() => {
     if (typeof window !== "undefined") {
       const demo = getActiveDemoUser();
-      if (demo) return { name: demo.name, email: demo.email };
+      if (demo) {
+        const stored = getStoredUserProfile(demo.id || demo.email);
+        return {
+          name: stored?.name || demo.name,
+          email: stored?.email || demo.email,
+          photoUrl: stored?.photoUrl || demo.photoUrl,
+          phone: stored?.phone || demo.phone,
+          county: stored?.countyScope || demo.countyScope,
+          district: stored?.districtScope || demo.districtScope,
+          language: stored?.language || demo.language,
+          bio: stored?.description || demo.description,
+          nin: stored?.nin || demo.nin,
+          id: demo.id,
+        };
+      }
     }
     return user;
   });
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+
   const [role, setRoleState] = useState(() => {
     if (typeof window !== "undefined") {
       const demo = getActiveDemoUser();
@@ -617,13 +652,57 @@ export default function DashboardClient({
     }
     return getActiveRole(assignedRole || "Ministry administrator");
   });
+
+  const handleSaveProfile = (updated: {
+    name: string;
+    email: string;
+    photoUrl?: string;
+    phone?: string;
+    county?: string;
+    district?: string;
+    language?: string;
+    bio?: string;
+  }) => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      ...updated,
+    }));
+    updateActiveDemoUser({
+      name: updated.name,
+      email: updated.email,
+      photoUrl: updated.photoUrl,
+      phone: updated.phone,
+      countyScope: updated.county,
+      districtScope: updated.district,
+      language: updated.language,
+      description: updated.bio,
+    });
+    setNotice("Account profile and photo updated successfully.");
+  };
+
   const setRole = (r: string) => {
     setRoleState(r);
     setActiveRole(r);
     const matching = DEMO_USERS.find((u) => u.role === r);
     if (matching) {
-      setCurrentUser({ name: matching.name, email: matching.email });
-      setActiveDemoUser(matching);
+      const stored = getStoredUserProfile(matching.id || matching.email);
+      const activeUser = {
+        name: stored?.name || matching.name,
+        email: stored?.email || matching.email,
+        photoUrl: stored?.photoUrl || matching.photoUrl,
+        phone: stored?.phone || matching.phone,
+        county: stored?.countyScope || matching.countyScope,
+        district: stored?.districtScope || matching.districtScope,
+        language: stored?.language || matching.language,
+        bio: stored?.description || matching.description,
+        nin: stored?.nin || matching.nin,
+        id: matching.id,
+      };
+      setCurrentUser(activeUser);
+      setActiveDemoUser({
+        ...matching,
+        ...stored,
+      });
     }
   };
   const getSignOutUrl = () => {
@@ -978,12 +1057,74 @@ export default function DashboardClient({
             <button className="bell" onClick={()=>nav(visible.some(m=>m[0]==="Verification")?"Verification":"Home")} title="Open pending work">
               ♢<sup>{pending}</sup>
             </button>
-            <div className="identity">
-              <span>{currentUser.name.slice(0, 1).toUpperCase()}</span>
+            <div
+              className="identity"
+              style={{
+                cursor: "pointer",
+                padding: "4px 8px",
+                borderRadius: "10px",
+                transition: "background 0.2s",
+              }}
+              title="Click to view & edit your profile, phone number, and photo"
+              onClick={() => setProfileModalOpen(true)}
+            >
+              <div style={{ position: "relative" }}>
+                {currentUser.photoUrl ? (
+                  <img
+                    src={currentUser.photoUrl}
+                    alt={currentUser.name}
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid #22c55e",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <span>{currentUser.name.slice(0, 1).toUpperCase()}</span>
+                )}
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: "-2px",
+                    right: "-2px",
+                    background: "#166534",
+                    color: "#ffffff",
+                    borderRadius: "50%",
+                    width: "14px",
+                    height: "14px",
+                    fontSize: "8px",
+                    display: "grid",
+                    placeItems: "center",
+                    border: "1.5px solid #ffffff",
+                  }}
+                  title="Upload / edit photo"
+                >
+                  ✎
+                </span>
+              </div>
               <div>
-                <b>{currentUser.name}</b>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <b>{currentUser.name}</b>
+                  <span
+                    style={{
+                      fontSize: "0.68rem",
+                      background: "rgba(34, 197, 94, 0.15)",
+                      color: "#166534",
+                      padding: "1px 5px",
+                      borderRadius: "4px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Edit
+                  </span>
+                </div>
                 <select
                   value={role}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) => setRole(e.target.value)}
                   style={{
                     display: "block",
@@ -1259,6 +1400,14 @@ export default function DashboardClient({
             );
             setSelectedFarmer(updated);
           }}
+        />
+      )}
+      {profileModalOpen && (
+        <AccountProfileModal
+          user={currentUser}
+          role={role}
+          onClose={() => setProfileModalOpen(false)}
+          onSave={handleSaveProfile}
         />
       )}
     </main>
