@@ -18,6 +18,26 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
   const [query,setQuery]=useState("");
   const [busy,setBusy]=useState(false);
 
+  const isProducer =
+    role === "Farmer" ||
+    role === "Farmer household representative" ||
+    role === "Cooperative representative";
+
+  const adminRoles = useMemo(
+    () =>
+      new Set([
+        "Ministry administrator",
+        "System administrator",
+        "Help-desk officer",
+        "Independent audit user",
+        "Security auditor",
+      ]),
+    []
+  );
+
+  // Strict RBAC: Producers, field enumerators, agro-dealers, and extension agents are clients/consumers, not Help Desk managers
+  const canManage = !isProducer && adminRoles.has(role);
+
   const [articleDraft, setArticleDraft] = useState<Partial<Article>>({
     articleCode: "",
     title: "",
@@ -37,11 +57,41 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
   };
   useEffect(()=>{load()},[]);
 
-  const mine=data.tickets.filter(t=>!data.access.canManage||tab!=="mine"||t.requesterRole===role);
-  const filtered=mine.filter(t=>(t.ticketCode+t.subject+t.category+t.requesterName).toLowerCase().includes(query.toLowerCase()));
-  const open=data.tickets.filter(t=>!["Resolved","Closed"].includes(t.status)).length;
-  const overdue=data.tickets.filter(t=>!["Resolved","Closed"].includes(t.status)&&new Date(t.dueAt)<new Date()).length;
-  const resolved=data.tickets.filter(t=>t.status==="Resolved"||t.status==="Closed").length;
+  const myTickets = useMemo(() => {
+    return data.tickets.filter(
+      (t) =>
+        t.requesterRole === role ||
+        (isProducer &&
+          (t.requesterRole === "Farmer" ||
+            t.requesterRole === "Farmer household representative" ||
+            t.requesterRole === "Cooperative representative" ||
+            t.requesterName?.toLowerCase().includes("flomo") ||
+            t.requesterName?.toLowerCase().includes("kollie")))
+    );
+  }, [data.tickets, isProducer, role]);
+
+  const displayedTickets = useMemo(() => {
+    if (canManage && tab === "queue") {
+      return data.tickets;
+    }
+    return myTickets;
+  }, [canManage, tab, data.tickets, myTickets]);
+
+  const filtered = displayedTickets.filter((t) =>
+    (t.ticketCode + t.subject + t.category + t.requesterName).toLowerCase().includes(query.toLowerCase())
+  );
+
+  // National metrics (for administrators / triage managers)
+  const open = data.tickets.filter((t) => !["Resolved", "Closed"].includes(t.status)).length;
+  const overdue = data.tickets.filter(
+    (t) => !["Resolved", "Closed"].includes(t.status) && new Date(t.dueAt) < new Date()
+  ).length;
+  const resolved = data.tickets.filter((t) => t.status === "Resolved" || t.status === "Closed").length;
+
+  // Personal metrics (for farmers / producers)
+  const myOpen = myTickets.filter((t) => !["Resolved", "Closed"].includes(t.status)).length;
+  const myInTriage = myTickets.filter((t) => ["Open", "Acknowledged", "In progress"].includes(t.status)).length;
+  const myResolved = myTickets.filter((t) => t.status === "Resolved" || t.status === "Closed").length;
 
   async function create(e:FormEvent<HTMLFormElement>){
     e.preventDefault();
@@ -151,7 +201,7 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
           <button onClick={()=>setModal(true)}>＋ New support request</button>
-          {onNavigate && data.access.canManage && (
+          {onNavigate && canManage && (
             <button
               onClick={() => onNavigate("Institutional Governance")}
               style={{
@@ -171,16 +221,52 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
       </section>
 
       <div className="metric-grid">
-        <article className="metric"><div><span>Active requests</span><strong>{open}</strong><small>Awaiting action or response</small></div><i>◌</i></article>
-        <article className="metric"><div><span>SLA overdue</span><strong>{overdue}</strong><small>Requires immediate escalation</small></div><i>!</i></article>
-        <article className="metric"><div><span>Resolved</span><strong>{resolved}</strong><small>Closed-loop support</small></div><i>✓</i></article>
-        <article className="metric"><div><span>Guidance articles</span><strong>{data.articles.length}</strong><small>Published self-service answers</small></div><i>?</i></article>
+        <article className="metric">
+          <div>
+            <span>{canManage ? "Active requests" : "My open requests"}</span>
+            <strong>{canManage ? open : myOpen}</strong>
+            <small>{canManage ? "Awaiting action or response" : "Tracked by support officers"}</small>
+          </div>
+          <i>◌</i>
+        </article>
+        <article className="metric">
+          <div>
+            <span>{canManage ? "SLA overdue" : "In triage"}</span>
+            <strong>{canManage ? overdue : myInTriage}</strong>
+            <small>{canManage ? "Requires immediate escalation" : "Being reviewed by registry team"}</small>
+          </div>
+          <i>{canManage ? "!" : "⏳"}</i>
+        </article>
+        <article className="metric">
+          <div>
+            <span>{canManage ? "Resolved" : "My resolved requests"}</span>
+            <strong>{canManage ? resolved : myResolved}</strong>
+            <small>{canManage ? "Closed-loop support" : "Completed tickets"}</small>
+          </div>
+          <i>✓</i>
+        </article>
+        <article className="metric">
+          <div>
+            <span>Guidance articles</span>
+            <strong>{data.articles.length}</strong>
+            <small>Published self-service answers</small>
+          </div>
+          <i>?</i>
+        </article>
       </div>
 
       <div className="hd-tabs">
-        <button className={tab==="mine"?"active":""} onClick={()=>setTab("mine")}>My requests</button>
-        {data.access.canManage&&<button className={tab==="queue"?"active":""} onClick={()=>setTab("queue")}>Support queue</button>}
-        <button className={tab==="knowledge"?"active":""} onClick={()=>setTab("knowledge")}>Knowledge base ({data.articles.length})</button>
+        <button className={tab==="mine"?"active":""} onClick={()=>setTab("mine")}>
+          {canManage ? "My tickets" : "My requests"}
+        </button>
+        {canManage && (
+          <button className={tab==="queue"?"active":""} onClick={()=>setTab("queue")}>
+            Support queue
+          </button>
+        )}
+        <button className={tab==="knowledge"?"active":""} onClick={()=>setTab("knowledge")}>
+          Knowledge base ({data.articles.length})
+        </button>
         <input placeholder="Search tickets or guidance…" value={query} onChange={e=>setQuery(e.target.value)}/>
       </div>
 
@@ -210,7 +296,7 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
                 Step-by-step guidance for smallholders, enumerators, extension agents, and institutional partners.
               </span>
             </div>
-            {data.access.canManage && (
+            {canManage && (
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button
                   onClick={() => {
@@ -268,7 +354,7 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
                       <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "10px", background: "#f1f5f9", color: "#475569", fontWeight: 600 }}>
                         {a.audience || "All users"}
                       </span>
-                      {data.access.canManage && (
+                      {canManage && (
                         <button
                           onClick={() => deleteArticle(a.articleCode)}
                           title="Delete article"
@@ -307,7 +393,7 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
         <section className="panel registry">
           <div className="table-tools">
             <div>
-              <b>{tab==="queue"?"National support queue":"My support requests"}</b>
+              <b>{canManage && tab==="queue" ? "National support queue" : "My support requests"}</b>
               <span>{filtered.length} accountable service records</span>
             </div>
             <button onClick={()=>setModal(true)}>＋ Submit request</button>
@@ -593,7 +679,7 @@ export default function HelpDesk({role,notify,onNavigate}:{role:string;notify:(s
         </div>
       )}
 
-      {selected && <TicketDrawer ticket={selected} canManage={data.access.canManage} busy={busy} close={()=>setSelected(null)} action={action}/>}
+      {selected && <TicketDrawer ticket={selected} canManage={canManage} busy={busy} close={()=>setSelected(null)} action={action}/>}
     </div>
   );
 }

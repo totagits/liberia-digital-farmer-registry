@@ -468,7 +468,7 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
   // 9. Help Desk: /api/help-desk
   if (pathname === "/api/help-desk") {
-    const HD_STORAGE_KEY = "dfr_help_desk_v2";
+    const HD_STORAGE_KEY = "dfr_help_desk_v3";
     const defaultArticles = [
       { articleCode: "KB-001", title: "How to capture offline field coordinates & cadastral polygons", category: "Field Operations", audience: "Enumerators", summary: "Step-by-step guidance on GPS calibration and saving unverified drafts offline.", content: "1. Calibrate device GPS by stepping outside under open sky.\n2. Verify that horizontal accuracy is under 5 meters.\n3. Walk the perimeter of the holding, pausing at each vertex for 3 seconds.\n4. Save the boundary as a draft. Do not submit without farmer signature or thumbprint." },
       { articleCode: "KB-002", title: "E-Voucher Redemption Protocols & SMS Token Verification", category: "Benefits & Inputs", audience: "Input Agro-dealers", summary: "Verification of farmer DFR ID and SMS OTP before releasing seed and fertilizer inputs.", content: "1. Request the farmer's official DFR ID Card or SMS voucher code.\n2. Scan the QR code or type the 8-digit voucher code into the dealer portal.\n3. Verify the 6-digit confirmation token sent to the farmer's registered phone number.\n4. Dispense only the approved inputs (e.g. NPK 15-15-15, certified lowland rice seed).\n5. Click 'Confirm Distribution' immediately to record the immutable transaction." },
@@ -477,17 +477,157 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       { articleCode: "KB-005", title: "National Data Privacy, Farmer Consent & Biometric Safeguards", category: "Data Privacy & Safeguards", audience: "All users", summary: "Mandatory compliance with Liberia Data Protection Act 2024 and FAO Digital Agriculture Standards.", content: "1. Enumerators must read the Vernacular Consent Statement (English/Kpelle/Bassa) before taking photos or coordinates.\n2. Farmers have the statutory right to inspect, verify, and request corrections.\n3. Biometric and spatial data may never be shared with commercial advertisers or unauthorized third parties." },
     ];
 
+    const defaultTickets = [
+      {
+        ticketCode: "HD-2026-0101",
+        requesterEmail: "kollie.flomo@farmers.moa.gov.lr",
+        requesterName: "Kollie Flomo",
+        requesterRole: "Farmer",
+        county: "Sinoe",
+        category: "Registration / data correction",
+        subject: "Request to update registered parcel boundaries following GPS resurvey",
+        description: "During the recent extension visit, Extension Officer Patience Toe resurveyed parcel P-2026-0418. The new GPS polygon is 3.8 hectares instead of 3.2 hectares. Please update my land cadastre record so that my 2026 fertilizer quota reflects the actual cultivated area.",
+        priority: "Normal",
+        sensitivity: "Internal",
+        status: "In progress",
+        slaHours: 24,
+        dueAt: new Date(Date.now() + 18 * 3600000).toISOString(),
+        assignedTeam: "GIS & Mapping",
+        assignedTo: "Cadastral Verification Officer",
+        resolution: "",
+        satisfaction: 0,
+        createdAt: new Date(Date.now() - 36 * 3600000).toISOString(),
+        messages: [
+          {
+            id: 1,
+            authorName: "Kollie Flomo",
+            authorRole: "Farmer",
+            message: "I submitted the resurvey coordinate slip verified by Officer Patience Toe. Kindly approve the change.",
+            visibility: "Requester-visible",
+            createdAt: new Date(Date.now() - 36 * 3600000).toISOString(),
+          },
+          {
+            id: 2,
+            authorName: "Cadastral Verification Officer",
+            authorRole: "GIS Analyst",
+            message: "Survey vertices verified against satellite imagery. The perimeter polygon does not overlap neighboring customary holdings. Ready for cadastral sync.",
+            visibility: "Requester-visible",
+            createdAt: new Date(Date.now() - 12 * 3600000).toISOString(),
+          }
+        ]
+      },
+      {
+        ticketCode: "HD-2026-0102",
+        requesterEmail: "kollie.flomo@farmers.moa.gov.lr",
+        requesterName: "Kollie Flomo",
+        requesterRole: "Farmer",
+        county: "Sinoe",
+        category: "Programme / voucher",
+        subject: "SMS e-voucher confirmation code not received for 2026 planting season inputs",
+        description: "My DFR ID is LBR-2026-0418. I went to the agro-dealer in Greenville, but did not receive the SMS OTP code on my Lonestar mobile number (+231-770-449-102) to authorize seed collection.",
+        priority: "High",
+        sensitivity: "Internal",
+        status: "Resolved",
+        slaHours: 8,
+        dueAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+        assignedTeam: "Programmes & Payments",
+        assignedTo: "Voucher Triage Specialist",
+        resolution: "Resent SMS OTP token through the Lonestar Cell MTN gateway. Farmer confirmed receipt and redeemed certified lowland rice seed voucher at Greenville Agro-Inputs Hub.",
+        satisfaction: 5,
+        createdAt: new Date(Date.now() - 72 * 3600000).toISOString(),
+        messages: [
+          {
+            id: 1,
+            authorName: "Kollie Flomo",
+            authorRole: "Farmer",
+            message: "Please help re-send the voucher code to my phone number.",
+            visibility: "Requester-visible",
+            createdAt: new Date(Date.now() - 72 * 3600000).toISOString(),
+          },
+          {
+            id: 2,
+            authorName: "Voucher Triage Specialist",
+            authorRole: "Programmes & Payments",
+            message: "SMS OTP manually regenerated and successfully dispatched to +231-770-449-102. Redemption verified at 14:22 GMT.",
+            visibility: "Requester-visible",
+            createdAt: new Date(Date.now() - 65 * 3600000).toISOString(),
+          }
+        ]
+      },
+      {
+        ticketCode: "HD-2026-0089",
+        requesterEmail: "gboveh.coop@agri.gov.lr",
+        requesterName: "Gboveh Farmers Union",
+        requesterRole: "Cooperative representative",
+        county: "Bong",
+        category: "Registration / data correction",
+        subject: "Bulk onboarding of 45 smallholder cassava producers in Suakoko",
+        description: "We have collected offline paper forms and GPS coordinates for 45 new cooperative members. Need technical assistance batch-importing the JSON export into the national registry.",
+        priority: "Normal",
+        sensitivity: "Internal",
+        status: "Open",
+        slaHours: 24,
+        dueAt: new Date(Date.now() + 20 * 3600000).toISOString(),
+        assignedTeam: "Registry & Data Quality",
+        assignedTo: "National Triage Officer",
+        resolution: "",
+        satisfaction: 0,
+        createdAt: new Date(Date.now() - 10 * 3600000).toISOString(),
+        messages: [
+          {
+            id: 1,
+            authorName: "Gboveh Farmers Union",
+            authorRole: "Cooperative representative",
+            message: "Awaiting template validation checks.",
+            visibility: "Requester-visible",
+            createdAt: new Date(Date.now() - 10 * 3600000).toISOString(),
+          }
+        ]
+      },
+      {
+        ticketCode: "HD-2026-0072",
+        requesterEmail: "hon.nuetah@moa.gov.lr",
+        requesterName: "Hon. J. Alexander Nuetah",
+        requesterRole: "Ministry administrator",
+        county: "National",
+        category: "Policy / Governance",
+        subject: "MoA statutory data exchange protocol review with Forestry Development Authority",
+        description: "Need legal and data architecture clearance on cross-referencing DFR holding coordinates with national forest reserve buffer zones.",
+        priority: "High",
+        sensitivity: "Restricted personal data",
+        status: "In progress",
+        slaHours: 8,
+        dueAt: new Date(Date.now() + 4 * 3600000).toISOString(),
+        assignedTeam: "Institutional Governance",
+        assignedTo: "National Legal Officer",
+        resolution: "",
+        satisfaction: 0,
+        createdAt: new Date(Date.now() - 20 * 3600000).toISOString(),
+        messages: [
+          {
+            id: 1,
+            authorName: "Hon. J. Alexander Nuetah",
+            authorRole: "Ministry administrator",
+            message: "Please prioritize alignment with the 2024 Liberia Forest Conservation Charter.",
+            visibility: "Requester-visible",
+            createdAt: new Date(Date.now() - 20 * 3600000).toISOString(),
+          }
+        ]
+      }
+    ];
+
     const getStoredHelpDesk = () => {
-      if (typeof window === "undefined") return { tickets: [], articles: defaultArticles };
+      if (typeof window === "undefined") return { tickets: defaultTickets, articles: defaultArticles };
       try {
         const raw = localStorage.getItem(HD_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (!parsed.articles || !parsed.articles.length) parsed.articles = defaultArticles;
+          if (!parsed.tickets || !parsed.tickets.length) parsed.tickets = defaultTickets;
           return parsed;
         }
       } catch {}
-      return { tickets: [], articles: defaultArticles };
+      return { tickets: defaultTickets, articles: defaultArticles };
     };
 
     const saveStoredHelpDesk = (data: any) => {
@@ -501,9 +641,9 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
     if (method === "GET") {
       const store = getStoredHelpDesk();
       return jsonResponse({
-        tickets: store.tickets || [],
+        tickets: store.tickets || defaultTickets,
         articles: store.articles || defaultArticles,
-        access: { canManage: true, role: "Ministry administrator" },
+        access: { canManage: false, role: "Citizen / Farmer" },
       });
     }
 
@@ -511,7 +651,7 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       try {
         const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
         const store = getStoredHelpDesk();
-        store.tickets = store.tickets || [];
+        store.tickets = store.tickets || defaultTickets;
         store.articles = store.articles || defaultArticles;
 
         if (body.action === "create-article") {
@@ -540,12 +680,14 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
         // Default: Create support ticket
         const code = `HD-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+        const requesterRole = body.requesterRole || "Citizen / Farmer";
+        const isFarmer = requesterRole === "Farmer" || requesterRole === "Farmer household representative";
         const newTicket = {
           ticketCode: code,
-          requesterEmail: "hon.nuetah@moa.gov.lr",
-          requesterName: "Hon. J. Alexander Nuetah",
-          requesterRole: body.requesterRole || "Ministry administrator",
-          county: body.county || "National",
+          requesterEmail: isFarmer ? "kollie.flomo@farmers.moa.gov.lr" : "hon.nuetah@moa.gov.lr",
+          requesterName: isFarmer ? "Kollie Flomo" : (body.requesterName || "Hon. J. Alexander Nuetah"),
+          requesterRole: requesterRole,
+          county: body.county || (isFarmer ? "Sinoe" : "National"),
           category: body.category || "General support",
           subject: body.subject || "Support Inquiry",
           description: body.description || "",
@@ -561,8 +703,8 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
           createdAt: new Date().toISOString(),
           messages: [{
             id: Date.now(),
-            authorName: "Hon. J. Alexander Nuetah",
-            authorRole: "Ministry administrator",
+            authorName: isFarmer ? "Kollie Flomo" : (body.requesterName || "Hon. J. Alexander Nuetah"),
+            authorRole: requesterRole,
             message: body.description || body.subject || "",
             visibility: "Requester-visible",
             createdAt: new Date().toISOString(),
