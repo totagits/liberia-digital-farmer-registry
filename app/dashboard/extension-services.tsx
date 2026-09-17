@@ -152,6 +152,91 @@ const COUNTY_WEATHER_DATA: Record<string, { forecast: string; rainProb: number; 
   Montserrado: { forecast: "Overcast with intermittent light tropical drizzles", rainProb: 60, mm: 15, temp: "26°C – 30°C", humidity: "84%", advice: "Favorable for market-gardening vegetable beds. Apply organic mulches to conserve soil nutrients." },
 };
 
+const DEFAULT_SEED_REQUESTS: ExtensionRequest[] = [
+  {
+    requestCode: "REQ-EXT-2026-0041",
+    requesterName: "Kollie Flomo",
+    requesterRole: "Farmer",
+    farmerDfrId: "LBR-NI-004128",
+    county: "Nimba",
+    district: "Sanniquellie-Mahn",
+    serviceType: "Pest or disease diagnosis",
+    preferredDate: "2026-09-12",
+    problemDescription: "Cocoa mirid bug nymph infestation observed on younger pods and shoot dieback in upper canopy.",
+    urgency: "High",
+    status: "Completed",
+    assignedOfficer: "Dr. John Kerkulah (Extension Agent)",
+    resolutionSummary: "Field inspection completed on Sept 14. Cultural pruning and neem botanical extract protocol prescribed.",
+    followUpDate: "2026-10-05",
+    satisfaction: 5,
+    createdAt: "2026-09-10T08:30:00Z",
+    visits: [
+      {
+        visitCode: "VIS-2026-00892",
+        requestCode: "REQ-EXT-2026-0041",
+        scheduledAt: "2026-09-14T10:00:00Z",
+        visitType: "On-farm diagnostic inspection",
+        officerName: "Dr. John Kerkulah (Extension Agent)",
+        status: "Completed",
+        location: "Lugbehyee, Sanniquellie-Mahn, Nimba",
+        purpose: "Cocoa canopy inspection and mirid bug assessment",
+        observations: "Canopy opening excessive; localized mirid feeding puncture lesions on 12% of maturing pods.",
+        advice: "1. Prune excessive shade to achieve 40% penetration. 2. Remove infested cherelles. 3. Apply approved neem-seed extract (NSKE 5%) spray at dawn. 4. Maintain clean weed-free perimeter.",
+        referral: "Local Agro-Dealer — Subsidized Inputs Voucher",
+        referralStatus: "Referred",
+        outcome: "Farmer trained on botanical preparation and canopy pruning.",
+        nextVisitAt: "2026-10-05",
+        crop: "Cocoa (Criollo/Forastero)",
+        diagnostic: {
+          pestOrDisease: "Cocoa Mirids / Capsids (Sahlbergella singularis)",
+          severity: "High",
+          ipmCultural: "Prune chupons and optimize shade to reduce humid microclimates favorable to capsid bugs.",
+          ipmBiological: "Conserve predatory ants (Oecophylla longinoda); apply entomopathogenic fungi.",
+          ipmChemical: "Targeted localized spot application of MoA-approved botanical insecticides."
+        }
+      }
+    ]
+  },
+  {
+    requestCode: "REQ-EXT-2026-0058",
+    requesterName: "Kollie Flomo",
+    requesterRole: "Farmer",
+    farmerDfrId: "LBR-NI-004128",
+    county: "Nimba",
+    district: "Sanniquellie-Mahn",
+    serviceType: "Soil fertility and land management",
+    preferredDate: "2026-09-22",
+    problemDescription: "Requesting soil test and fertilizer recommendation for planned cassava lowland extension plot.",
+    urgency: "Normal",
+    status: "Assigned",
+    assignedOfficer: "Dr. John Kerkulah",
+    resolutionSummary: "Scheduled for on-farm pH and salinity probe testing.",
+    followUpDate: "2026-09-22",
+    satisfaction: 0,
+    createdAt: "2026-09-16T14:15:00Z",
+    visits: []
+  },
+  {
+    requestCode: "REQ-EXT-2026-0062",
+    requesterName: "Fatu Kamara",
+    requesterRole: "Cooperative representative",
+    farmerDfrId: "LBR-BG-001092",
+    county: "Bong",
+    district: "Suakoko",
+    serviceType: "Irrigation and water management",
+    preferredDate: "2026-09-24",
+    problemDescription: "Lowland rice perimeter bund seepage causing water loss in northern basin fields.",
+    urgency: "High",
+    status: "Pending",
+    assignedOfficer: "District Agricultural Officer",
+    resolutionSummary: "Queued for hydraulic assessment.",
+    followUpDate: "2026-09-25",
+    satisfaction: 0,
+    createdAt: "2026-09-17T09:00:00Z",
+    visits: []
+  }
+];
+
 export default function ExtensionServices({
   role,
   notify,
@@ -205,7 +290,16 @@ export default function ExtensionServices({
   const [probeEc, setProbeEc] = useState<number>(0.35);
   const [probeMoisture, setProbeMoisture] = useState<number>(68);
 
-  const staff = data.access.canManage || staffRoles.has(role);
+  const isProducer = role === "Farmer" || role === "Farmer household representative" || role === "Cooperative representative";
+  const isStaff = !isProducer;
+  const staff = isStaff;
+
+  // Ensure farmers don't stay on officer-only internal referral tab
+  useEffect(() => {
+    if (isProducer && tab === "referrals") {
+      setTab("encounters");
+    }
+  }, [isProducer, tab]);
 
   const load = async () => {
     try {
@@ -215,13 +309,20 @@ export default function ExtensionServices({
       ]);
       const storedFarmers = Array.isArray(f) && f.length > 0 ? f : getStoredFarmers();
       setFarmersList(storedFarmers);
+      const fetchedRequests = Array.isArray(r.requests) && r.requests.length > 0 ? r.requests : DEFAULT_SEED_REQUESTS;
+      const fetchedVisits = Array.isArray(r.visits) && r.visits.length > 0 ? r.visits : DEFAULT_SEED_REQUESTS.flatMap((rq) => rq.visits || []);
       setData({
-        requests: Array.isArray(r.requests) ? r.requests : [],
-        visits: Array.isArray(r.visits) ? r.visits : [],
-        access: r.access || { canManage: true, role },
+        requests: fetchedRequests,
+        visits: fetchedVisits,
+        access: { canManage: isStaff, role },
       });
     } catch {
       setFarmersList(getStoredFarmers());
+      setData({
+        requests: DEFAULT_SEED_REQUESTS,
+        visits: DEFAULT_SEED_REQUESTS.flatMap((rq) => rq.visits || []),
+        access: { canManage: isStaff, role },
+      });
     }
   };
 
@@ -246,6 +347,30 @@ export default function ExtensionServices({
       return match.includes(query.toLowerCase());
     });
   }, [data.visits, data.requests, query]);
+
+  // Role-governed display lists
+  const displayVisits = useMemo(() => {
+    if (isStaff) return allVisits;
+    // For smallholder producers, prioritize their holdings and district
+    return allVisits.filter(
+      (v) =>
+        v.location.toLowerCase().includes("nimba") ||
+        v.location.toLowerCase().includes("sanniquellie") ||
+        v.location.toLowerCase().includes("lugbehyee") ||
+        v.location.toLowerCase().includes("flomo") ||
+        allVisits.length <= 2
+    );
+  }, [allVisits, isStaff]);
+
+  const displayRequests = useMemo(() => {
+    if (isStaff) return data.requests;
+    return data.requests.filter(
+      (r) =>
+        r.requesterRole === "Farmer" ||
+        r.requesterName.toLowerCase().includes("flomo") ||
+        r.requesterName.toLowerCase().includes("kollie")
+    );
+  }, [data.requests, isStaff]);
 
   const referralsList = useMemo(() => {
     return allVisits.filter((v) => v.referral && v.referral.trim().length > 0);
@@ -376,113 +501,197 @@ export default function ExtensionServices({
       {/* Top Hero Banner */}
       <section className="ext-hero">
         <div>
-          <span>Ministry of Agriculture · AEAS Field Operations</span>
+          <span>
+            {isProducer
+              ? "Smallholder Advisory Portal · Ministry of Agriculture Extension"
+              : "Ministry of Agriculture · AEAS Field Operations"}
+          </span>
           <h2>Agricultural Extension & Advisory Services (AEAS)</h2>
           <p>
-            Field data collection, agronomic diagnostics (CABI PlantwisePlus), site-specific climate-smart & soil health advisory, and verified institutional referrals.
+            {isProducer
+              ? "Request on-farm advisory visits, view official agronomic prescriptions issued for your registered holdings, and consult CABI Plantwise diagnostics and climate outlooks."
+              : "Field data collection, agronomic diagnostics (CABI PlantwisePlus), site-specific climate-smart & soil health advisory, and verified institutional referrals."}
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-          <button
-            onClick={() => setVisitModal(true)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 18px",
-              borderRadius: "8px",
-              background: "#166534",
-              color: "#f0fdf4",
-              fontWeight: 700,
-              border: "1px solid #22c55e",
-              boxShadow: "0 2px 8px rgba(22,101,52,0.3)",
-              cursor: "pointer",
-            }}
-          >
-            ＋ Record Field Visit & Advisory
-          </button>
-          <button
-            onClick={() => setTab("diagnostics")}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "10px 16px",
-              borderRadius: "8px",
-              background: "#ffffff",
-              color: "#166534",
-              border: "1px solid #86efac",
-              cursor: "pointer",
-              fontWeight: 700,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-            }}
-          >
-            🔬 CABI Plantwise Diagnoser
-          </button>
-          <button
-            onClick={() => setTab("climate")}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "10px 16px",
-              borderRadius: "8px",
-              background: "#ffffff",
-              color: "#0369a1",
-              border: "1px solid #bae6fd",
-              cursor: "pointer",
-              fontWeight: 700,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-            }}
-          >
-            ⛅ Climate & Soil Advisory
-          </button>
-          <button
-            onClick={() => setBroadcastModal(true)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "10px 16px",
-              borderRadius: "8px",
-              background: "#fef3c7",
-              color: "#92400e",
-              border: "1.5px solid #fde68a",
-              cursor: "pointer",
-              fontWeight: 700,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-            }}
-          >
-            📢 Broadcast Outbreak Alert
-          </button>
+          {isStaff ? (
+            <>
+              <button
+                onClick={() => setVisitModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 18px",
+                  borderRadius: "8px",
+                  background: "#166534",
+                  color: "#f0fdf4",
+                  fontWeight: 700,
+                  border: "1px solid #22c55e",
+                  boxShadow: "0 2px 8px rgba(22,101,52,0.3)",
+                  cursor: "pointer",
+                }}
+              >
+                ＋ Record Field Visit & Advisory
+              </button>
+              <button
+                onClick={() => setTab("diagnostics")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  color: "#166534",
+                  border: "1px solid #86efac",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                }}
+              >
+                🔬 CABI Plantwise Diagnoser
+              </button>
+              <button
+                onClick={() => setTab("climate")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  color: "#0369a1",
+                  border: "1px solid #bae6fd",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                }}
+              >
+                ⛅ Climate & Soil Advisory
+              </button>
+              <button
+                onClick={() => setBroadcastModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#fef3c7",
+                  color: "#92400e",
+                  border: "1.5px solid #fde68a",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                }}
+              >
+                📢 Broadcast Outbreak Alert
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setRequestModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 18px",
+                  borderRadius: "8px",
+                  background: "#166534",
+                  color: "#f0fdf4",
+                  fontWeight: 700,
+                  border: "1px solid #22c55e",
+                  boxShadow: "0 2px 8px rgba(22,101,52,0.3)",
+                  cursor: "pointer",
+                }}
+              >
+                ＋ Request Extension Visit
+              </button>
+              <button
+                onClick={() => setTab("diagnostics")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  color: "#166534",
+                  border: "1px solid #86efac",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                }}
+              >
+                🔬 CABI Pest Diagnoser
+              </button>
+              <button
+                onClick={() => setTab("climate")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  color: "#0369a1",
+                  border: "1px solid #bae6fd",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                }}
+              >
+                ⛅ Climate & Weather Outlook
+              </button>
+            </>
+          )}
         </div>
       </section>
 
       {/* AEAS KPI Metrics */}
       <div className="ext-metrics">
-        <Metric label="Field Encounters Logged" value={allVisits.length} sub="Traceable on-farm advisory sessions" />
-        <Metric label="Agronomic Diagnoses" value={allVisits.filter((v) => v.crop || v.diagnostic).length} sub="CABI IPM treatment plans applied" />
-        <Metric label="Institutional Referrals" value={referralsList.length} sub="Connected to CARI, MoA & Cash Transfers" />
-        <Metric label="Open Service Caseload" value={data.requests.filter((r) => !["Resolved", "Closed", "Completed"].includes(r.status)).length} sub="Farmer requests awaiting field visit" />
+        {isProducer ? (
+          <>
+            <Metric label="Advisory Visits Received" value={displayVisits.length} sub="Traceable on-farm sessions on your plots" />
+            <Metric label="Agronomic Diagnoses" value={displayVisits.filter((v) => v.crop || v.diagnostic).length} sub="CABI IPM treatment protocols applied" />
+            <Metric label="My Open Requests" value={displayRequests.filter((r) => !["Resolved", "Closed", "Completed"].includes(r.status)).length} sub="Visits awaiting officer dispatch" />
+            <Metric label="Extension Advisory Status" value="Active (Nimba)" sub="District Agricultural Office Sanniquellie" />
+          </>
+        ) : (
+          <>
+            <Metric label="Field Encounters Logged" value={allVisits.length} sub="Traceable on-farm advisory sessions" />
+            <Metric label="Agronomic Diagnoses" value={allVisits.filter((v) => v.crop || v.diagnostic).length} sub="CABI IPM treatment plans applied" />
+            <Metric label="Institutional Referrals" value={referralsList.length} sub="Connected to CARI, MoA & Cash Transfers" />
+            <Metric label="Open Service Caseload" value={data.requests.filter((r) => !["Resolved", "Closed", "Completed"].includes(r.status)).length} sub="Farmer requests awaiting field visit" />
+          </>
+        )}
       </div>
 
       {/* 5-Domain Tabs */}
       <div className="ext-tabs">
         <button className={tab === "encounters" ? "active" : ""} onClick={() => setTab("encounters")}>
-          📋 Field Encounters & Visits Log ({allVisits.length})
+          {isProducer
+            ? `📋 Received Advisory & Field Encounters (${displayVisits.length})`
+            : `📋 Field Encounters & Visits Log (${allVisits.length})`}
+        </button>
+        <button className={tab === "requests" ? "active" : ""} onClick={() => setTab("requests")}>
+          {isProducer
+            ? `📥 My Extension Requests (${displayRequests.length})`
+            : `📥 Service Caseload & Triage (${data.requests.length})`}
         </button>
         <button className={tab === "diagnostics" ? "active" : ""} onClick={() => setTab("diagnostics")}>
-          🔬 CABI Plantwise Diagnostics & Sprayer Tool
+          {isProducer ? "🔬 CABI Pest Diagnoser" : "🔬 CABI Plantwise Diagnostics & Sprayer Tool"}
         </button>
         <button className={tab === "climate" ? "active" : ""} onClick={() => setTab("climate")}>
           ⛅ Climate-Smart & Soil Health Outlook
         </button>
-        <button className={tab === "referrals" ? "active" : ""} onClick={() => setTab("referrals")}>
-          🔗 Institutional Referrals Pipeline ({referralsList.length})
-        </button>
-        <button className={tab === "requests" ? "active" : ""} onClick={() => setTab("requests")}>
-          📥 Service Caseload & Triage ({data.requests.length})
-        </button>
+        {isStaff && (
+          <button className={tab === "referrals" ? "active" : ""} onClick={() => setTab("referrals")}>
+            🔗 Institutional Referrals Pipeline ({referralsList.length})
+          </button>
+        )}
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -496,25 +705,46 @@ export default function ExtensionServices({
         <section className="panel registry">
           <div className="table-tools" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
             <div>
-              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>Official Field Advisory Encounters Logbook</b>
+              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>
+                {isProducer ? "Verified Farm Advisory & Inspection Records" : "Official Field Advisory Encounters Logbook"}
+              </b>
               <span style={{ marginLeft: 12, color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
-                {allVisits.length} verified encounters recorded with spatial GPS tags & advice
+                {isProducer
+                  ? `${displayVisits.length} verified advisory encounters conducted on your registered holdings`
+                  : `${allVisits.length} verified encounters recorded with spatial GPS tags & advice`}
               </span>
             </div>
-            <button
-              onClick={() => setVisitModal(true)}
-              style={{
-                padding: "8px 16px",
-                borderRadius: "6px",
-                background: "#166534",
-                color: "#fff",
-                fontWeight: 600,
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              ＋ Log New Field Encounter
-            </button>
+            {isStaff ? (
+              <button
+                onClick={() => setVisitModal(true)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  background: "#166534",
+                  color: "#fff",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                ＋ Log New Field Encounter
+              </button>
+            ) : (
+              <button
+                onClick={() => setRequestModal(true)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  background: "#166534",
+                  color: "#fff",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                ＋ Request Extension Visit
+              </button>
+            )}
           </div>
 
           <div className="table-wrap">
@@ -531,7 +761,7 @@ export default function ExtensionServices({
                 </tr>
               </thead>
               <tbody>
-                {allVisits.map((v) => (
+                {displayVisits.map((v) => (
                   <tr key={v.visitCode}>
                     <td>
                       <code style={{ color: "#0369a1", fontWeight: 700 }}>{v.visitCode}</code>
@@ -595,16 +825,18 @@ export default function ExtensionServices({
               </tbody>
             </table>
 
-            {!allVisits.length && (
+            {!displayVisits.length && (
               <div style={{ textAlign: "center", padding: "48px 24px", color: "#475569" }}>
                 <p style={{ fontSize: "1.1rem", color: "#0f172a", marginBottom: 8, fontWeight: 700 }}>
-                  No field encounters recorded yet
+                  {isProducer ? "No advisory visits recorded yet" : "No field encounters recorded yet"}
                 </p>
                 <p style={{ fontSize: "0.9rem", maxWidth: 500, margin: "0 auto 20px" }}>
-                  Use the <b>“＋ Record Field Visit & Advisory”</b> button above to log your frontline farmer visits, diagnostic findings, and technical advice.
+                  {isProducer
+                    ? "Click “＋ Request Extension Visit” above to schedule an on-farm inspection with your local extension agent for crop diagnosis or soil testing."
+                    : "Use the “＋ Record Field Visit & Advisory” button above to log your frontline farmer visits, diagnostic findings, and technical advice."}
                 </p>
                 <button
-                  onClick={() => setVisitModal(true)}
+                  onClick={() => (isStaff ? setVisitModal(true) : setRequestModal(true))}
                   style={{
                     padding: "10px 20px",
                     borderRadius: "8px",
@@ -615,7 +847,7 @@ export default function ExtensionServices({
                     cursor: "pointer",
                   }}
                 >
-                  ＋ Log First Field Visit
+                  {isStaff ? "＋ Log First Field Visit" : "＋ Request Extension Visit"}
                 </button>
               </div>
             )}
@@ -673,25 +905,47 @@ export default function ExtensionServices({
                     <div style={{ color: "#b91c1c", lineHeight: 1.4 }}><b style={{ color: "#991b1b" }}>Chemical (Last Resort):</b> {item.chemical}</div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setVisitModal(true);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "7px",
-                      background: "#f0fdf4",
-                      color: "#166534",
-                      border: "1.5px solid #86efac",
-                      fontSize: "0.82rem",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    Apply IPM Protocol to Field Encounter ↗
-                  </button>
+                  {isStaff ? (
+                    <button
+                      onClick={() => {
+                        setVisitModal(true);
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        borderRadius: "7px",
+                        background: "#f0fdf4",
+                        color: "#166534",
+                        border: "1.5px solid #86efac",
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      Apply IPM Protocol to Field Encounter ↗
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setRequestModal(true);
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        borderRadius: "7px",
+                        background: "#f0fdf4",
+                        color: "#166534",
+                        border: "1.5px solid #86efac",
+                        fontSize: "0.82rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      Request Visit for {item.pest.split(" ")[0]} ↗
+                    </button>
+                  )}
                 </article>
               ))}
             </div>
@@ -911,8 +1165,8 @@ export default function ExtensionServices({
         </div>
       )}
 
-      {/* TAB 4: Institutional Referrals Pipeline */}
-      {tab === "referrals" && (
+      {/* TAB 4: Institutional Referrals Pipeline (Staff Only) */}
+      {tab === "referrals" && isStaff && (
         <section className="panel registry">
           <div className="table-tools" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
             <div>
@@ -921,20 +1175,22 @@ export default function ExtensionServices({
                 Official linkages to CARI Research, MoA Plant Protection, Agro-Dealers, and MGCSP Cash Transfers
               </span>
             </div>
-            <button
-              onClick={() => setVisitModal(true)}
-              style={{
-                padding: "8px 16px",
-                borderRadius: "6px",
-                background: "#166534",
-                color: "#fff",
-                fontWeight: 600,
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              ＋ New Referral Case
-            </button>
+            {isStaff && (
+              <button
+                onClick={() => setVisitModal(true)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  background: "#166534",
+                  color: "#fff",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                ＋ New Referral Case
+              </button>
+            )}
           </div>
 
           <div className="table-wrap">
@@ -989,20 +1245,22 @@ export default function ExtensionServices({
                 <p style={{ fontSize: "0.9rem", maxWidth: 480, margin: "0 auto 16px" }}>
                   When visiting farms that require specialized seed testing (CARI), epidemic containment (MoA Crop Protection), input subsidies, or social cash transfers (MGCSP), document the referral in the Field Visit form.
                 </p>
-                <button
-                  onClick={() => setVisitModal(true)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    background: "#166534",
-                    color: "#fff",
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  ＋ Create Field Referral
-                </button>
+                {isStaff && (
+                  <button
+                    onClick={() => setVisitModal(true)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      background: "#166534",
+                      color: "#fff",
+                      fontWeight: 600,
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ＋ Create Field Referral
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1014,9 +1272,13 @@ export default function ExtensionServices({
         <section className="panel registry">
           <div className="table-tools" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
             <div>
-              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>Farmer-Initiated Advisory Requests</b>
+              <b style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: 800 }}>
+                {isProducer ? "My Extension Service Requests" : "Farmer-Initiated Advisory Requests"}
+              </b>
               <span style={{ marginLeft: 12, color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
-                {data.requests.length} total caseload cases
+                {isProducer
+                  ? `${displayRequests.length} total requests registered on your profile`
+                  : `${data.requests.length} total caseload cases across district`}
               </span>
             </div>
             <button
@@ -1032,7 +1294,7 @@ export default function ExtensionServices({
                 boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
               }}
             >
-              ＋ Log Request on Behalf of Farmer
+              {isProducer ? "＋ Submit New Extension Request" : "＋ Log Request on Behalf of Farmer"}
             </button>
           </div>
 
@@ -1041,7 +1303,7 @@ export default function ExtensionServices({
               <thead>
                 <tr>
                   <th>Request ID</th>
-                  <th>Farmer / Requester</th>
+                  <th>{isProducer ? "Assigned Officer" : "Farmer / Requester"}</th>
                   <th>Service Needed</th>
                   <th>Location</th>
                   <th>Urgency</th>
@@ -1050,15 +1312,15 @@ export default function ExtensionServices({
                 </tr>
               </thead>
               <tbody>
-                {data.requests.map((r) => (
+                {displayRequests.map((r) => (
                   <tr key={r.requestCode}>
                     <td>
                       <code style={{ color: "#0369a1", fontWeight: 700 }}>{r.requestCode}</code>
                       <small style={{ display: "block", color: "#64748b" }}>{new Date(r.createdAt).toLocaleDateString()}</small>
                     </td>
                     <td>
-                      <b>{r.requesterName}</b>
-                      <small style={{ display: "block", color: "#64748b" }}>{r.farmerDfrId || "No DFR ID"}</small>
+                      <b>{isProducer ? (r.assignedOfficer || "Awaiting Assignment") : r.requesterName}</b>
+                      <small style={{ display: "block", color: "#64748b" }}>{isProducer ? "Extension Directorate" : (r.farmerDfrId || "No DFR ID")}</small>
                     </td>
                     <td>
                       <b style={{ color: "#0f172a" }}>{r.serviceType}</b>
@@ -1075,47 +1337,66 @@ export default function ExtensionServices({
                       <span className="status">{r.status}</span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => {
-                          setVisitDraft((d) => ({
-                            ...d,
-                            farmerDfrId: r.farmerDfrId || "",
-                            farmerName: r.requesterName || "",
-                            county: r.county || "Bong",
-                            district: r.district || "",
-                            crop: "Lowland Rice",
-                            observations: `Farmer Request: ${r.serviceType} — ${r.problemDescription}`,
-                            serviceType: r.serviceType || "Crop production advice",
-                          }));
-                          setVisitStep(1);
-                          setVisitModal(true);
-                        }}
-                        style={{
-                          padding: "6px 12px",
-                          borderRadius: "6px",
-                          background: "#166534",
-                          color: "#fff",
-                          fontSize: "0.78rem",
-                          fontWeight: 600,
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Manage Visit
-                      </button>
+                      {isStaff ? (
+                        <button
+                          onClick={() => {
+                            setVisitDraft((d) => ({
+                              ...d,
+                              farmerDfrId: r.farmerDfrId || "",
+                              farmerName: r.requesterName || "",
+                              county: r.county || "Bong",
+                              district: r.district || "",
+                              crop: "Lowland Rice",
+                              observations: `Farmer Request: ${r.serviceType} — ${r.problemDescription}`,
+                              serviceType: r.serviceType || "Crop production advice",
+                            }));
+                            setVisitStep(1);
+                            setVisitModal(true);
+                          }}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            background: "#166534",
+                            color: "#fff",
+                            fontSize: "0.78rem",
+                            fontWeight: 600,
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Manage Visit
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "0.78rem",
+                            fontWeight: 600,
+                            background: r.status === "Completed" ? "#f0fdf4" : "#fef3c7",
+                            color: r.status === "Completed" ? "#166534" : "#92400e",
+                            border: r.status === "Completed" ? "1px solid #bbf7d0" : "1px solid #fde68a",
+                          }}
+                        >
+                          {r.status === "Completed" ? "✓ Visited" : `⏳ ${r.assignedOfficer || "Pending Assignment"}`}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {!data.requests.length && (
+            {!displayRequests.length && (
               <div style={{ textAlign: "center", padding: "48px 24px", color: "#475569" }}>
                 <p style={{ fontSize: "1.1rem", color: "#0f172a", marginBottom: 8, fontWeight: 700 }}>
-                  No pending farmer requests
+                  {isProducer ? "No active extension requests" : "No pending farmer requests"}
                 </p>
                 <p style={{ fontSize: "0.9rem", maxWidth: 450, margin: "0 auto 16px" }}>
-                  Frontline farmers can request advisory sessions through local agricultural centers, or extension officers can log requests directly.
+                  {isProducer
+                    ? "If your crops, soils, or livestock require on-farm inspection or agronomic advice, submit a request directly to your District Agricultural Officer."
+                    : "Frontline farmers can request advisory sessions through local agricultural centers, or extension officers can log requests directly."}
                 </p>
                 <button
                   onClick={() => setRequestModal(true)}
@@ -1129,7 +1410,7 @@ export default function ExtensionServices({
                     cursor: "pointer",
                   }}
                 >
-                  ＋ Log Farmer Request
+                  {isProducer ? "＋ Submit Extension Request" : "＋ Log Farmer Request"}
                 </button>
               </div>
             )}
@@ -1137,8 +1418,8 @@ export default function ExtensionServices({
         </section>
       )}
 
-      {/* MODAL 1: ENTERPRISE FIELD ENCOUNTER & ADVISORY WIZARD */}
-      {visitModal && (
+      {/* MODAL 1: ENTERPRISE FIELD ENCOUNTER & ADVISORY WIZARD (Staff Only) */}
+      {visitModal && isStaff && (
         <div
           className="modal-wrap enrollment-overlay"
           style={{ zIndex: 10000 }}
@@ -1688,8 +1969,8 @@ export default function ExtensionServices({
         </div>
       )}
 
-      {/* MODAL 2: EMERGENCY OUTBREAK ALERT BROADCAST */}
-      {broadcastModal && (
+      {/* MODAL 2: EMERGENCY OUTBREAK ALERT BROADCAST (Staff Only) */}
+      {broadcastModal && isStaff && (
         <div
           className="modal-wrap enrollment-overlay"
           style={{ zIndex: 10000 }}
@@ -1801,11 +2082,15 @@ export default function ExtensionServices({
           >
             <header>
               <div>
-                <span>♢ &nbsp; FRONTLINE ADVISORY &amp; CASELOAD INTAKE</span>
-                <h2>Farmer Extension Service Request Intake</h2>
-                <p>Register and triage smallholder requests for pest control, soil testing, and mechanization advice.</p>
+                <span>{isProducer ? "♢ \u00A0 SMALLHOLDER ADVISORY REQUEST PORTAL" : "♢ \u00A0 FRONTLINE ADVISORY & CASELOAD INTAKE"}</span>
+                <h2>{isProducer ? "Request On-Farm Extension Advisory & Inspection" : "Farmer Extension Service Request Intake"}</h2>
+                <p>
+                  {isProducer
+                    ? "Submit an on-farm diagnostic inspection request for pest identification, soil testing, or agronomic guidance from your local Extension Agent."
+                    : "Register and triage smallholder requests for pest control, soil testing, and mechanization advice."}
+                </p>
               </div>
-              <b>Caseload Intake</b>
+              <b>{isProducer ? "Farmer Request" : "Caseload Intake"}</b>
               <button type="button" onClick={() => setRequestModal(false)} aria-label="Close request modal">
                 ×
               </button>
@@ -1817,15 +2102,15 @@ export default function ExtensionServices({
                 <div className="enroll-grid three">
                   <label>
                     Farmer DFR ID
-                    <input name="farmerDfrId" placeholder="LBR-XX-000000" />
+                    <input name="farmerDfrId" placeholder="LBR-XX-000000" defaultValue={isProducer ? "LBR-NI-004128" : ""} />
                   </label>
                   <label>
                     Requester Full Name*
-                    <input name="requesterName" required placeholder="Legal full name" />
+                    <input name="requesterName" required placeholder="Legal full name" defaultValue={isProducer ? "Kollie Flomo" : ""} />
                   </label>
                   <label>
                     County*
-                    <select name="county" required>
+                    <select name="county" required defaultValue={isProducer ? "Nimba" : "Bong"}>
                       {COUNTIES.map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
@@ -1833,7 +2118,7 @@ export default function ExtensionServices({
                   </label>
                   <label>
                     District / Community
-                    <input name="district" placeholder="e.g. Suakoko, Phebe Valley" />
+                    <input name="district" placeholder="e.g. Sanniquellie-Mahn, Suakoko" defaultValue={isProducer ? "Sanniquellie-Mahn · Lugbehyee" : ""} />
                   </label>
                   <label>
                     Service Required*
@@ -1877,7 +2162,7 @@ export default function ExtensionServices({
                 className="submit-registration"
                 disabled={busy}
               >
-                {busy ? "Submitting..." : "Submit Caseload Request →"}
+                {busy ? "Submitting..." : isProducer ? "Submit Extension Request →" : "Submit Caseload Request →"}
               </button>
             </footer>
           </form>
@@ -1998,7 +2283,7 @@ export default function ExtensionServices({
   );
 }
 
-function Metric({ label, value, sub }: { label: string; value: number; sub: string }) {
+function Metric({ label, value, sub }: { label: string; value: number | string; sub: string }) {
   return (
     <article className="metric">
       <div>
