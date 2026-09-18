@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useMemo } from "react";
+import { printElementById, provisionRegisteredUser } from "../../lib/demo-users";
 
 export interface OrgRegistrationWizardProps {
   close: () => void;
@@ -95,6 +96,7 @@ export default function OrganizationRegistrationWizard({
     legalForm: "Registered Cooperative Society",
   });
   const [busy, setBusy] = useState(false);
+  const [registeredOrg, setRegisteredOrg] = useState<any | null>(null);
 
   const activeEntity = entityTypes.find((t) => t.id === selectedType) || entityTypes[0];
 
@@ -191,10 +193,39 @@ export default function OrganizationRegistrationWizard({
       setBusy(false);
 
       if (res.ok) {
-        notify(`Official registration complete! ${data.partyId || "Organization"} created and queued for CAO verification.`);
+        const partyId = data.partyId || `ORG-${selectedType.slice(0, 4).toUpperCase()}-${Date.now().toString().slice(-5)}`;
+        const role = selectedType.includes("Cooperative")
+          ? "Cooperative representative"
+          : selectedType.includes("Agribusiness")
+          ? "Agribusiness representative"
+          : "Organization administrator";
+        const repName = draft.representativeName || `${draft.legalName || "Organization"} Official`;
+        const provision = provisionRegisteredUser({
+          name: repName,
+          email: draft.email,
+          phone: draft.phone,
+          role,
+          dfrId: partyId,
+          county,
+          district,
+          institution: draft.legalName || "Registered Agricultural Organization",
+          category: "producer",
+        });
+
+        setRegisteredOrg({
+          ...data,
+          partyId,
+          legalName: draft.legalName || "Unnamed Organization",
+          repName,
+          tempPassword: provision.tempPassword,
+          accountUser: provision.user,
+          enrolledAt: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+        });
+
+        setStep(6);
+        notify(`Official registration complete! ${partyId} created and queued for CAO verification.`);
         await refresh();
         if (onSuccess) onSuccess(data);
-        close();
       } else {
         notify(data.error || "Organization registration could not be completed.");
       }
@@ -211,6 +242,7 @@ export default function OrganizationRegistrationWizard({
     "Governance & Membership",
     "Commodities & Facilities",
     "Review & Submission",
+    "Institutional Onboarding & Credentials",
   ];
 
   const femalePct = useMemo(() => {
@@ -1054,27 +1086,203 @@ export default function OrganizationRegistrationWizard({
               </label>
             </>
           )}
+
+          {step === 6 && registeredOrg && (
+            <div className="onboarding-dossier" style={{ padding: "4px 0" }}>
+              <div style={{ background: "linear-gradient(135deg, #0c2340, #1e3a8a)", color: "#fff", padding: "18px 22px", borderRadius: "14px", border: "1.5px solid #38bdf8", marginBottom: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+                  <div>
+                    <span style={{ color: "#7dd3fc", fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      ✓ Institutional Enrollment Confirmed · Multi-Channel Onboarding Active
+                    </span>
+                    <h2 style={{ margin: "4px 0", fontSize: "22px", color: "#ffffff", fontFamily: "Georgia, serif" }}>
+                      {registeredOrg.legalName}
+                    </h2>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#e0f2fe" }}>
+                      National Registry Party Identifier: <strong style={{ color: "#fef08a", fontFamily: "monospace", fontSize: "15px" }}>{registeredOrg.partyId}</strong>
+                    </p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ display: "inline-block", background: "#fef08a", color: "#854d0e", fontWeight: 800, fontSize: "11px", padding: "4px 12px", borderRadius: "20px" }}>
+                      ● Provisional · Queued for CAO Audit
+                    </span>
+                    <div style={{ fontSize: "11px", color: "#bae6fd", marginTop: "4px" }}>
+                      Enrolled: {registeredOrg.enrolledAt}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px", marginBottom: "18px" }}>
+                {/* SMS Dispatch */}
+                <div style={{ background: "#ffffff", border: "1.5px solid #dcfce7", borderRadius: "14px", padding: "16px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e2e8f0", paddingBottom: "8px", marginBottom: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "18px" }}>📱</span>
+                      <div>
+                        <b style={{ fontSize: "12px", color: "#0f172a" }}>Liberia Telco SMS Gateway</b>
+                        <div style={{ fontSize: "10px", color: "#64748b" }}>Lonestar MTN / Orange SMPP Port 2775</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: "10px", background: "#ecfdf5", color: "#059669", fontWeight: 800, padding: "2px 8px", borderRadius: "10px", border: "1px solid #a7f3d0" }}>
+                      ✓ DELIVRD (120ms)
+                    </span>
+                  </div>
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px", fontSize: "11px", lineHeight: "1.6", color: "#1e293b" }}>
+                    <div style={{ fontSize: "10px", color: "#64748b", marginBottom: "4px", fontWeight: 700 }}>
+                      To: <span style={{ color: "#0284c7" }}>{draft.phone || "+231 886 500 123"}</span> ({registeredOrg.repName})
+                    </div>
+                    <p style={{ margin: 0, fontStyle: "italic", background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}>
+                      &ldquo;Republic of Liberia MoA DFR: Registration confirmed for <b>{registeredOrg.legalName}</b> (ID: <b>{registeredOrg.partyId}</b>). Representative portal access provisioned for <b>{registeredOrg.repName}</b>. Temp PIN/Password: <b style={{ color: "#b91c1c", background: "#fee2e2", padding: "1px 4px", borderRadius: "4px" }}>{registeredOrg.tempPassword}</b>. Mandatory password change required upon first login at dfr.moa.gov.lr/signin.&rdquo;
+                    </p>
+                  </div>
+                </div>
+
+                {/* Email Dispatch */}
+                <div style={{ background: "#ffffff", border: "1.5px solid #e0e7ff", borderRadius: "14px", padding: "16px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e2e8f0", paddingBottom: "8px", marginBottom: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "18px" }}>✉️</span>
+                      <div>
+                        <b style={{ fontSize: "12px", color: "#0f172a" }}>MoA Official e-Gov Mailer</b>
+                        <div style={{ fontSize: "10px", color: "#64748b" }}>SMTP Relay: registry@moa.gov.lr</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: "10px", background: "#eff6ff", color: "#1d4ed8", fontWeight: 800, padding: "2px 8px", borderRadius: "10px", border: "1px solid #bfdbfe" }}>
+                      ✓ SENT (250 OK)
+                    </span>
+                  </div>
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px", fontSize: "11px", lineHeight: "1.6", color: "#1e293b" }}>
+                    <div style={{ fontSize: "10px", color: "#64748b", marginBottom: "4px", fontWeight: 700 }}>
+                      To: <span style={{ color: "#0284c7" }}>{draft.email || registeredOrg.accountUser.email}</span>
+                    </div>
+                    <div style={{ background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}>
+                      <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>
+                        Subject: Liberia DFR — Corporate Registration &amp; Representative Credential
+                      </div>
+                      <p style={{ margin: 0, fontSize: "11px", color: "#475569" }}>
+                        Representative account issued with Temporary Password: <code style={{ color: "#b91c1c", fontWeight: 800 }}>{registeredOrg.tempPassword}</code>. Policy requires setting a confidential permanent password on initial login.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Printable Organization Certificate */}
+              <div id="printable-org-certificate" className="official-registration-slip" style={{ background: "#ffffff", border: "2px solid #0369a1", borderRadius: "12px", padding: "18px 22px", marginBottom: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #0369a1", paddingBottom: "10px", marginBottom: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <img src="/assets/moa-logo.png" alt="MoA" style={{ width: "42px", height: "42px", objectFit: "contain" }} />
+                    <div>
+                      <span style={{ fontSize: "10px", color: "#0369a1", fontWeight: 800, letterSpacing: "0.08em" }}>REPUBLIC OF LIBERIA · MINISTRY OF AGRICULTURE</span>
+                      <h3 style={{ margin: "2px 0 0", fontSize: "17px", color: "#0c4a6e" }}>Certificate of Provisional Entity Registration</h3>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: "11px", fontWeight: 700, color: "#0369a1" }}>
+                    REGISTRY IDENTIFIER<br />{registeredOrg.partyId}
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", fontSize: "11px", marginBottom: "12px" }}>
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ color: "#64748b", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Legal Organization</span>
+                    <b style={{ display: "block", fontSize: "13px", color: "#0f172a", marginTop: "2px" }}>{registeredOrg.legalName}</b>
+                  </div>
+                  <div style={{ background: "#f0f9ff", padding: "8px 12px", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+                    <span style={{ color: "#0369a1", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Entity Classification</span>
+                    <b style={{ display: "block", fontSize: "13px", color: "#0369a1", marginTop: "2px" }}>{selectedType}</b>
+                  </div>
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ color: "#64748b", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Authorized Representative</span>
+                    <b style={{ display: "block", fontSize: "12px", color: "#0f172a", marginTop: "2px" }}>{registeredOrg.repName}</b>
+                  </div>
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ color: "#64748b", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>County &amp; District</span>
+                    <b style={{ display: "block", fontSize: "12px", color: "#0f172a", marginTop: "2px" }}>{county} / {district}</b>
+                  </div>
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ color: "#64748b", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Members / Size</span>
+                    <b style={{ display: "block", fontSize: "12px", color: "#0f172a", marginTop: "2px" }}>{draft.memberCount || "0"} Members ({draft.womenMembers || "0"} Women)</b>
+                  </div>
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ color: "#64748b", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Primary Value Chain</span>
+                    <b style={{ display: "block", fontSize: "12px", color: "#0f172a", marginTop: "2px" }}>{draft.primaryCommodity || "Multi-commodity"}</b>
+                  </div>
+                </div>
+
+                <div style={{ background: "#f0fdf4", border: "1px dashed #166534", borderRadius: "8px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
+                  <div>
+                    <span style={{ color: "#166534", fontWeight: 800, textTransform: "uppercase", display: "block", fontSize: "10px" }}>Verification Status:</span>
+                    Provisional registration active. Official certificate valid for commercial aggregation, input distribution, and government procurement.
+                  </div>
+                  <div style={{ fontFamily: "monospace", fontWeight: 800, color: "#0369a1", fontSize: "12px", background: "#ffffff", padding: "4px 8px", borderRadius: "4px", border: "1px solid #cbd5e1" }}>
+                    [QR-VERIFY: {registeredOrg.partyId}]
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         <footer>
-          <button
-            type="button"
-            disabled={step === 1}
-            onClick={() => setStep(step - 1)}
-          >
-            ← Previous Step
-          </button>
           {step < 5 ? (
-            <button
-              type="button"
-              onClick={() => setStep(step + 1)}
-            >
-              Next Step →
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={step === 1}
+                onClick={() => setStep(step - 1)}
+              >
+                ← Previous Step
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(step + 1)}
+              >
+                Next Step →
+              </button>
+            </>
+          ) : step === 5 ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+              >
+                ← Previous Step
+              </button>
+              <button className="submit-registration" disabled={busy}>
+                {busy ? "Registering in National Store…" : `Complete ${activeEntity.title} Registration`}
+              </button>
+            </>
           ) : (
-            <button className="submit-registration" disabled={busy}>
-              {busy ? "Registering in National Store…" : `Complete ${activeEntity.title} Registration`}
-            </button>
+            <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => printElementById("printable-org-certificate", `Organization-Registration-${registeredOrg?.partyId}`)}
+                style={{ background: "#0284c7", color: "#ffffff", border: 0, padding: "10px 18px", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+              >
+                🖨 Print / PDF Certificate
+              </button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isGh = typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry");
+                    const prefix = isGh ? "/liberia-digital-farmer-registry" : "";
+                    window.location.href = `${prefix}/signin?email=${encodeURIComponent(registeredOrg.accountUser.email)}&temp=${encodeURIComponent(registeredOrg.tempPassword)}`;
+                  }}
+                  style={{ background: "#16a34a", color: "#ffffff", border: 0, padding: "10px 18px", borderRadius: "8px", fontWeight: 800, cursor: "pointer" }}
+                >
+                  🔑 Activate Representative Account →
+                </button>
+                <button
+                  type="button"
+                  onClick={close}
+                  style={{ background: "#1e293b", color: "#ffffff", border: 0, padding: "10px 18px", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                >
+                  ✓ Done / Return to Registry
+                </button>
+              </div>
+            </div>
           )}
         </footer>
       </form>

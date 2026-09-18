@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   DEMO_USERS,
@@ -8,6 +8,9 @@ import {
   getActiveDemoUser,
   setActiveDemoUser,
   clearActiveDemoUser,
+  completeFirstTimePasswordChange,
+  getNewlyRegisteredUsers,
+  getStoredUserProfile,
 } from "../../lib/demo-users";
 
 export default function SignInPage() {
@@ -25,6 +28,14 @@ export default function SignInPage() {
   const [targetRole, setTargetRole] = useState<string>("");
   const [existingSession, setExistingSession] = useState<DemoUser | null>(null);
 
+  // Newly registered users & Mandatory first-time password change state
+  const [registeredUsersList, setRegisteredUsersList] = useState<DemoUser[]>([]);
+  const [passwordModalUser, setPasswordModalUser] = useState<DemoUser | null>(null);
+  const [currentTempInput, setCurrentTempInput] = useState<string>("");
+  const [newPasswordInput, setNewPasswordInput] = useState<string>("");
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Check existing authenticated session
@@ -33,12 +44,18 @@ export default function SignInPage() {
         setExistingSession(active);
       }
 
+      // Load newly registered users
+      const newlyRegistered = getNewlyRegisteredUsers();
+      setRegisteredUsersList(newlyRegistered);
+
       // Parse query params
       const params = new URLSearchParams(window.location.search);
       const redirectParam = params.get("redirect");
       const domainParam = params.get("domain") || params.get("title");
       const roleParam = params.get("role") || params.get("recommendedRole");
       const catParam = params.get("cat") || params.get("category");
+      const emailParam = params.get("email");
+      const tempParam = params.get("temp");
 
       if (redirectParam) {
         setTargetRedirect(redirectParam);
@@ -53,17 +70,47 @@ export default function SignInPage() {
       if (catParam) {
         setSelectedCategory(catParam);
       }
+
+      if (emailParam) {
+        setCustomEmail(emailParam);
+        if (tempParam) setCustomPassword(tempParam);
+        // Find registered user requiring password change
+        const target = newlyRegistered.find(u => u.email.toLowerCase() === emailParam.toLowerCase()) ||
+          (getStoredUserProfile(emailParam) as DemoUser | null);
+        if (target && (target.mustChangePassword || tempParam)) {
+          setPasswordModalUser({
+            ...target,
+            tempPassword: tempParam || target.tempPassword || target.passwordHint,
+          });
+          setCurrentTempInput(tempParam || target.tempPassword || target.passwordHint || "");
+        }
+      }
     }
   }, []);
 
-  const filteredUsers = DEMO_USERS.filter((u) => {
-    const matchesCategory = selectedCategory === "all" || u.category === selectedCategory;
+  const allAvailableUsers = useMemo(() => {
+    const combined = [...registeredUsersList, ...DEMO_USERS];
+    const seen = new Set<string>();
+    const list: DemoUser[] = [];
+    for (const u of combined) {
+      const key = u.email.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        list.push(u);
+      }
+    }
+    return list;
+  }, [registeredUsersList]);
+
+  const filteredUsers = allAvailableUsers.filter((u) => {
+    const matchesCategory = selectedCategory === "all" || u.category === selectedCategory || (selectedCategory === "producer" && u.isNewlyRegistered);
     const matchesSearch =
       !search.trim() ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.role.toLowerCase().includes(search.toLowerCase()) ||
       u.countyScope.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.dfrId && u.dfrId.toLowerCase().includes(search.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -102,6 +149,12 @@ export default function SignInPage() {
   };
 
   const handleSignInAs = (user: DemoUser) => {
+    if (user.mustChangePassword) {
+      setPasswordModalUser(user);
+      setCurrentTempInput(user.tempPassword || user.passwordHint || "");
+      setPasswordError("");
+      return;
+    }
     setActiveDemoUser(user);
     setToast(`Credentials verified. Authenticating as ${user.name} (${user.role})…`);
     setTimeout(() => {
@@ -111,7 +164,25 @@ export default function SignInPage() {
 
   const handleCustomSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    const user: DemoUser = {
+    const cleanMail = customEmail.trim().toLowerCase();
+    const cleanDigits = customEmail.replace(/[^0-9]/g, "");
+    
+    // Check if custom sign in matches a newly registered user with pending password change
+    const foundReg = allAvailableUsers.find(
+      (u) =>
+        u.email.toLowerCase() === cleanMail ||
+        (cleanDigits && u.phone && u.phone.replace(/[^0-9]/g, "") === cleanDigits) ||
+        (u.dfrId && u.dfrId.toLowerCase() === cleanMail)
+    );
+
+    if (foundReg && foundReg.mustChangePassword) {
+      setPasswordModalUser(foundReg);
+      setCurrentTempInput(customPassword || foundReg.tempPassword || "");
+      setPasswordError("");
+      return;
+    }
+
+    const user: DemoUser = foundReg || {
       id: `custom-${Date.now()}`,
       name: customEmail.split("@")[0].replace(".", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       role: customRole,
@@ -132,6 +203,39 @@ export default function SignInPage() {
     setTimeout(() => {
       window.location.href = getDashboardUrl(targetRedirect);
     }, 450);
+  };
+
+  const handlePasswordChangeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    if (!passwordModalUser) return;
+
+    const expected = (passwordModalUser.tempPassword || passwordModalUser.passwordHint || "").trim();
+    if (expected && currentTempInput.trim() !== expected) {
+      setPasswordError("The temporary password entered does not match your assigned registration temporary password.");
+      return;
+    }
+
+    if (newPasswordInput.length < 4) {
+      setPasswordError("Your new password or PIN must be at least 4 characters.");
+      return;
+    }
+
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordError("The new passwords do not match. Please re-enter.");
+      return;
+    }
+
+    const updated = completeFirstTimePasswordChange(passwordModalUser.email, newPasswordInput);
+    if (updated) {
+      setToast(`Password successfully updated! Security requirement cleared. Authenticating as ${updated.name}…`);
+      setPasswordModalUser(null);
+      setTimeout(() => {
+        window.location.href = getDashboardUrl(targetRedirect);
+      }, 500);
+    } else {
+      setPasswordError("Failed to update password. Please try again.");
+    }
   };
 
   return (
@@ -422,6 +526,27 @@ export default function SignInPage() {
                       : undefined
                   }
                 >
+                  {user.isNewlyRegistered && (
+                    <div
+                      style={{
+                        marginBottom: "10px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "#16a34a",
+                        color: "#ffffff",
+                        fontSize: "0.72rem",
+                        fontWeight: 800,
+                        padding: "3px 8px",
+                        borderRadius: "4px",
+                        letterSpacing: "0.03em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      ● Newly Registered · Password Change Pending
+                    </div>
+                  )}
+
                   {isRecommended && (
                     <div
                       style={{
@@ -474,21 +599,23 @@ export default function SignInPage() {
                       <b>{user.institution}</b>
                     </div>
                     <div>
-                      <small>Official Email</small>
-                      <code>{user.email}</code>
+                      <small>Official Email / ID</small>
+                      <code>{user.dfrId ? `${user.dfrId} (${user.email})` : user.email}</code>
                     </div>
                     <div>
-                      <small>Credential Key</small>
-                      <code>{user.passwordHint}</code>
+                      <small>{user.mustChangePassword ? "Temporary PIN / Password" : "Credential Key"}</small>
+                      <code style={user.mustChangePassword ? { color: "#b91c1c", fontWeight: 700 } : undefined}>
+                        {user.passwordHint}
+                      </code>
                     </div>
                   </div>
 
                   <button
                     className="signin-btn"
-                    style={{ backgroundColor: user.badgeColor }}
+                    style={{ backgroundColor: user.mustChangePassword ? "#15803d" : user.badgeColor }}
                     onClick={() => handleSignInAs(user)}
                   >
-                    Authenticate as {user.role.split(" ")[0]} →
+                    {user.mustChangePassword ? "🔑 1st Sign-In · Set Password →" : `Authenticate as ${user.role.split(" ")[0]} →`}
                   </button>
                 </article>
               );
@@ -571,6 +698,241 @@ export default function SignInPage() {
           Government of Liberia · Ministry of Agriculture · Food and Agriculture Organization of the United Nations (FAO)
         </p>
       </footer>
+
+      {/* Mandatory First-Time Password Change Challenge Modal */}
+      {passwordModalUser && (
+        <div
+          className="modal-wrap"
+          style={{
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "fixed",
+            inset: 0,
+            background: "rgba(10, 15, 29, 0.85)",
+            backdropFilter: "blur(6px)",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              color: "#0f172a",
+              borderRadius: "16px",
+              maxWidth: "520px",
+              width: "100%",
+              padding: "28px",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
+              border: "2px solid #166534",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                borderBottom: "1px solid #e2e8f0",
+                paddingBottom: "14px",
+                marginBottom: "16px",
+              }}
+            >
+              <img
+                src="/assets/moa-logo.png"
+                alt="MoA"
+                style={{ width: "42px", height: "42px", objectFit: "contain" }}
+                onError={(e) => {
+                  e.currentTarget.src = "/liberia-digital-farmer-registry/assets/moa-logo.png";
+                }}
+              />
+              <div>
+                <span
+                  style={{
+                    fontSize: "10px",
+                    color: "#166534",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  REPUBLIC OF LIBERIA · MINISTRY OF AGRICULTURE
+                </span>
+                <h2 style={{ margin: "2px 0 0", fontSize: "19px", color: "#102c20" }}>
+                  Mandatory First-Time Password Change
+                </h2>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: "#fef3c7",
+                border: "1px solid #fde047",
+                borderRadius: "10px",
+                padding: "12px 14px",
+                marginBottom: "16px",
+                fontSize: "12px",
+                color: "#854d0e",
+                lineHeight: "1.5",
+              }}
+            >
+              <b>Security Policy Requirement:</b> Welcome to the Liberia DFR platform, <b>{passwordModalUser.name}</b> ({passwordModalUser.dfrId || passwordModalUser.role}). Because your account was created with a temporary password, national security policy requires creating your own confidential permanent password before unlocking your registry profile and services.
+            </div>
+
+            {passwordError && (
+              <div
+                style={{
+                  background: "#fee2e2",
+                  border: "1px solid #fca5a5",
+                  color: "#b91c1c",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  marginBottom: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                ⚠️ {passwordError}
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordChangeSubmit}>
+              <div style={{ marginBottom: "14px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "#475569",
+                    textTransform: "uppercase",
+                    marginBottom: "5px",
+                  }}
+                >
+                  Assigned Temporary Password / PIN*
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={currentTempInput}
+                  onChange={(e) => setCurrentTempInput(e.target.value)}
+                  placeholder="e.g. DFR-BO-8392"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1.5px solid #cbd5e1",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontFamily: "monospace",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: "14px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "#475569",
+                    textTransform: "uppercase",
+                    marginBottom: "5px",
+                  }}
+                >
+                  New Confidential Password or 4-Digit PIN*
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  placeholder="Enter new strong password or PIN"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1.5px solid #cbd5e1",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <small style={{ color: "#64748b", fontSize: "10px" }}>
+                  Minimum 4 characters or digits. Memorize or save securely.
+                </small>
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "#475569",
+                    textTransform: "uppercase",
+                    marginBottom: "5px",
+                  }}
+                >
+                  Confirm New Password / PIN*
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPasswordInput}
+                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                  placeholder="Re-enter new password or PIN"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1.5px solid #cbd5e1",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                  borderTop: "1px solid #e2e8f0",
+                  paddingTop: "16px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setPasswordModalUser(null)}
+                  style={{
+                    background: "#f1f5f9",
+                    color: "#475569",
+                    border: "1px solid #cbd5e1",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    background: "#16a34a",
+                    color: "#ffffff",
+                    border: 0,
+                    padding: "10px 20px",
+                    borderRadius: "8px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                  }}
+                >
+                  ✓ Set Password &amp; Enter Portal →
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

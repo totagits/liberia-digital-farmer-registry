@@ -17,6 +17,11 @@ export interface DemoUser {
   phone?: string;
   language?: string;
   nin?: string;
+  mustChangePassword?: boolean;
+  dfrId?: string;
+  tempPassword?: string;
+  isNewlyRegistered?: boolean;
+  registeredAt?: string;
 }
 
 export const DEMO_USERS: DemoUser[] = [
@@ -272,6 +277,120 @@ export function getStoredUserProfile(userIdOrEmail: string): Partial<DemoUser> |
   return null;
 }
 
+const REGISTERED_USERS_KEY = "dfr_newly_registered_users_v1";
+
+export function getNewlyRegisteredUsers(): DemoUser[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function provisionRegisteredUser(params: {
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  dfrId: string;
+  county: string;
+  district: string;
+  institution?: string;
+  category?: "admin" | "field" | "extension" | "producer" | "oversight";
+}): { user: DemoUser; tempPassword: string } {
+  const code = Math.floor(1000 + Math.random() * 9000);
+  const tempPassword = `DFR-${params.county.slice(0, 2).toUpperCase()}-${code}`;
+  const effectiveEmail = params.email?.trim() || `${params.dfrId.toLowerCase().replace(/[^a-z0-9]/g, "-")}@farmer.moa.gov.lr`;
+  
+  const user: DemoUser = {
+    id: `reg-${Date.now()}-${params.dfrId}`,
+    name: params.name,
+    role: params.role || "Farmer",
+    email: effectiveEmail,
+    passwordHint: tempPassword,
+    institution: params.institution || (params.role.includes("Cooperative") ? "Agricultural Cooperative" : "Smallholder Producer"),
+    countyScope: `${params.county} County`,
+    districtScope: params.district || "Central District",
+    description: `Official ${params.role} account registered under ${params.dfrId}. Mandatory first-time password change active.`,
+    badgeColor: "#16a34a",
+    category: params.category || "producer",
+    avatar: params.name.slice(0, 2).toUpperCase(),
+    phone: params.phone,
+    mustChangePassword: true,
+    dfrId: params.dfrId,
+    tempPassword,
+    isNewlyRegistered: true,
+    registeredAt: new Date().toISOString(),
+  };
+
+  if (typeof window !== "undefined") {
+    try {
+      // 1. Save to newly registered users list
+      const existing = getNewlyRegisteredUsers();
+      const updatedList = [user, ...existing.filter(u => u.dfrId !== params.dfrId)].slice(0, 30);
+      localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(updatedList));
+
+      // 2. Save into profiles map keyed by id, email, phone, and dfrId
+      const PROFILES_KEY = "dfr_user_profiles_v1";
+      const profilesRaw = localStorage.getItem(PROFILES_KEY);
+      const profiles = profilesRaw ? JSON.parse(profilesRaw) : {};
+      profiles[user.id] = user;
+      profiles[user.email.toLowerCase()] = user;
+      if (user.phone) profiles[user.phone.replace(/[^0-9]/g, "")] = user;
+      if (user.dfrId) profiles[user.dfrId] = user;
+      localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+    } catch {}
+  }
+
+  return { user, tempPassword };
+}
+
+export function completeFirstTimePasswordChange(identifier: string, newPassword: string): DemoUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const PROFILES_KEY = "dfr_user_profiles_v1";
+    const profilesRaw = localStorage.getItem(PROFILES_KEY);
+    const profiles = profilesRaw ? JSON.parse(profilesRaw) : {};
+    
+    // Find target
+    const cleanId = identifier.trim().toLowerCase();
+    const cleanDigits = identifier.replace(/[^0-9]/g, "");
+    const targetUser: DemoUser | undefined = 
+      profiles[cleanId] || 
+      profiles[identifier] || 
+      (cleanDigits ? profiles[cleanDigits] : undefined) ||
+      getNewlyRegisteredUsers().find(u => u.email.toLowerCase() === cleanId || u.dfrId === identifier || (u.phone && u.phone.replace(/[^0-9]/g, "") === cleanDigits));
+
+    if (!targetUser) return null;
+
+    const updatedUser: DemoUser = {
+      ...targetUser,
+      passwordHint: newPassword,
+      mustChangePassword: false,
+      isNewlyRegistered: false,
+    };
+
+    // Update in profiles
+    profiles[updatedUser.id] = updatedUser;
+    profiles[updatedUser.email.toLowerCase()] = updatedUser;
+    if (updatedUser.phone) profiles[updatedUser.phone.replace(/[^0-9]/g, "")] = updatedUser;
+    if (updatedUser.dfrId) profiles[updatedUser.dfrId] = updatedUser;
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+
+    // Update in newly registered list
+    const registered = getNewlyRegisteredUsers().map(u => u.dfrId === updatedUser.dfrId ? updatedUser : u);
+    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(registered));
+
+    // Set as active session
+    setActiveDemoUser(updatedUser);
+    return updatedUser;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Universal print helper for official registry documents:
  * Voucher Dockets, Advisory Slips, Payment Receipts, and Certificates.
@@ -321,8 +440,7 @@ export function printElementById(elementId: string, title = "Official Registry D
       font-size: 13px;
       line-height: 1.5;
     }
-    .modal-actions, button, .modal-head button, header button { display: none !important; }
-    .register-modal, .voucher-detail-card, .receipt-card, .ext-wizard, .enrollment-wizard {
+    .register-modal, .voucher-detail-card, .receipt-card, .ext-wizard, .enrollment-wizard, #printable-registration-slip, #printable-org-certificate, .official-registration-slip {
       max-width: 100% !important;
       width: 100% !important;
       background: #ffffff !important;
@@ -332,6 +450,13 @@ export function printElementById(elementId: string, title = "Official Registry D
       padding: 18px 22px !important;
       margin: 0 auto !important;
       box-sizing: border-box !important;
+    }
+    .cert-frame {
+      border: 3px double #166534;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 10px 0;
+      background: #fafdfb;
     }
     .modal-head {
       border-bottom: 1px solid #dce8df;
