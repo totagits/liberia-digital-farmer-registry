@@ -1,8 +1,8 @@
 "use client";
 import {FormEvent,useEffect,useState} from "react";
 type Data={vouchers:any[];accounts:any[];transactions:any[];access:{currentEmail:string;canVoucher:boolean;canPayment:boolean}};
-const voucherRoles=new Set(["Voucher administrator","Input-distribution officer","Ministry administrator"]);
-const paymentRoles=new Set(["Payment officer","Ministry administrator"]);
+const voucherRoles=new Set(["Voucher administrator","Input-distribution officer","Ministry administrator","Program officer","County agricultural officer","District agricultural officer"]);
+const paymentRoles=new Set(["Payment officer","Ministry administrator","Program officer"]);
 
 export default function Benefits({module,role,notify}:{module:"vouchers"|"payments";role:string;notify:(x:string)=>void}){
   const[data,setData]=useState<Data>({vouchers:[],accounts:[],transactions:[],access:{currentEmail:"",canVoucher:false,canPayment:false}});

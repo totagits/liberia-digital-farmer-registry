@@ -155,6 +155,53 @@ export interface MockAudit {
   details: string;
   createdAt: string;
 }
+
+export interface MockVoucher {
+  id: number;
+  voucherCode: string;
+  farmerDfrId: string;
+  ownerEmail: string;
+  programme: string;
+  category: string;
+  value: number;
+  currency: string;
+  status: string;
+  expiresAt: string;
+  distributionSite: string;
+  appointmentAt?: string;
+  receiptAcknowledged?: boolean;
+  redeemedAt?: string;
+  createdAt: string;
+}
+
+export interface MockPaymentAccount {
+  id: number;
+  farmerDfrId: string;
+  ownerEmail: string;
+  provider: string;
+  accountName: string;
+  accountNumberMasked: string;
+  verified: boolean;
+  status: string;
+  accountType: string;
+  createdAt?: string;
+}
+
+export interface MockPaymentTransaction {
+  id: number;
+  transactionCode: string;
+  farmerDfrId: string;
+  ownerEmail: string;
+  programme: string;
+  amount: number;
+  currency: string;
+  status: string;
+  receiptRef?: string;
+  processedAt?: string;
+  createdAt: string;
+  failureReason?: string;
+}
+
 const INITIAL_FARMERS: MockFarmer[] = [];
 
 const INITIAL_PARTIES: MockParty[] = [];
@@ -368,6 +415,143 @@ const INITIAL_SOPS: MockSOP[] = [
     changeClass: "Standard",
   },
 ];
+export const INITIAL_VOUCHERS: MockVoucher[] = [
+  {
+    id: 1,
+    voucherCode: "VCH-26-44019",
+    farmerDfrId: "LBR-BG-000104",
+    ownerEmail: "tis@totaggroup.com",
+    programme: "National Rice Development Support Programme (NRDSP)",
+    category: "Certified Rice Seed (Nerica L-19) & NPK 15-15-15",
+    value: 185,
+    currency: "USD",
+    status: "Issued",
+    expiresAt: "2026-11-30",
+    distributionSite: "CARI Suakoko Agro Hub, Bong County",
+    appointmentAt: "Pickup Window: 09:00 - 15:00 GMT",
+    receiptAcknowledged: false,
+    createdAt: "2026-09-02 10:30:00",
+  },
+  {
+    id: 2,
+    voucherCode: "VCH-26-88123",
+    farmerDfrId: "LBR-LF-000301",
+    ownerEmail: "tis@totaggroup.com",
+    programme: "FAO Smallholder Post-Harvest Loss Mitigation",
+    category: "Hermetic Storage Bags (5x 50kg) & Moisture Meter",
+    value: 95,
+    currency: "USD",
+    status: "Issued",
+    expiresAt: "2026-12-15",
+    distributionSite: "Voinjama Central Agro-Dealer Depot, Lofa County",
+    appointmentAt: "Open for Collection",
+    receiptAcknowledged: false,
+    createdAt: "2026-09-05 14:15:00",
+  },
+  {
+    id: 3,
+    voucherCode: "VCH-26-12904",
+    farmerDfrId: "LBR-NM-000215",
+    ownerEmail: "tis@totaggroup.com",
+    programme: "MoA Tree Crop Rehabilitation Initiative",
+    category: "Cocoa Clonal Seedlings (150 units) & Pruning Kit",
+    value: 240,
+    currency: "USD",
+    status: "Redeemed",
+    expiresAt: "2026-10-31",
+    distributionSite: "Ganta Agro-Center, Nimba County",
+    appointmentAt: "Distributed on 14-Sep-2026",
+    receiptAcknowledged: false,
+    redeemedAt: "2026-09-14 11:00:00",
+    createdAt: "2026-08-20 08:00:00",
+  },
+  {
+    id: 4,
+    voucherCode: "VCH-26-90512",
+    farmerDfrId: "LBR-MO-000412",
+    ownerEmail: "tis@totaggroup.com",
+    programme: "Urban Peri-Horticulture & Solar Irrigation Pilot",
+    category: "Drip Irrigation Kit & Vegetable Hybrid Pack",
+    value: 310,
+    currency: "USD",
+    status: "Redeemed",
+    expiresAt: "2026-12-31",
+    distributionSite: "Fendell MoA Logistics Center, Montserrado County",
+    appointmentAt: "Delivered & Confirmed",
+    receiptAcknowledged: true,
+    redeemedAt: "2026-08-28 16:30:00",
+    createdAt: "2026-08-10 11:45:00",
+  },
+];
+
+export const INITIAL_BENEFIT_ACCOUNTS: MockPaymentAccount[] = [
+  {
+    id: 1,
+    farmerDfrId: "LBR-BG-000104",
+    ownerEmail: "tis@totaggroup.com",
+    provider: "MTN Mobile Money",
+    accountName: "Josephine Flomo",
+    accountNumberMasked: "0886***214",
+    verified: true,
+    status: "Verified",
+    accountType: "Mobile money",
+    createdAt: "2026-08-15 09:00:00",
+  },
+  {
+    id: 2,
+    farmerDfrId: "LBR-LF-000301",
+    ownerEmail: "tis@totaggroup.com",
+    provider: "Orange Money",
+    accountName: "Korto Kollie",
+    accountNumberMasked: "0777***890",
+    verified: true,
+    status: "Verified",
+    accountType: "Mobile money",
+    createdAt: "2026-08-18 10:15:00",
+  },
+  {
+    id: 3,
+    farmerDfrId: "LBR-MO-000412",
+    ownerEmail: "tis@totaggroup.com",
+    provider: "MTN Mobile Money",
+    accountName: "Fatu Kamara",
+    accountNumberMasked: "0880***553",
+    verified: false,
+    status: "Verification requested",
+    accountType: "Mobile money",
+    createdAt: "2026-09-01 14:20:00",
+  },
+];
+
+export const INITIAL_BENEFIT_TRANSACTIONS: MockPaymentTransaction[] = [
+  {
+    id: 1,
+    transactionCode: "TX-26-00812",
+    farmerDfrId: "LBR-BG-000104",
+    ownerEmail: "tis@totaggroup.com",
+    programme: "NRDSP Rice Producer Cash Support",
+    amount: 150,
+    currency: "USD",
+    status: "Disbursed",
+    receiptRef: "REC-MOA-2026-0981",
+    processedAt: "2026-09-08 11:20:00",
+    createdAt: "2026-09-08 11:20:00",
+  },
+  {
+    id: 2,
+    transactionCode: "TX-26-00755",
+    farmerDfrId: "LBR-LF-000301",
+    ownerEmail: "tis@totaggroup.com",
+    programme: "FAO Climate Resilience Emergency Aid",
+    amount: 80,
+    currency: "USD",
+    status: "Disbursed",
+    receiptRef: "REC-FAO-2026-0755",
+    processedAt: "2026-09-12 14:05:00",
+    createdAt: "2026-09-12 14:05:00",
+  },
+];
+
 const INITIAL_AUDITS: MockAudit[] = [];
 
 const LEGACY_STORAGE_KEYS = [
@@ -401,6 +585,9 @@ const STORAGE_KEYS = {
   AUDITS: "dfr_audits_store_v2_live",
   HOUSEHOLDS: "dfr_households_store_v2_live",
   ROLE: "dfr_active_role_v2_live",
+  VOUCHERS: "dfr_benefits_vouchers",
+  ACCOUNTS: "dfr_benefits_accounts",
+  TRANSACTIONS: "dfr_benefits_tx",
 };
 
 export function getStoredFarmers(): MockFarmer[] {
@@ -834,3 +1021,187 @@ export function setActiveRole(role: string): void {
     } catch {}
   }
 }
+
+export function getStoredVouchers(): MockVoucher[] {
+  if (typeof window === "undefined") return INITIAL_VOUCHERS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.VOUCHERS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(INITIAL_VOUCHERS));
+      return INITIAL_VOUCHERS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(INITIAL_VOUCHERS));
+      return INITIAL_VOUCHERS;
+    }
+    return parsed;
+  } catch {
+    return INITIAL_VOUCHERS;
+  }
+}
+
+export function saveStoredVoucher(voucher: Partial<MockVoucher>): MockVoucher {
+  const existing = getStoredVouchers();
+  const id = existing.length > 0 ? Math.max(...existing.map((v) => v.id)) + 1 : 1;
+  const newVoucher: MockVoucher = {
+    id,
+    voucherCode: voucher.voucherCode || `VCH-26-${Date.now().toString().slice(-5)}`,
+    farmerDfrId: voucher.farmerDfrId || "LBR-MO-000412",
+    ownerEmail: voucher.ownerEmail || "tis@totaggroup.com",
+    programme: voucher.programme || "Input Subsidy",
+    category: voucher.category || "Certified seed & fertilizer",
+    value: Number(voucher.value) || 100,
+    currency: voucher.currency || "USD",
+    status: "Issued",
+    expiresAt: voucher.expiresAt || "2026-12-31",
+    distributionSite: voucher.distributionSite || "County Agro Hub",
+    appointmentAt: voucher.appointmentAt || "Pending pickup",
+    receiptAcknowledged: false,
+    createdAt: new Date().toISOString().replace("T", " ").slice(0, 19),
+  };
+  const updated = [newVoucher, ...existing];
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(updated));
+      addStoredAudit({
+        actor: "voucher.admin@moa.gov.lr",
+        action: "Voucher issued",
+        entity: newVoucher.voucherCode,
+        details: `Beneficiary: ${newVoucher.farmerDfrId}, Entitlement: ${newVoucher.category}, Value: ${newVoucher.currency} ${newVoucher.value}`,
+      });
+    } catch {}
+  }
+  return newVoucher;
+}
+
+export function redeemStoredVoucher(voucherCode: string): boolean {
+  const existing = getStoredVouchers();
+  let found = false;
+  const updated = existing.map((v) => {
+    if (v.voucherCode === voucherCode) {
+      found = true;
+      return { ...v, status: "Redeemed", redeemedAt: new Date().toISOString().replace("T", " ").slice(0, 19) };
+    }
+    return v;
+  });
+  if (typeof window !== "undefined" && found) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(updated));
+      addStoredAudit({
+        actor: "distribution.officer@moa.gov.lr",
+        action: "Voucher distribution confirmed",
+        entity: voucherCode,
+        details: "Maker-checker distribution confirmed at county depot",
+      });
+    } catch {}
+  }
+  return found;
+}
+
+export function acknowledgeStoredVoucher(voucherCode: string): boolean {
+  const existing = getStoredVouchers();
+  let found = false;
+  const updated = existing.map((v) => {
+    if (v.voucherCode === voucherCode) {
+      found = true;
+      return { ...v, receiptAcknowledged: true };
+    }
+    return v;
+  });
+  if (typeof window !== "undefined" && found) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(updated));
+      addStoredAudit({
+        actor: "farmer@dfr.gov.lr",
+        action: "Voucher receipt acknowledged",
+        entity: voucherCode,
+        details: "Beneficiary confirmed receipt of physical agricultural inputs",
+      });
+    } catch {}
+  }
+  return found;
+}
+
+export function getStoredBenefitAccounts(): MockPaymentAccount[] {
+  if (typeof window === "undefined") return INITIAL_BENEFIT_ACCOUNTS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(INITIAL_BENEFIT_ACCOUNTS));
+      return INITIAL_BENEFIT_ACCOUNTS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(INITIAL_BENEFIT_ACCOUNTS));
+      return INITIAL_BENEFIT_ACCOUNTS;
+    }
+    return parsed;
+  } catch {
+    return INITIAL_BENEFIT_ACCOUNTS;
+  }
+}
+
+export function saveStoredBenefitAccount(acc: Partial<MockPaymentAccount>): MockPaymentAccount {
+  const existing = getStoredBenefitAccounts();
+  const id = existing.length > 0 ? Math.max(...existing.map((a) => a.id)) + 1 : 1;
+  const raw = String(acc.accountNumberMasked || "0770000000");
+  const masked = raw.length > 4 ? `${raw.slice(0, 4)}***${raw.slice(-3)}` : raw;
+  const newAcc: MockPaymentAccount = {
+    id,
+    farmerDfrId: acc.farmerDfrId || "LBR-MO-000412",
+    ownerEmail: acc.ownerEmail || "tis@totaggroup.com",
+    provider: acc.provider || "MTN Mobile Money",
+    accountName: acc.accountName || "Account Holder",
+    accountNumberMasked: masked,
+    verified: false,
+    status: "Verification requested",
+    accountType: acc.accountType || "Mobile money",
+    createdAt: new Date().toISOString().replace("T", " ").slice(0, 19),
+  };
+  const updated = [newAcc, ...existing];
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(updated));
+    } catch {}
+  }
+  return newAcc;
+}
+
+export function verifyStoredBenefitAccount(id: number, status = "Verified"): boolean {
+  const existing = getStoredBenefitAccounts();
+  let found = false;
+  const updated = existing.map((a) => {
+    if (a.id === id) {
+      found = true;
+      return { ...a, status, verified: status === "Verified" };
+    }
+    return a;
+  });
+  if (typeof window !== "undefined" && found) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(updated));
+    } catch {}
+  }
+  return found;
+}
+
+export function getStoredBenefitTransactions(): MockPaymentTransaction[] {
+  if (typeof window === "undefined") return INITIAL_BENEFIT_TRANSACTIONS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_BENEFIT_TRANSACTIONS));
+      return INITIAL_BENEFIT_TRANSACTIONS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_BENEFIT_TRANSACTIONS));
+      return INITIAL_BENEFIT_TRANSACTIONS;
+    }
+    return parsed;
+  } catch {
+    return INITIAL_BENEFIT_TRANSACTIONS;
+  }
+}
+

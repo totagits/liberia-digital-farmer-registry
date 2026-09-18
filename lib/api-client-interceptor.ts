@@ -21,6 +21,14 @@ import {
   getStoredSOPs,
   getStoredAudits,
   addStoredAudit,
+  getStoredVouchers,
+  saveStoredVoucher,
+  redeemStoredVoucher,
+  acknowledgeStoredVoucher,
+  getStoredBenefitAccounts,
+  saveStoredBenefitAccount,
+  verifyStoredBenefitAccount,
+  getStoredBenefitTransactions,
   MockFarmer,
   MockParcel,
 } from "./mock-data";
@@ -1841,24 +1849,10 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
   // 12. Benefits: /api/benefits
   if (pathname === "/api/benefits") {
-    const defaultVouchers: any[] = [];
-    const defaultAccounts: any[] = [];
-    const defaultTransactions: any[] = [];
-
     if (method === "GET") {
-      let vouchers = defaultVouchers;
-      let accounts = defaultAccounts;
-      let transactions = defaultTransactions;
-      if (typeof window !== "undefined") {
-        try {
-          const storedV = localStorage.getItem("dfr_benefits_vouchers");
-          if (storedV) vouchers = JSON.parse(storedV);
-          const storedA = localStorage.getItem("dfr_benefits_accounts");
-          if (storedA) accounts = JSON.parse(storedA);
-          const storedT = localStorage.getItem("dfr_benefits_tx");
-          if (storedT) transactions = JSON.parse(storedT);
-        } catch {}
-      }
+      const vouchers = getStoredVouchers();
+      const accounts = getStoredBenefitAccounts();
+      const transactions = getStoredBenefitTransactions();
       return jsonResponse({
         vouchers,
         accounts,
@@ -1872,63 +1866,11 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       try {
         const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
         if (body.action === "account") {
-          let accounts = defaultAccounts;
-          if (typeof window !== "undefined") {
-            try {
-              const storedA = localStorage.getItem("dfr_benefits_accounts");
-              if (storedA) accounts = JSON.parse(storedA);
-            } catch {}
-          }
-          const num = String(body.accountNumber || "0770000000");
-          const masked = num.length > 4 ? `${num.slice(0, 4)}***${num.slice(-3)}` : num;
-          const newAcc = {
-            id: Date.now(),
-            farmerDfrId: body.farmerDfrId || "LBR-MO-000412",
-            ownerEmail: "tis@totaggroup.com",
-            provider: body.provider || "MTN Mobile Money",
-            accountName: body.accountName || "Account Holder",
-            accountNumberMasked: masked,
-            verified: false,
-            status: "Verification requested",
-            accountType: "Mobile money",
-          };
-          accounts = [newAcc, ...accounts];
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("dfr_benefits_accounts", JSON.stringify(accounts));
-            } catch {}
-          }
+          const newAcc = saveStoredBenefitAccount(body);
           return jsonResponse({ success: true, account: newAcc }, 201);
         }
         if (body.action === "voucher") {
-          let vouchers = defaultVouchers;
-          if (typeof window !== "undefined") {
-            try {
-              const storedV = localStorage.getItem("dfr_benefits_vouchers");
-              if (storedV) vouchers = JSON.parse(storedV);
-            } catch {}
-          }
-          const newV = {
-            id: Date.now(),
-            voucherCode: `VCH-${new Date().getFullYear().toString().slice(-2)}-${Date.now().toString().slice(-5)}`,
-            farmerDfrId: body.farmerDfrId || "LBR-MO-000412",
-            ownerEmail: body.ownerEmail || "tis@totaggroup.com",
-            programme: body.programme || "Input Subsidy",
-            category: body.category || "Seed and fertilizer",
-            value: Number(body.value) || 100,
-            currency: body.currency || "USD",
-            status: "Issued",
-            expiresAt: body.expiresAt || "2026-12-31",
-            distributionSite: body.distributionSite || "County Agro Hub",
-            appointmentAt: "Pending pickup",
-            receiptAcknowledged: false,
-          };
-          vouchers = [newV, ...vouchers];
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("dfr_benefits_vouchers", JSON.stringify(vouchers));
-            } catch {}
-          }
+          const newV = saveStoredVoucher(body);
           return jsonResponse({ success: true, voucher: newV }, 201);
         }
       } catch {}
@@ -1939,51 +1881,15 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       try {
         const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
         if (body.action === "verify-account") {
-          let accounts = defaultAccounts;
-          if (typeof window !== "undefined") {
-            try {
-              const storedA = localStorage.getItem("dfr_benefits_accounts");
-              if (storedA) accounts = JSON.parse(storedA);
-            } catch {}
-          }
-          accounts = accounts.map((a) => (a.id === Number(body.id) ? { ...a, status: "Verified", verified: true } : a));
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("dfr_benefits_accounts", JSON.stringify(accounts));
-            } catch {}
-          }
+          verifyStoredBenefitAccount(Number(body.id), body.status || "Verified");
           return jsonResponse({ success: true });
         }
         if (body.action === "redeem") {
-          let vouchers = defaultVouchers;
-          if (typeof window !== "undefined") {
-            try {
-              const storedV = localStorage.getItem("dfr_benefits_vouchers");
-              if (storedV) vouchers = JSON.parse(storedV);
-            } catch {}
-          }
-          vouchers = vouchers.map((v) => (v.voucherCode === body.voucherCode ? { ...v, status: "Redeemed" } : v));
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("dfr_benefits_vouchers", JSON.stringify(vouchers));
-            } catch {}
-          }
+          redeemStoredVoucher(String(body.voucherCode));
           return jsonResponse({ success: true });
         }
         if (body.action === "acknowledge") {
-          let vouchers = defaultVouchers;
-          if (typeof window !== "undefined") {
-            try {
-              const storedV = localStorage.getItem("dfr_benefits_vouchers");
-              if (storedV) vouchers = JSON.parse(storedV);
-            } catch {}
-          }
-          vouchers = vouchers.map((v) => (v.voucherCode === body.voucherCode ? { ...v, receiptAcknowledged: true } : v));
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("dfr_benefits_vouchers", JSON.stringify(vouchers));
-            } catch {}
-          }
+          acknowledgeStoredVoucher(String(body.voucherCode));
           return jsonResponse({ success: true });
         }
       } catch {}
