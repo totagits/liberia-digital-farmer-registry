@@ -741,6 +741,7 @@ export default function DashboardClient({
   const [mobile, setMobile] = useState(false);
   const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
   const [farmerTab, setFarmerTab] = useState("Profile");
+  const [faoGuideOpen, setFaoGuideOpen] = useState(true);
   const load = async () => {
     try {
       const [f, a] = await Promise.all([
@@ -1253,6 +1254,95 @@ export default function DashboardClient({
               <span>×</span>
             </button>
           )}
+
+          {/* FAO Tender Evaluation & Live Testing Banner */}
+          <div className="fao-evaluator-banner">
+            <div className="fao-banner-header">
+              <div className="fao-badge-row">
+                <span className="fao-pill-badge">FAO RFP 2026/FRLIR/FRLIR/137641</span>
+                <span className="fao-pill-green">● Live Operational DPI Platform</span>
+                <span className="fao-pill-blue">MoA · MGCSP · LISGIS · CDA</span>
+              </div>
+              <button
+                type="button"
+                className="fao-toggle-btn"
+                onClick={() => setFaoGuideOpen(!faoGuideOpen)}
+              >
+                {faoGuideOpen ? "Hide Evaluator Console ▲" : "FAO Evaluator Console & Deliverables ▼"}
+              </button>
+            </div>
+
+            {faoGuideOpen && (
+              <div className="fao-banner-body">
+                <div className="fao-intro-text">
+                  <h3>FAO Tender Evaluation Console &amp; Live Test Environment</h3>
+                  <p>
+                    This platform operates in <strong>Live Interactive Mode</strong> for the FAO Tender Evaluation Committee.
+                    All workflows are fully functional: you can register farmers, digitize cadastral parcels, capture live device GPS, walk farm boundaries, issue &amp; redeem agricultural input vouchers, evaluate social protection vulnerability (MGCSP SCTP), and test role-governed access across all 15 counties.
+                  </p>
+                </div>
+
+                <div className="fao-quick-modules">
+                  <div className="fao-mod-card" onClick={() => nav("Farmer Registry")}>
+                    <div className="mod-num">Core 1</div>
+                    <b>Digital Farmers Registry</b>
+                    <small>Farmer &amp; household profiling, DFR IDs, demographics</small>
+                    <span className="mod-link">Open Registry →</span>
+                  </div>
+
+                  <div className="fao-mod-card" onClick={() => nav("Farms & GIS")}>
+                    <div className="mod-num">GIS &amp; GPS</div>
+                    <b>Cadastral Land Demarcation</b>
+                    <small>Perimeter walk, live GPS pins, hectares &amp; map certificates</small>
+                    <span className="mod-link">Open Cadastre →</span>
+                  </div>
+
+                  <div className="fao-mod-card" onClick={() => nav("Field Registration")}>
+                    <div className="mod-num">Offline PWA</div>
+                    <b>Field Data Synchronization</b>
+                    <small>Store-and-forward engine for remote rural counties</small>
+                    <span className="mod-link">Test Sync →</span>
+                  </div>
+
+                  <div className="fao-mod-card" onClick={() => nav("Social Protection")}>
+                    <div className="mod-num">Core 3</div>
+                    <b>Social Protection (MGCSP)</b>
+                    <small>SCTP cash transfer linkages, PMT vulnerability scoring</small>
+                    <span className="mod-link">View Protection →</span>
+                  </div>
+
+                  <div className="fao-mod-card" onClick={() => nav("Service Delivery")}>
+                    <div className="mod-num">Core 2</div>
+                    <b>Agriculture Management</b>
+                    <small>Subsidized input vouchers, seed delivery &amp; digital signatures</small>
+                    <span className="mod-link">View Vouchers →</span>
+                  </div>
+
+                  <div className="fao-mod-card" onClick={() => nav("SOP Manual")}>
+                    <div className="mod-num">Governance</div>
+                    <b>9-Part SOP Framework</b>
+                    <small>Registration workflows, RACI matrix &amp; institutional roles</small>
+                    <span className="mod-link">Open SOPs →</span>
+                  </div>
+                </div>
+
+                <div className="fao-deliverables-strip">
+                  <span>8 Official Tender Deliverables:</span>
+                  <div className="fao-del-links">
+                    <Link href="/deliverables/inception-report">D1: Inception</Link>
+                    <Link href="/deliverables/gap-assessment">D2: Gap Assessment</Link>
+                    <Link href="/deliverables/system-design">D3: System Design</Link>
+                    <Link href="/deliverables/sop-manual">D4: SOP Manual</Link>
+                    <Link href="/deliverables/functional-platform">D5: Functional Platform</Link>
+                    <Link href="/deliverables/training-report">D6: Training Report</Link>
+                    <Link href="/deliverables/pilot-report">D7: Pilot Plan</Link>
+                    <Link href="/deliverables/final-report">D8: Final Policy Report</Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="page-head">
             <div>
               <span>National agriculture data workspace</span>

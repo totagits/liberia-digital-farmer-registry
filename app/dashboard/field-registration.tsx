@@ -276,13 +276,13 @@ export default function FieldRegistrationWorkspace({
               >
                 <span
                   style={{
-                    width: 7,
-                    height: 7,
+                    width: 8,
+                    height: 8,
                     borderRadius: "50%",
                     background: isSimulatedOffline ? "#ef4444" : "#22c55e",
                   }}
                 />
-                {isSimulatedOffline ? "Simulated Offline Mode" : "Online · Connected to Central Registry"}
+                {isSimulatedOffline ? "Field Offline Mode (Local Storage Active)" : "Online · Connected to Central Registry"}
               </span>
             </div>
             <h1 style={{ margin: "4px 0 8px", fontSize: 24, fontWeight: 700, color: "#fff" }}>
@@ -687,7 +687,7 @@ export default function FieldRegistrationWorkspace({
               </div>
               <h2 style={{ margin: "6px 0 4px", fontSize: 18, color: "#0f172a" }}>
                 {isSimulatedOffline
-                  ? "Simulated Offline: Records Encrypted on Local Device"
+                  ? "Field Offline: Records Encrypted on Local Device"
                   : "Online Mode: Central Registry Synced & Ready"}
               </h2>
               <p style={{ margin: 0, fontSize: 13, color: "#64748b", maxWidth: 600 }}>
@@ -701,8 +701,8 @@ export default function FieldRegistrationWorkspace({
                   setIsSimulatedOffline(!isSimulatedOffline);
                   notify(
                     !isSimulatedOffline
-                      ? "Switched to Offline Field Simulation. New submissions will queue locally."
-                      : "Switched back to Online Mode."
+                      ? "Switched to Field Offline Mode. New submissions will queue locally."
+                      : "Switched back to Online Central Mode."
                   );
                 }}
                 style={{
@@ -716,7 +716,7 @@ export default function FieldRegistrationWorkspace({
                   cursor: "pointer",
                 }}
               >
-                {isSimulatedOffline ? "● Disable Offline Mode" : "○ Simulate Offline Field Mode"}
+                {isSimulatedOffline ? "● Return to Online Mode" : "○ Disconnect (Field Offline Mode)"}
               </button>
 
               <button
@@ -760,7 +760,7 @@ export default function FieldRegistrationWorkspace({
                   cursor: "pointer",
                 }}
               >
-                ＋ Simulate Field Record
+                ＋ Queue Sample Field Packet
               </button>
             </div>
 

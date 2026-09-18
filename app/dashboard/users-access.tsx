@@ -475,7 +475,7 @@ export default function UsersAccessWorkspace({
                             cursor: "pointer",
                             fontWeight: 600,
                           }}
-                          title={`Simulate session as ${u.name}`}
+                          title={`Switch active user session to ${u.name}`}
                         >
                           Switch Persona ↗
                         </button>
