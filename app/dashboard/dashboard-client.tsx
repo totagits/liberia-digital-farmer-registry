@@ -301,6 +301,8 @@ const menu = [
       "Voucher administrator",
       "Input-distribution officer",
       "Program officer",
+      "County agricultural officer",
+      "District agricultural officer",
       "Ministry administrator",
     ],
   ],
@@ -1347,7 +1349,9 @@ export default function DashboardClient({
             <div>
               <span>National agriculture data workspace</span>
               <h1>{active}</h1>
-              <p>{role} · Scope: National · Data access: role governed</p>
+              <p>
+                {role} · Scope: {currentUser.county ? `${currentUser.county}${currentUser.district ? ` / ${currentUser.district}` : ""}` : "National"} · Data access: role governed
+              </p>
             </div>
             <div className="head-actions">
               {canRegister && registrationRoles.has(role) && ["Home", "Farmer Registry", "Field Registration"].includes(active) && (

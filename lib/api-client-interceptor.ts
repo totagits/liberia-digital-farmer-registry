@@ -32,6 +32,7 @@ import {
   MockFarmer,
   MockParcel,
 } from "./mock-data";
+import { getActiveDemoUser } from "./demo-users";
 
 let isInstalled = false;
 
@@ -459,6 +460,18 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
 
   // 8. Appendix & Controls: /api/appendix-controls
   if (pathname === "/api/appendix-controls") {
+    const activeDemo = typeof window !== "undefined" ? getActiveDemoUser() : null;
+    const activeRole = activeDemo?.role || "Ministry administrator";
+    const activeInst = activeDemo?.institution || "Ministry of Agriculture";
+    const activeScope = activeDemo?.countyScope 
+      ? `${activeDemo.countyScope}${activeDemo.districtScope ? ` / ${activeDemo.districtScope}` : ""}` 
+      : "National";
+    const sensitivityCeiling = ["Ministry administrator", "System administrator"].includes(activeRole)
+      ? "Full Unrestricted"
+      : ["District agricultural officer", "County agricultural officer", "Verification officer"].includes(activeRole)
+      ? "Regional Operational"
+      : "Scoped";
+
     return jsonResponse({
       sops: getStoredSOPs(),
       rules: [
@@ -475,10 +488,16 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
         { indicatorCode: "IND-01", name: "County Registry Coverage Percentage", definition: "% of targeted farming households enrolled in the national DFR", numerator: "0", denominator: "220000", frequency: "Monthly", owner: "M&E Officer", disaggregations: "County, Gender, Commodity", currentValue: 0, unit: "%", lastCalculatedAt: new Date().toISOString().slice(0, 10) },
       ],
       assignments: [
-        { id: 1, email: "tis@totaggroup.com", displayName: "Michael Gwoah", role: "Ministry administrator", institution: "Ministry of Agriculture", countyScope: "National", districtScope: "All Districts", sensitivityCeiling: "Top Secret / Restr.", status: "Active" },
+        { id: 1, email: activeDemo?.email || "tis@totaggroup.com", displayName: activeDemo?.name || "Michael Gwoah", role: activeRole, institution: activeInst, countyScope: activeScope, districtScope: activeDemo?.districtScope || "All Districts", sensitivityCeiling: sensitivityCeiling, status: "Active" },
       ],
       farmers: getStoredFarmers(),
-      access: { institution: "Ministry of Agriculture", role: "Ministry administrator", countyScope: "National", sensitivityCeiling: "Full Unrestricted", capabilities: ["registry.create", "registry.verify", "registry.manage", "reports.export"] },
+      access: { 
+        institution: activeInst, 
+        role: activeRole, 
+        countyScope: activeScope, 
+        sensitivityCeiling: sensitivityCeiling, 
+        capabilities: ["registry.create", "registry.verify", "registry.manage", "reports.export"] 
+      },
     });
   }
 
