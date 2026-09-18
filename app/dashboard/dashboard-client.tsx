@@ -886,6 +886,37 @@ export default function DashboardClient({
       setNotice("Failed to update verification status.");
     }
   }
+
+  async function deleteFarmer(f: Farmer) {
+    const confirmName = `${f.firstName || ""} ${f.lastName || ""}`.trim() || f.dfrId;
+    if (!window.confirm(`Are you sure you want to permanently delete the registration record for "${confirmName}" (${f.dfrId})? This cannot be undone.`)) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/farmers/${f.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setFarmers((prev) => prev.filter((item) => item.id !== f.id));
+        setNotice(`Registration record ${f.dfrId} deleted successfully.`);
+        if (selectedFarmer?.id === f.id) {
+          setSelectedFarmer(null);
+        }
+        await load();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setNotice(err.error || "Failed to delete record.");
+      }
+    } catch {
+      setFarmers((prev) => prev.filter((item) => item.id !== f.id));
+      setNotice(`Registration record ${f.dfrId} removed.`);
+      if (selectedFarmer?.id === f.id) {
+        setSelectedFarmer(null);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const nav = (name: string) => {
     setActive(name);
     setMobile(false);
@@ -1527,6 +1558,10 @@ export default function DashboardClient({
           onClose={() => setSelectedFarmer(null)}
           onVerify={verify}
           notify={setNotice}
+          onDelete={async (id) => {
+            const target = farmers.find(x => x.id === id) || selectedFarmer;
+            if (target) await deleteFarmer(target);
+          }}
           onUpdate={(updated) => {
             setFarmers((prev) =>
               prev.map((f) => (f.id === updated.id ? { ...f, ...updated } : f))
@@ -1813,6 +1848,23 @@ function Registry({
                         >
                           Review
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteFarmer(f)}
+                          style={{
+                            background: "#fee2e2",
+                            color: "#b91c1c",
+                            border: "1px solid #fecaca",
+                            borderRadius: "6px",
+                            padding: "6px 12px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
+                          title="Delete / purge incomplete or unverified registration record"
+                        >
+                          🗑 Delete
+                        </button>
                       </>
                     ) : (
                       <>
@@ -1829,6 +1881,23 @@ function Registry({
                           title="View and print official National DFR Credential ID Card"
                         >
                           ID Card
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteFarmer(f)}
+                          style={{
+                            background: "#f1f5f9",
+                            color: "#64748b",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: "6px",
+                            padding: "6px 10px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer"
+                          }}
+                          title="Delete farmer record"
+                        >
+                          🗑
                         </button>
                       </>
                     )}

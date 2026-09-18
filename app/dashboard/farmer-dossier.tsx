@@ -181,6 +181,7 @@ export default function FarmerDossier({
   onVerify,
   notify,
   onUpdate,
+  onDelete,
 }: {
   farmer: FarmerRecord;
   initialTab?: string;
@@ -188,6 +189,7 @@ export default function FarmerDossier({
   onVerify: (id: number, status: string) => Promise<void>;
   notify: (msg: string) => void;
   onUpdate?: (updated: FarmerRecord) => void;
+  onDelete?: (id: number) => Promise<void>;
 }) {
   const [farmer, setFarmer] = useState<FarmerRecord>(initialFarmer);
   const [tab, setTab] = useState(initialTab);
@@ -510,6 +512,36 @@ export default function FarmerDossier({
           >
             {editing ? "Cancel Editing" : "✎ Edit Profile"}
           </button>
+          {onDelete && (
+            <button
+              type="button"
+              className="btn-action-danger"
+              style={{
+                background: "#fee2e2",
+                color: "#b91c1c",
+                border: "1px solid #fca5a5",
+                borderRadius: "8px",
+                padding: "8px 14px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                marginLeft: "auto",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px"
+              }}
+              onClick={async () => {
+                const name = `${farmer.firstName || ""} ${farmer.lastName || ""}`.trim() || farmer.dfrId;
+                if (window.confirm(`Permanently delete registration record for "${name}" (${farmer.dfrId})? This cannot be undone.`)) {
+                  await onDelete(farmer.id);
+                  onClose();
+                }
+              }}
+              title="Permanently delete this registration record"
+            >
+              🗑 Delete Registration
+            </button>
+          )}
         </div>
 
         {/* Tab Navigation */}

@@ -6,6 +6,7 @@ import {
   getStoredFarmers,
   saveStoredFarmer,
   updateStoredFarmer,
+  deleteStoredFarmer,
   getStoredParties,
   saveStoredParty,
   updateStoredParty,
@@ -169,6 +170,14 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
         return jsonResponse({ ok: true, success: true, farmer: updated });
       }
       return jsonResponse({ ok: true, success: true, status: body.status || "Verified" });
+    }
+
+    if (method === "DELETE") {
+      if (!isNaN(maybeId) && maybeId > 0) {
+        deleteStoredFarmer(maybeId);
+        return jsonResponse({ ok: true, success: true, message: "Farmer record deleted" });
+      }
+      return jsonResponse({ error: "Missing farmer ID" }, 400);
     }
   }
 

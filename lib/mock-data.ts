@@ -666,6 +666,28 @@ export function updateStoredFarmer(id: number, update: Partial<MockFarmer>): Moc
   return updatedFarmer;
 }
 
+export function deleteStoredFarmer(id: number): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const existing = getStoredFarmers();
+    const target = existing.find((f) => f.id === id);
+    const updated = existing.filter((f) => f.id !== id);
+    localStorage.setItem(STORAGE_KEYS.FARMERS, JSON.stringify(updated));
+    if (target) {
+      addStoredAudit({
+        actor: "officer@dfr.moa.gov.lr",
+        action: "Farmer registration deleted",
+        entity: target.dfrId,
+        details: `Deleted record for ${target.firstName} ${target.lastName} (${target.dfrId})`,
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+
 export function getStoredParties(): MockParty[] {
   purgeLegacyMockStorage();
   let list: MockParty[] = INITIAL_PARTIES;

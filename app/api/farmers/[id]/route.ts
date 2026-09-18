@@ -22,3 +22,21 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   return NextResponse.json({ ok:true,provisionalId:row.provisionalId,approvedDfrId });
 }
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const db = await getDb();
+  const row = (await db.select().from(farmers).where(eq(farmers.id, Number(id))).limit(1))[0];
+  if (!row) return NextResponse.json({ error: "Record not found" }, { status: 404 });
+  await db.delete(farmers).where(eq(farmers.id, Number(id)));
+  await db.insert(auditEvents).values({
+    actor: "District Agricultural Officer",
+    action: "Farmer record deleted",
+    entity: row.dfrId || `Farmer #${id}`,
+    details: `Deleted registration record for ${row.firstName} ${row.lastName}`
+  });
+  realtimeBus.publish("farmer:deleted", { id: Number(id) });
+  realtimeBus.publish("audit:logged", { actor: "District Agricultural Officer", action: "Farmer record deleted", entity: row.dfrId });
+  return NextResponse.json({ ok: true, deletedId: Number(id) });
+}
+
