@@ -272,3 +272,118 @@ export function getStoredUserProfile(userIdOrEmail: string): Partial<DemoUser> |
   return null;
 }
 
+/**
+ * Universal print helper for official registry documents:
+ * Voucher Dockets, Advisory Slips, Payment Receipts, and Certificates.
+ *
+ * It renders the printable element in an isolated invisible iframe and triggers print.
+ * This guarantees 100% reliable print previews regardless of parent CSS, scrolling, or browser caching.
+ */
+export function printElementById(elementId: string, title = "Official Registry Document") {
+  if (typeof window === "undefined") return;
+  const target = document.getElementById(elementId);
+  if (!target) {
+    window.print();
+    return;
+  }
+
+  const contentHtml = target.outerHTML;
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.left = "-9999px";
+  iframe.style.top = "0";
+  iframe.style.width = "960px";
+  iframe.style.height = "1200px";
+  iframe.style.border = "none";
+  iframe.style.opacity = "0.01";
+  iframe.style.pointerEvents = "none";
+  iframe.style.zIndex = "-9999";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) {
+    window.print();
+    iframe.remove();
+    return;
+  }
+
+  const baseHref = window.location.origin + (window.location.pathname.startsWith("/liberia-digital-farmer-registry") ? "/liberia-digital-farmer-registry/" : "/");
+
+  const styles = `
+    @page { margin: 8mm 10mm; size: auto; }
+    *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      margin: 0 !important;
+      padding: 12px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .modal-actions, button, .modal-head button, header button { display: none !important; }
+    .register-modal, .voucher-detail-card, .receipt-card, .ext-wizard, .enrollment-wizard {
+      max-width: 100% !important;
+      width: 100% !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+      border: 1.5px solid #166534 !important;
+      border-radius: 8px !important;
+      padding: 18px 22px !important;
+      margin: 0 auto !important;
+      box-sizing: border-box !important;
+    }
+    .modal-head {
+      border-bottom: 1px solid #dce8df;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-head h2 { margin: 2px 0 0 0; font-size: 20px; color: #102c20; }
+    .ext-wizard header {
+      background: #10182d !important;
+      color: #ffffff !important;
+      border-radius: 6px 6px 0 0 !important;
+      padding: 16px 20px !important;
+    }
+    .ext-wizard header h2 { color: #ffffff !important; margin: 4px 0 !important; }
+    .ext-wizard header span { color: #ffc400 !important; font-weight: 800 !important; font-size: 11px !important; }
+    .ext-wizard header p { color: #dce4f0 !important; margin: 0 !important; }
+    .identity-panel, .enroll-panel {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: #f8fafc;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 13px; }
+    dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; padding: 12px 0; }
+    dl > div { border: 1px solid #dce7df; border-radius: 8px; padding: 10px 14px; background: #f8fafc; }
+    dt { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; }
+    dd { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: #0f172a; }
+    img { max-width: 100%; height: auto; }
+  `;
+
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><base href="${baseHref}" /><title>${title}</title><meta charset="utf-8" /><style>${styles}</style></head><body>${contentHtml}</body></html>`);
+  doc.close();
+
+  // Wait briefly for layout and any images to paint before opening print preview
+  setTimeout(() => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch (err) {
+      window.print();
+    } finally {
+      setTimeout(() => {
+        iframe.remove();
+      }, 3000);
+    }
+  }, 400);
+}
+

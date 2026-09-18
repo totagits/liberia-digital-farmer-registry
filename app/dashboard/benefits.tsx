@@ -1,5 +1,6 @@
 "use client";
 import {FormEvent,useEffect,useState} from "react";
+import { printElementById } from "../../lib/demo-users";
 type Data={vouchers:any[];accounts:any[];transactions:any[];access:{currentEmail:string;canVoucher:boolean;canPayment:boolean}};
 const voucherRoles=new Set(["Voucher administrator","Input-distribution officer","Ministry administrator","Program officer","County agricultural officer","District agricultural officer"]);
 const paymentRoles=new Set(["Payment officer","Ministry administrator","Program officer"]);
@@ -201,7 +202,7 @@ function BenefitModal({modal,selected,close,submit,send,manager}:{modal:string;s
               )}
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => printElementById("printable-voucher-docket", `Voucher-Docket-${selected.voucherCode}`)}
                 style={{ background: "#0f766e", color: "#ffffff", border: 0, padding: "8px 16px", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
               >
                 🖨 Print / Save Docket
@@ -213,7 +214,7 @@ function BenefitModal({modal,selected,close,submit,send,manager}:{modal:string;s
     );
   }
 
-  if(modal==="receipt")return <div className="modal-wrap"><section id="printable-receipt-docket" className="register-modal glass compact-modal receipt-card"><div className="modal-head"><div><span>Official payment record</span><h2>Payment receipt</h2></div><button onClick={close}>×</button></div><dl><div><dt>Transaction</dt><dd>{selected.transactionCode}</dd></div><div><dt>Programme</dt><dd>{selected.programme}</dd></div><div><dt>Amount</dt><dd>{selected.currency} {Number(selected.amount).toFixed(2)}</dd></div><div><dt>Status</dt><dd>{selected.status}</dd></div><div><dt>Receipt reference</dt><dd>{selected.receiptRef}</dd></div><div><dt>Processed</dt><dd>{selected.processedAt||selected.createdAt}</dd></div></dl><div className="modal-actions"><button onClick={close}>Close</button><button onClick={()=>window.print()}>Print / save receipt</button></div></section></div>;
+  if(modal==="receipt")return <div className="modal-wrap"><section id="printable-receipt-docket" className="register-modal glass compact-modal receipt-card"><div className="modal-head"><div><span>Official payment record</span><h2>Payment receipt</h2></div><button onClick={close}>×</button></div><dl><div><dt>Transaction</dt><dd>{selected.transactionCode}</dd></div><div><dt>Programme</dt><dd>{selected.programme}</dd></div><div><dt>Amount</dt><dd>{selected.currency} {Number(selected.amount).toFixed(2)}</dd></div><div><dt>Status</dt><dd>{selected.status}</dd></div><div><dt>Receipt reference</dt><dd>{selected.receiptRef}</dd></div><div><dt>Processed</dt><dd>{selected.processedAt||selected.createdAt}</dd></div></dl><div className="modal-actions"><button onClick={close}>Close</button><button onClick={()=>printElementById("printable-receipt-docket", `Payment-Receipt-${selected.transactionCode}`)}>Print / save receipt</button></div></section></div>;
   const edit=modal==="edit-account";const action=edit?"update-account":["voucher-issue","payment-issue"].includes(modal)?"issue":modal;
   return <div className="modal-wrap"><form className="register-modal glass compact-modal" onSubmit={e=>submit(e,action,edit?"PATCH":"POST")}><div className="modal-head"><div><span>Identity-protected workflow</span><h2>{modal==="voucher"?"Issue voucher":modal==="account"?"Add payout account":edit?"Update payout account":modal==="payment-issue"?"Report payment problem":"Report voucher problem"}</h2></div><button type="button" onClick={close}>×</button></div><div className="form-grid">
     {modal==="voucher"&&<><label>Beneficiary email*<input name="ownerEmail" type="email" required/></label><label>DFR ID*<input name="farmerDfrId" required/></label><label>Programme*<input name="programme" required/></label><label>Entitlement*<input name="category" required/></label><label>Value*<input name="value" type="number" required/></label><label>Currency<select name="currency"><option>USD</option><option>LRD</option></select></label><label>Expiry*<input name="expiresAt" type="date" required/></label><label>Distribution site*<input name="distributionSite" required/></label></>}

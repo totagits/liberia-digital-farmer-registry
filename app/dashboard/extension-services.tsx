@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredFarmers, MockFarmer } from "../../lib/mock-data";
+import { printElementById } from "../../lib/demo-users";
 
 export interface ExtensionVisit {
   id?: number;
@@ -2271,7 +2272,7 @@ export default function ExtensionServices({
                 className="submit-registration"
                 style={{ background: "#166534", color: "#fff" }}
                 onClick={() => {
-                  if (typeof window !== "undefined") window.print();
+                  printElementById("printable-advisory-slip", `Farmer-Advisory-Slip-${cardModal.visitCode}`);
                 }}
               >
                 🖨 Print / PDF Advisory Slip
