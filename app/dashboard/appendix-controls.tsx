@@ -176,7 +176,7 @@ export default function AppendixControls({
         </article>
       </div>
     </>}
-    {tab==="SOP approvals"&&<article className="panel registry"><Head t="Operational SOP lifecycle" s="Draft → consultation → institutional review → approval → publication → review"/><div className="sop-ops">{data.sops.map((s:R)=><article key={s.id}><header><code>{s.sopCode} · v{s.version}</code><em>{s.stage.replaceAll("_"," ")}</em></header><h3>{s.title}</h3><p>{s.ownerInstitution} · next review {s.nextReviewDate}</p><div className="approval-track"><span>Required: {s.requiredApprovals.join(", ")}</span><b>Approved: {s.approvals.join(", ")||"None"}</b></div><small>{s.consultationStatus} · {s.commentsOpen} open comments</small><footer><button onClick={()=>action({entity:"sop",id:s.id,approve:true},"PATCH")}>Record institutional approval</button><button onClick={()=>action({entity:"sop",id:s.id,stage:"PUBLISHED",approve:true},"PATCH")}>Publish effective version</button></footer></article>)}</div></article>}
+    {tab==="SOP approvals"&&<article className="panel registry"><Head t="Operational SOP lifecycle" s="Draft → consultation → institutional review → approval → publication → review"/><div className="sop-ops">{data.sops.map((s:R)=><article key={s.id}><header><code>{s.sopCode} · v{s.version}</code><em>{s.stage.replaceAll("_"," ")}</em></header><h3>{s.title}</h3><p>{s.ownerInstitution} · next review {s.nextReviewDate}</p><div className="approval-track"><span>Required: {s.requiredApprovals.join(", ")}</span><b>Approved: {s.approvals.join(", ")||"None"}</b></div><small>{s.consultationStatus} · {s.commentsOpen} open comments</small><footer className="ctrl-card-footer"><button className="ctrl-btn btn-primary-action" onClick={()=>action({entity:"sop",id:s.id,approve:true},"PATCH")}>Record institutional approval</button><button className="ctrl-btn btn-record-action" onClick={()=>action({entity:"sop",id:s.id,stage:"PUBLISHED",approve:true},"PATCH")}>Publish effective version</button></footer></article>)}</div></article>}
     {tab==="Data quality"&&<><article className="panel registry"><Head t="Configurable quality rules" s="Accuracy, completeness, consistency, timeliness, uniqueness and reliability" action={<button disabled={busy} onClick={()=>action({action:"run-quality"})}>{busy?"Assessing…":"Run quality assessment"}</button>}/><Table heads={["Rule","Dimension","Entity","Expression","Severity","Owner","State"]} rows={data.rules.map((x:R)=>[x.ruleCode,<b>{x.dimension}</b>,x.entityType,<code>{x.expression}</code>,x.severity,x.ownerInstitution,x.enabled?"Enabled":"Disabled"])}/></article><article className="panel registry"><Head t="Assessment results" s="Record-level six-dimensional scores and correction outcomes"/><Table heads={["Subject","Accuracy","Complete","Consistent","Timely","Unique","Reliable","Overall / outcome"]} rows={data.assessments.map((x:R)=>[x.subjectRef,x.accuracy,x.completeness,x.consistency,x.timeliness,x.uniqueness,x.reliability,<b>{x.overallScore}% · {x.outcome}</b>])}/></article></>}
     {tab==="Supervision & audits"&&<ControlPanel title="Field supervision, spot checks and periodic DQA" rows={grouped(["Field supervision","Spot check","Periodic DQA"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, `Decision recorded ${new Date().toISOString()}`)}/>} 
     {tab==="Reports"&&<><article className="panel registry"><Head t="Approved monitoring indicator catalogue" s="Versioned definitions, frequency, ownership and disaggregation"/><Table heads={["Indicator","Definition","Calculation","Frequency","Owner","Disaggregation","Value"]} rows={data.indicators.map((x:R)=>[<><b>{x.name}</b><small>{x.indicatorCode}</small></>,x.definition,`${x.numerator} / ${x.denominator}`,x.frequency,x.owner,x.disaggregations,`${x.currentValue} ${x.unit}`])}/></article><ControlPanel title="Scheduled and controlled report releases" rows={grouped(["Scheduled report"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, "Reviewer approval and dataset freeze recorded")}/></>} 
@@ -221,7 +221,7 @@ function Cards({rows,update}:{rows:R[];update:(x:R,s:string,ev?:string)=>void}){
             </div>
           </dl>
           <small>{Object.entries(x.details||{}).map(([k,v])=>`${k}: ${Array.isArray(v)?v.join(", "):v}`).join(" · ")}</small>
-          <footer>
+          <footer className="ctrl-card-footer">
             {!isInProgress && !isCompleted && (
               <button 
                 type="button" 
@@ -240,7 +240,7 @@ function Cards({rows,update}:{rows:R[];update:(x:R,s:string,ev?:string)=>void}){
                   disabled
                   title="Task is currently running: Start is disabled"
                 >
-                  ▶ Running (Disabled)
+                  ▶ Running
                 </button>
                 <button 
                   type="button" 
@@ -248,7 +248,7 @@ function Cards({rows,update}:{rows:R[];update:(x:R,s:string,ev?:string)=>void}){
                   onClick={()=>update(x,"Active")}
                   title="Pause task and re-enable Start button"
                 >
-                  ⏸ Pause / Reset
+                  ⏸ Reset
                 </button>
               </>
             )}
@@ -264,7 +264,7 @@ function Cards({rows,update}:{rows:R[];update:(x:R,s:string,ev?:string)=>void}){
             )}
             <button 
               type="button" 
-              className={`ctrl-btn ${isCompleted ? "btn-completed-status" : "btn-primary-action"}`}
+              className={`ctrl-btn ${isCompleted ? "btn-completed-status" : "btn-record-action"}`}
               disabled={isCompleted}
               onClick={()=>update(x,"Completed")}
               title={isCompleted ? "Task is completed" : "Finalize and record completion evidence"}
