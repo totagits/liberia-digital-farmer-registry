@@ -50,6 +50,22 @@ export default function AppendixControls({
     }else notify(j.error||"Action failed");
   }
 
+  function handleControlUpdate(control: R, newStatus: string, evidence?: string) {
+    // Instant optimistic update in React state so UI updates in 0ms!
+    setData((prev) => ({
+      ...prev,
+      controls: prev.controls.map((c: R) => (c.id === control.id ? { ...c, status: newStatus, evidence: evidence || c.evidence } : c)),
+    }));
+    notify(
+      newStatus === "Completed"
+        ? "Control completed with accountable audit evidence."
+        : newStatus === "In progress"
+        ? "Control started: task is now In progress (Start button disabled)."
+        : "Control reverted to Active status (Start button re-enabled)."
+    );
+    action({ entity: "control", id: control.id, status: newStatus, evidence: evidence || `Status set to ${newStatus}` }, "PATCH");
+  }
+
   const executionSteps = [
     {
       step: 1,
@@ -156,19 +172,19 @@ export default function AppendixControls({
         </article>
         <article className="panel">
           <Head t="Appendix 2 action queue" s="Priority controls across institutions"/>
-          <Cards rows={data.controls.filter((x:R)=>x.priority==="Critical"||x.priority==="High").slice(0,7)} update={(x,s)=>action({entity:"control",id:x.id,status:s},"PATCH")}/>
+          <Cards rows={data.controls.filter((x:R)=>x.priority==="Critical"||x.priority==="High").slice(0,7)} update={handleControlUpdate}/>
         </article>
       </div>
     </>}
     {tab==="SOP approvals"&&<article className="panel registry"><Head t="Operational SOP lifecycle" s="Draft → consultation → institutional review → approval → publication → review"/><div className="sop-ops">{data.sops.map((s:R)=><article key={s.id}><header><code>{s.sopCode} · v{s.version}</code><em>{s.stage.replaceAll("_"," ")}</em></header><h3>{s.title}</h3><p>{s.ownerInstitution} · next review {s.nextReviewDate}</p><div className="approval-track"><span>Required: {s.requiredApprovals.join(", ")}</span><b>Approved: {s.approvals.join(", ")||"None"}</b></div><small>{s.consultationStatus} · {s.commentsOpen} open comments</small><footer><button onClick={()=>action({entity:"sop",id:s.id,approve:true},"PATCH")}>Record institutional approval</button><button onClick={()=>action({entity:"sop",id:s.id,stage:"PUBLISHED",approve:true},"PATCH")}>Publish effective version</button></footer></article>)}</div></article>}
     {tab==="Data quality"&&<><article className="panel registry"><Head t="Configurable quality rules" s="Accuracy, completeness, consistency, timeliness, uniqueness and reliability" action={<button disabled={busy} onClick={()=>action({action:"run-quality"})}>{busy?"Assessing…":"Run quality assessment"}</button>}/><Table heads={["Rule","Dimension","Entity","Expression","Severity","Owner","State"]} rows={data.rules.map((x:R)=>[x.ruleCode,<b>{x.dimension}</b>,x.entityType,<code>{x.expression}</code>,x.severity,x.ownerInstitution,x.enabled?"Enabled":"Disabled"])}/></article><article className="panel registry"><Head t="Assessment results" s="Record-level six-dimensional scores and correction outcomes"/><Table heads={["Subject","Accuracy","Complete","Consistent","Timely","Unique","Reliable","Overall / outcome"]} rows={data.assessments.map((x:R)=>[x.subjectRef,x.accuracy,x.completeness,x.consistency,x.timeliness,x.uniqueness,x.reliability,<b>{x.overallScore}% · {x.outcome}</b>])}/></article></>}
-    {tab==="Supervision & audits"&&<ControlPanel title="Field supervision, spot checks and periodic DQA" rows={grouped(["Field supervision","Spot check","Periodic DQA"])} setOpen={setOpen} update={(x,s)=>action({entity:"control",id:x.id,status:s,evidence:`Decision recorded ${new Date().toISOString()}`},"PATCH")}/>} 
-    {tab==="Reports"&&<><article className="panel registry"><Head t="Approved monitoring indicator catalogue" s="Versioned definitions, frequency, ownership and disaggregation"/><Table heads={["Indicator","Definition","Calculation","Frequency","Owner","Disaggregation","Value"]} rows={data.indicators.map((x:R)=>[<><b>{x.name}</b><small>{x.indicatorCode}</small></>,x.definition,`${x.numerator} / ${x.denominator}`,x.frequency,x.owner,x.disaggregations,`${x.currentValue} ${x.unit}`])}/></article><ControlPanel title="Scheduled and controlled report releases" rows={grouped(["Scheduled report"])} setOpen={setOpen} update={(x,s)=>action({entity:"control",id:x.id,status:s,evidence:"Reviewer approval and dataset freeze recorded"},"PATCH")}/></>}
-    {tab==="Training & support"&&<ControlPanel title="Training, attendance, competency, certification and support" rows={grouped(["Training session","Technical support"])} setOpen={setOpen} update={(x,s)=>action({entity:"control",id:x.id,status:s,evidence:s==="Completed"?"Completion evidence and certificate register updated":"Status decision recorded"},"PATCH")}/>} 
-    {tab==="Committees"&&<ControlPanel title="National Steering Committee and Technical Working Groups" rows={grouped(["National Steering Committee","Technical Working Group"])} setOpen={setOpen} update={(x,s)=>action({entity:"control",id:x.id,status:s,evidence:"Quorum, resolution and accountable action recorded"},"PATCH")}/>} 
-    {tab==="Social protection"&&<ControlPanel title="MGCSP referrals and shock-responsive intervention" rows={grouped(["Social-protection referral","Shock response"])} setOpen={setOpen} update={(x,s)=>action({entity:"control",id:x.id,status:s,evidence:"Purpose, minimum-data decision and response status recorded"},"PATCH")}/>} 
+    {tab==="Supervision & audits"&&<ControlPanel title="Field supervision, spot checks and periodic DQA" rows={grouped(["Field supervision","Spot check","Periodic DQA"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, `Decision recorded ${new Date().toISOString()}`)}/>} 
+    {tab==="Reports"&&<><article className="panel registry"><Head t="Approved monitoring indicator catalogue" s="Versioned definitions, frequency, ownership and disaggregation"/><Table heads={["Indicator","Definition","Calculation","Frequency","Owner","Disaggregation","Value"]} rows={data.indicators.map((x:R)=>[<><b>{x.name}</b><small>{x.indicatorCode}</small></>,x.definition,`${x.numerator} / ${x.denominator}`,x.frequency,x.owner,x.disaggregations,`${x.currentValue} ${x.unit}`])}/></article><ControlPanel title="Scheduled and controlled report releases" rows={grouped(["Scheduled report"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, "Reviewer approval and dataset freeze recorded")}/></>} 
+    {tab==="Training & support"&&<ControlPanel title="Training, attendance, competency, certification and support" rows={grouped(["Training session","Technical support"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, s==="Completed"?"Completion evidence and certificate register updated":"Status decision recorded")}/>} 
+    {tab==="Committees"&&<ControlPanel title="National Steering Committee and Technical Working Groups" rows={grouped(["National Steering Committee","Technical Working Group"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, "Quorum, resolution and accountable action recorded")}/>} 
+    {tab==="Social protection"&&<ControlPanel title="MGCSP referrals and shock-responsive intervention" rows={grouped(["Social-protection referral","Shock response"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, "Purpose, minimum-data decision and response status recorded")}/>} 
     {tab==="Consent & access"&&<div className="a2-grid"><article className="panel registry"><Head t="Consent lifecycle" s="Purpose, language, version, evidence and withdrawal"/><Table heads={["Consent","Subject","Version / language","Purposes","Channel","Status","Action"]} rows={data.consents.map((x:R)=>[x.consentCode,x.subjectRef,`${x.version} · ${x.language}`,Array.isArray(x.purposes)?x.purposes.join(", "):String(x.purposes||""),x.channel,x.status,<button disabled={x.status==="Withdrawn"} onClick={()=>action({entity:"consent",id:x.id},"PATCH")}>Withdraw</button>])}/></article><article className="panel registry"><Head t="Server-enforced access assignments" s="Identity, institution, geography, sensitivity and capabilities"/><Table heads={["Account","Role","Institution","Geography","Sensitivity","Status"]} rows={data.assignments.map((x:R)=>[<><b>{x.displayName}</b><small>{x.email}</small></>,x.role,x.institution,`${x.countyScope||"National"} / ${x.districtScope||"All"}`,x.sensitivityCeiling||"Internal",x.status||"Active"])}/></article></div>}
-    {tab==="Reference & recovery"&&<ControlPanel title="LISGIS reference data, backup, restoration and credential-gated connectors" rows={grouped(["Reference dataset","Backup run","Restoration test","Government connector"])} setOpen={setOpen} update={(x,s)=>action({entity:"control",id:x.id,status:s,evidence:"Test result, reviewer and timestamp captured"},"PATCH")}/>} 
+    {tab==="Reference & recovery"&&<ControlPanel title="LISGIS reference data, backup, restoration and credential-gated connectors" rows={grouped(["Reference dataset","Backup run","Restoration test","Government connector"])} setOpen={setOpen} update={(x,s)=>handleControlUpdate(x, s, "Test result, reviewer and timestamp captured")}/>} 
     {open&&<NewControl close={()=>setOpen(false)} save={(b)=>action({action:"create-control",...b})}/>}
   </div>
 }
@@ -177,7 +193,7 @@ function K({v,l,s}:{v:string;l:string;s:string}){return <article className="metr
 function Head({t,s,action}:{t:string;s:string;action?:React.ReactNode}){return <div className="table-tools"><div><b>{t}</b><span>{s}</span></div>{action}</div>}
 function Table({heads,rows}:{heads:string[];rows:any[][]}){return <div className="table-wrap"><table><thead><tr>{heads.map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((x,j)=><td key={j}>{x}</td>)}</tr>)}</tbody></table></div>}
 
-function Cards({rows,update}:{rows:R[];update:(x:R,s:string)=>void}){
+function Cards({rows,update}:{rows:R[];update:(x:R,s:string,ev?:string)=>void}){
   return <div className="control-cards">
     {rows.map(x=>{
       const isCompleted = x.status === "Completed";
@@ -206,19 +222,52 @@ function Cards({rows,update}:{rows:R[];update:(x:R,s:string)=>void}){
           </dl>
           <small>{Object.entries(x.details||{}).map(([k,v])=>`${k}: ${Array.isArray(v)?v.join(", "):v}`).join(" · ")}</small>
           <footer>
-            <button 
-              type="button" 
-              className={`ctrl-btn ${isInProgress ? "btn-active-status" : ""}`}
-              disabled={isCompleted || isInProgress}
-              onClick={()=>update(x,"In progress")}
-            >
-              {isInProgress ? "▶ In progress" : "Start"}
-            </button>
+            {!isInProgress && !isCompleted && (
+              <button 
+                type="button" 
+                className="ctrl-btn btn-primary-action"
+                onClick={()=>update(x,"In progress")}
+                title="Start this control task"
+              >
+                ▶ Start
+              </button>
+            )}
+            {isInProgress && (
+              <>
+                <button 
+                  type="button" 
+                  className="ctrl-btn btn-active-status"
+                  disabled
+                  title="Task is currently running: Start is disabled"
+                >
+                  ▶ Running (Disabled)
+                </button>
+                <button 
+                  type="button" 
+                  className="ctrl-btn btn-pause-action"
+                  onClick={()=>update(x,"Active")}
+                  title="Pause task and re-enable Start button"
+                >
+                  ⏸ Pause / Reset
+                </button>
+              </>
+            )}
+            {isCompleted && (
+              <button 
+                type="button" 
+                className="ctrl-btn btn-pause-action"
+                onClick={()=>update(x,"Active")}
+                title="Re-open control to test again"
+              >
+                ↺ Re-open
+              </button>
+            )}
             <button 
               type="button" 
               className={`ctrl-btn ${isCompleted ? "btn-completed-status" : "btn-primary-action"}`}
               disabled={isCompleted}
               onClick={()=>update(x,"Completed")}
+              title={isCompleted ? "Task is completed" : "Finalize and record completion evidence"}
             >
               {isCompleted ? "✓ Completed" : "Record completion"}
             </button>
