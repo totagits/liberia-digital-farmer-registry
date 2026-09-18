@@ -2179,6 +2179,7 @@ export default function ExtensionServices({
           }}
         >
           <div
+            id="printable-advisory-slip"
             className="enrollment-wizard ext-wizard"
             style={{ maxWidth: 760, background: "#ffffff" }}
           >

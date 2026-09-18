@@ -18,7 +18,7 @@
 @media(max-width:850px){.router-grid{grid-template-columns:1fr 1fr}.registration-router h2{font-size:23px}}@media(max-width:600px){.registration-router-overlay{padding:0}.registration-router{width:100%;min-height:100vh;border-radius:0}.registration-router>header,.router-section{padding-left:18px;padding-right:18px}.router-grid,.router-grid.individuals{grid-template-columns:1fr}.router-label{display:block}.router-label span{display:block;margin-top:4px}.registration-router>footer{padding:14px 18px;gap:15px}.classification-grid{grid-template-columns:1fr!important}}
 .coverage-leaflet{position:relative;height:420px;border-radius:14px;overflow:hidden;isolation:isolate;z-index:1}.coverage-leaflet .leaflet-container{height:100%;width:100%;background:#dce7dc}.coverage-map-info{position:absolute;z-index:500;left:15px;bottom:15px;background:#0f172ae8;color:white;border:1px solid #ffffff30;border-radius:12px;padding:12px 15px;display:flex;flex-direction:column;box-shadow:0 12px 30px #0004}.coverage-map-info b{font-size:10px}.coverage-map-info span{font-size:8px;color:#bfd0c5;margin:4px 0 8px}.coverage-map-info button{border:0;background:#20a46d;color:white;border-radius:7px;padding:7px;font-size:8px}.coverage-pin span,.dfr-map-marker span{display:block;width:16px;height:16px;background:#22c55e;border:3px solid white;border-radius:50%;box-shadow:0 0 0 3px #14532db0}.gis-workspace{--gis:#0f172a;--gis2:#18243a;--cyan:#38bdf8;--green:#22c55e;color:#152033}.gis-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.gis-kpis article,.review-metrics article{background:#fff;border:1px solid #dce4eb;border-radius:13px;padding:14px;display:flex;gap:11px;align-items:center}.gis-kpis i,.review-metrics i{width:37px;height:37px;border-radius:9px;background:#e7f7ef;color:#128054;display:grid;place-items:center}.gis-kpis svg,.review-metrics svg{width:18px}.gis-kpis article>div,.review-metrics article>div{display:flex;flex-direction:column}.gis-kpis span,.review-metrics span{font-size:8px;text-transform:uppercase;color:#708094}.gis-kpis b,.review-metrics b{font:17px Georgia;margin:3px 0}.gis-kpis small,.review-metrics small{font-size:8px;color:#7c8999}.gis-toolbar{display:flex;align-items:center;gap:7px;background:var(--gis);color:white;border-radius:14px 14px 0 0;padding:12px 14px}.gis-toolbar>div:first-child{display:flex;align-items:center;gap:8px;margin-right:auto}.gis-toolbar>div:first-child svg{color:var(--cyan)}.gis-toolbar>div:first-child b{font-size:11px}.gis-toolbar>div:first-child span{font-size:8px;color:#8fa2be}.gis-toolbar button{border:1px solid #34435b;background:#1c2a42;color:#dce7f7;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:5px;font-size:8px}.gis-toolbar button svg{width:14px}.gis-toolbar button.active,.gis-toolbar .primary-map{background:#087a54;border-color:#17a879;color:#fff}.basemaps{display:flex;gap:3px}.gis-stage{display:grid;grid-template-columns:minmax(0,1fr) 285px;background:#e9eef3;border:1px solid #d1dce6}.map-shell{height:610px;position:relative;isolation:isolate;z-index:1}.leaflet-map{height:100%;width:100%;z-index:1}.digitize-banner{position:absolute;z-index:500;left:15px;top:15px;background:#10192fea;color:white;padding:10px 12px;border:1px solid #54bdec;border-radius:10px;display:flex;gap:8px;align-items:center}.digitize-banner b{font-size:9px;color:#7dd3fc}.digitize-banner span{font-size:8px}.digitize-banner button{border:0;background:#ffffff18;color:white;border-radius:5px;font-size:7px;padding:5px}.ndvi-legend{position:absolute;z-index:500;left:15px;bottom:20px;background:#10192fea;color:white;border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px}.ndvi-legend b,.ndvi-legend span{grid-column:1/-1;font-size:8px}.ndvi-legend span{color:#a7b5c9}.ndvi-legend i,.ndvi-legend em{font-style:normal;font-size:7px;padding-top:7px;border-top:5px solid #f7e967}.ndvi-legend em{border-color:#087d3c}.spatial-panel{background:#111b30;color:white;padding:18px;overflow:auto}.spatial-panel header span{font-size:8px;color:#7dd3fc;text-transform:uppercase}.spatial-panel header h3{font:19px Georgia;margin:5px 0 15px}.metric-pairs{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric-pairs p{background:#19263e;border:1px solid #2a3a54;border-radius:9px;padding:10px;display:flex;flex-direction:column;margin:0}.metric-pairs span,.metric-pairs small{font-size:7px;color:#91a4be}.metric-pairs b{font-size:11px;margin:4px 0}.metric-pairs .good{color:#4ade80}.metric-pairs .bad{color:#fb7185}.parcel-form{display:flex;flex-direction:column;gap:8px;margin-top:14px}.parcel-form input,.parcel-form select{background:#19263e;border:1px solid #33445f;color:white;border-radius:8px;padding:9px;font-size:8px}.parcel-form button{border:0;background:#078458;color:white;border-radius:8px;padding:10px;display:flex;justify-content:center;align-items:center;gap:5px;font-size:8px}.parcel-form svg{width:14px}.qc-panel{margin-top:13px;background:white;border:1px solid #dce4eb;border-radius:14px;overflow:hidden}.qc-panel>header{padding:17px 20px}.qc-panel header span{font-size:8px;text-transform:uppercase;color:#668}.qc-panel header h3{font:20px Georgia;margin:4px 0}.qc-panel>nav{display:flex;gap:5px;padding:0 15px 12px;overflow:auto}.qc-panel>nav button{white-space:nowrap;border:1px solid #d6e0e8;background:#f6f8fa;border-radius:8px;padding:8px 10px;font-size:8px}.qc-panel>nav button.active{background:#12203a;color:white}.qc-panel>nav b{margin-left:6px;background:#e1e8ef;color:#344359;border-radius:20px;padding:2px 5px}.parcel-table{overflow:auto}.parcel-table table{width:100%;border-collapse:collapse}.parcel-table th,.parcel-table td{padding:11px;border-top:1px solid #e5ebf0;text-align:left;font-size:8px}.parcel-table td{font-size:9px}.parcel-table td small{display:block;color:#7a8795;margin-top:4px}.parcel-table code{font-size:8px;color:#096e4e}.parcel-table .flag,.parcel-table .clear,.field-verified,.unverified{font-size:7px;padding:5px 7px;border-radius:20px;background:#fee2e2;color:#991b1b}.parcel-table .clear,.field-verified{background:#dcfce7;color:#166534}.unverified{background:#fef3c7;color:#92400e}.parcel-table td button{border:0;background:#e5edf3;border-radius:7px;padding:6px;font-size:8px}.gis-review,.revision-modal{width:min(800px,94vw);background:#f8fafc;border-radius:17px;overflow:hidden}.gis-review>header,.revision-modal>header{display:flex;justify-content:space-between;padding:20px;background:#10192f;color:white}.gis-review header span{font-size:8px;color:#7dd3fc}.gis-review h2{font:24px Georgia;margin:5px 0}.gis-review header button,.revision-modal header button{border:0;background:#ffffff20;color:white;border-radius:50%;width:32px}.review-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:18px}.gis-review>pre{max-height:260px;overflow:auto;margin:0 18px;background:#10192f;color:#b9e8ff;border-radius:9px;padding:13px;font-size:8px}.gis-review>footer,.revision-modal>footer,.map-certificate>footer{background:#edf2f6;color:#111b30;padding:13px 18px;display:flex;justify-content:flex-end;gap:7px}.gis-review footer button,.revision-modal footer button,.map-certificate footer button{border:1px solid #cbd7e1;background:white;border-radius:8px;padding:8px 10px;font-size:8px;display:flex;gap:5px;align-items:center}.gis-review footer button:last-child{background:#087a54;color:white}.gis-review footer svg{width:14px}.revision-modal>p{font-size:9px;line-height:1.5;padding:0 20px}.revision-modal textarea{width:calc(100% - 40px);height:330px;margin:0 20px 18px;background:#10192f;color:#b9e8ff;border-radius:10px;padding:15px;font:10px monospace}.map-certificate{width:min(850px,95vw);background:white;padding:35px;border-radius:10px;color:#102034}.map-certificate>header{display:flex;align-items:center;border-bottom:3px solid #14734f;padding-bottom:15px}.map-certificate header img{width:65px;height:65px;object-fit:contain}.map-certificate header div{flex:1;text-align:center}.map-certificate header span,.map-certificate header p{font-size:8px}.map-certificate h2{font:25px Georgia;margin:5px}.map-certificate>h3{text-align:center;font:25px Georgia}.map-certificate dl{display:grid;grid-template-columns:1fr 1fr;border:1px solid #d8e1e8}.map-certificate dl div{padding:12px;border:1px solid #e2e8ee}.map-certificate dt{font-size:7px;color:#718096;text-transform:uppercase}.map-certificate dd{font-size:10px;font-weight:700;margin:5px 0}.certificate-seal{margin:20px auto;text-align:center;display:flex;flex-direction:column;align-items:center}.certificate-seal svg{width:45px;height:45px;color:#14734f}.certificate-seal b{font:16px Georgia}.certificate-seal span{font-size:8px;color:#718096}.leaflet-control-attribution{font-size:7px!important}
 @media(max-width:1000px){.gis-kpis{grid-template-columns:1fr 1fr}.gis-toolbar{flex-wrap:wrap}.gis-toolbar>div:first-child{width:100%}.gis-stage{grid-template-columns:1fr}.spatial-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}.parcel-form{margin:0}}@media(max-width:650px){.gis-kpis,.review-metrics{grid-template-columns:1fr}.basemaps{width:100%}.gis-stage .map-shell{height:500px}.spatial-panel{display:block}.map-certificate dl{grid-template-columns:1fr}}
-@media print{body *{visibility:hidden}.map-certificate,.map-certificate *{visibility:visible}.map-certificate{position:absolute;inset:0;width:100%;max-width:none}}
+@media print{.map-certificate{position:absolute;inset:0;width:100%;max-width:none}}
 .inclusion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:700px){.inclusion-grid{grid-template-columns:1fr}}
 
 .enrollment-overlay{align-items:flex-start;padding:3vh 2vw;overflow:auto;z-index:10000!important}.enrollment-wizard{width:min(1280px,97vw);margin:auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 90px #05140c55}.enrollment-wizard>header{position:relative;background:#10182d;color:#fff;padding:27px 30px 30px;border-bottom:4px solid #21a66d}.enrollment-wizard>header span{color:#ffc400;font-weight:850;font-size:11px;letter-spacing:.08em}.enrollment-wizard>header h2{font:700 29px Georgia;margin:8px 0}.enrollment-wizard>header p{font-size:11px;margin:0;color:#dce4f0}.enrollment-wizard>header>b{position:absolute;right:64px;top:28px;background:#003d2c;border:1px solid #08764e;border-radius:10px;padding:10px 17px;font-size:10px}.enrollment-wizard>header>button{position:absolute;right:20px;top:20px;border:0;background:#ffffff12;color:white;border-radius:50%;width:34px;height:34px}.enrollment-wizard>header nav{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:26px}.enrollment-wizard>header nav button{border:0;background:#202c43;color:#9fb2ce;border-radius:7px;padding:12px 5px;font-size:10px;font-weight:750}.enrollment-wizard>header nav button.active{background:#20a26c;color:#fff;box-shadow:0 0 0 2px #10182d,0 0 0 3px #d4e7c4}.enrollment-wizard>header nav button.done{color:#c5dcff}.enrollment-wizard>main{padding:30px;min-height:500px}.enrollment-wizard>main>h3,.enroll-panel>h3,.identity-panel>h3{font:700 17px Georgia;border-bottom:1px solid #172032;padding-bottom:10px;margin:0 0 16px}.enroll-panel{position:relative;background:#f7f9fc;border:1px solid #dce4ef;border-radius:15px;padding:20px;margin-bottom:24px}.identity-panel{background:#f5fff9;border:1px solid #93e8be;border-radius:16px;padding:25px}.identity-panel.organization{background:#f2fbff;border-color:#91d7ff}.classification-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.classification-grid label{position:relative;min-height:125px;border:2px solid #e0e6ef;border-radius:16px;padding:16px;display:flex;flex-direction:column;justify-content:flex-end}.classification-grid label.selected{background:#eafbf3;border-color:#14251d}.classification-grid input{position:absolute;right:15px;top:15px;accent-color:#1f9d69}.classification-grid i{position:absolute;top:17px;font-style:normal;color:#17865b;font-size:20px}.classification-grid b{font:700 14px Georgia}.classification-grid span{font-size:9px;color:#65768c;margin-top:4px}.enroll-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.enroll-grid.three{grid-template-columns:repeat(3,1fr)}.enroll-grid label,.full-label{display:flex;flex-direction:column;gap:7px;font-size:10px;font-weight:750}.enroll-grid input,.enroll-grid select,.full-label input{border:1px solid #ccd8e8;border-radius:10px;padding:13px;background:#fff;min-width:0}.choice-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.check-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 24px}.check-grid.vegetables{grid-template-columns:repeat(5,1fr);margin-bottom:0}.check-choice{display:flex;align-items:center;gap:9px;border:1px solid #d8e1ed;border-radius:10px;background:#fff;padding:12px;font-size:9px}.check-choice:has(input:checked){background:#ebfbf3;border-color:#27b478}.check-choice input{accent-color:#21a46e}.radio-line{display:flex;gap:22px;font-size:10px}.gps-button{float:right;border:0;background:#16845a;color:white;border-radius:9px;padding:9px 13px;font-size:9px;font-weight:750}.review-card{margin:30px 0;background:#10182d;color:#fff;border-radius:15px;padding:25px}.review-card h4{color:#ffc400;text-transform:uppercase;font-size:11px}.review-card>div{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-top:1px solid #ffffff1f;padding-top:15px}.review-card p{display:flex;flex-direction:column}.review-card span{font-size:8px;color:#9eb2d1}.review-card b{font-size:10px;margin-top:5px;color:#fff}.enrollment-wizard .consent{display:flex;gap:9px;background:#f0f6e8;padding:14px;border-radius:10px;font-size:9px}.enrollment-wizard>footer{background:#fff;border-top:1px solid #dce4ed;color:#102036;padding:18px 30px;display:flex;justify-content:space-between}.enrollment-wizard>footer button{border:0;background:#e6ebf3;border-radius:12px;padding:13px 22px;font-size:10px;font-weight:800}.enrollment-wizard>footer button:last-child{background:#13865a;color:#fff}.enrollment-wizard>footer .submit-registration{background:#f4a000;color:#11182b}.full-label{margin:20px 0}.enrollment-wizard h4{font-size:10px;text-transform:uppercase}.enrollment-wizard button:disabled{opacity:.45}
@@ -1771,33 +1771,182 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   white-space: nowrap;
 }
 
-/* Print Stylesheet */
+/* ==========================================================================
+   Comprehensive Universal Print Stylesheet
+   Supports: Voucher Dockets, Advisory Slips, Payment Receipts,
+   Farmer Smart Cards, Map Boundary Certificates, and Standard Workspaces
+   ========================================================================== */
 @media print {
-  body * {
-    visibility: hidden;
+  /* 1. Global Print Reset & Exact Color Preservation */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
+
+  @page {
+    margin: 8mm 10mm !important;
+    size: auto;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 2. Hide all non-printable chrome and interactive UI elements */
+  .dash-sidebar,
+  .dash-top,
+  .site-header,
+  .public-subheader,
+  .evaluation-bar,
+  .modal-actions,
+  .head-actions,
+  .table-tools button,
+  .panel-head button,
+  .modal-head button,
+  .modal-head > button,
+  .enrollment-wizard > header > button,
+  .enrollment-wizard > footer,
+  .party-wizard > footer,
+  .ext-wizard > footer,
+  .a2-tabs,
+  .gov-tabs,
+  .sop-tabs,
+  .component-tabs,
+  .dash-search,
+  .top-actions,
+  .hamb,
+  .bell,
+  button,
+  .site-search {
+    display: none !important;
+  }
+
+  /* 3. When a Modal is Open (Voucher Docket, Extension Advisory Slip, Receipt, Certificate) */
+  body:has(.modal-wrap) .dash-content,
+  body:has(.modal-wrap) .dash-main > :not(.modal-wrap),
+  body:has(.modal-wrap) .benefit-hero,
+  body:has(.modal-wrap) .benefit-table {
+    display: none !important;
+  }
+
+  .modal-wrap {
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Target all printable document cards specifically */
+  #printable-voucher-docket,
+  #printable-advisory-slip,
+  #printable-receipt-docket,
+  .voucher-detail-card,
+  .receipt-card,
+  .ext-wizard,
+  .map-certificate {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    border: 1.5px solid #166534 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 20px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    overflow: visible !important;
+    display: block !important;
+    visibility: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Explicitly ensure all inner elements of printable documents are visible */
+  #printable-voucher-docket *,
+  #printable-advisory-slip *,
+  #printable-receipt-docket *,
+  .voucher-detail-card *,
+  .receipt-card *,
+  .ext-wizard *,
+  .map-certificate *,
   #printable-farmer-card,
   #printable-farmer-card * {
-    visibility: visible;
+    visibility: visible !important;
   }
+
+  /* Extension Services Advisory Slip header */
+  .ext-wizard header {
+    background: #10182d !important;
+    color: #ffffff !important;
+    border-radius: 6px 6px 0 0 !important;
+    padding: 16px 20px !important;
+  }
+
+  .ext-wizard main {
+    padding: 12px 0 !important;
+    min-height: auto !important;
+  }
+
+  /* 4. Printable Farmer Smart Card / Dossier ID */
   #printable-farmer-card {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    box-shadow: none;
-    border: none;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    position: static !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
+
   .modern-smart-card {
-    page-break-inside: avoid;
-    break-inside: avoid;
-    margin-bottom: 24px;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 24px !important;
     box-shadow: none !important;
     border: 1.5px solid #205c38 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  }
+
+  /* 5. Regular Workspace Pages (when no modal is open) */
+  .dash-shell {
+    display: block !important;
+    background: #ffffff !important;
+  }
+
+  .dash-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .dash-content {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .panel {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 20px !important;
   }
 }
 
