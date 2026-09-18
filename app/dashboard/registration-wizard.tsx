@@ -23,6 +23,20 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
  const entity=classes.find(x=>x.id===kind)!;
  const field=(name:string,value:string)=>setDraft(d=>({...d,[name]:value}));
  const capture=()=>navigator.geolocation?.getCurrentPosition(p=>setDraft(d=>({...d,latitude:p.coords.latitude.toFixed(6),longitude:p.coords.longitude.toFixed(6)})),()=>notify("Location permission was not available. Enter coordinates manually."));
+ 
+ const handleFormChange = (e: React.FormEvent<HTMLFormElement>) => {
+  const x = e.target as HTMLInputElement | HTMLSelectElement;
+  if (!x.name) return;
+  if (x.type === "checkbox") {
+    const values = Array.from(
+      e.currentTarget.querySelectorAll<HTMLInputElement>(`input[name="${x.name}"]:checked`)
+    ).map((i) => i.value);
+    field(x.name, values.join(", "));
+  } else {
+    field(x.name, x.value);
+  }
+ };
+
  async function submit(e:FormEvent){
   e.preventDefault();
   setBusy(true);
@@ -62,7 +76,7 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
     notify("Error submitting registration to the registry.");
   }
  }
- return <div className="modal-wrap enrollment-overlay"><div className="enrollment-wizard" style={{ maxWidth: step === 7 ? "920px" : undefined }}>
+ return <div className="modal-wrap enrollment-overlay"><form className="enrollment-wizard" onSubmit={submit} onChange={handleFormChange} style={{ maxWidth: step === 7 ? "920px" : undefined }}>
   <header>
     <div>
       <span>♢ &nbsp; NATIONAL FARMER, HOUSEHOLD & FARM ENROLLMENT</span>
@@ -74,7 +88,7 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
     <nav>{stages.map((s,i)=><button type="button" key={s} className={step===i+1?"active":step>i+1?"done":""} onClick={()=>step !== 7 && setStep(i+1)} disabled={step === 7}>{i+1}. {s}</button>)}</nav>
   </header>
   <main>
-   {step===1&&<><Panel title="Individual & Household Classification"><div className="classification-grid">{classes.map(c=><label className={kind===c.id?"selected":""} key={c.id}><input type="radio" name="classification" value={c.id} checked={kind===c.id} onChange={()=>setKind(c.id)}/><i>{c.icon}</i><b>{c.title}</b><span>{c.sub}</span></label>)}</div></Panel><IndividualIdentity kind={kind}/><Panel title="Social Inclusion & Vulnerability Classifications"><div className="inclusion-grid"><Check name="socialInclusion" value="Female-Headed Household"/><Check name="socialInclusion" value="Youth Farmer (under 35 years)"/><Check name="socialInclusion" value="Person with Disability"/><Check name="socialInclusion" value="Elderly Farmer (60+ years)"/><Check name="socialInclusion" value="Internally Displaced / Returnee"/><Check name="socialInclusion" value="Extremely Poor / Social Registry Household"/></div></Panel></>}
+   {step===1&&<><Panel title="Individual & Household Classification"><div className="classification-grid">{classes.map(c=><label className={kind===c.id?"selected":""} key={c.id}><input type="radio" name="classification" value={c.id} checked={kind===c.id} onChange={()=>setKind(c.id)}/><i>{c.icon}</i><b>{c.title}</b><span>{c.sub}</span></label>)}</div></Panel><IndividualIdentity kind={kind} draft={draft} field={field}/><Panel title="Social Inclusion & Vulnerability Classifications"><div className="inclusion-grid"><Check name="socialInclusion" value="Female-Headed Household"/><Check name="socialInclusion" value="Youth Farmer (under 35 years)"/><Check name="socialInclusion" value="Person with Disability"/><Check name="socialInclusion" value="Elderly Farmer (60+ years)"/><Check name="socialInclusion" value="Internally Displaced / Returnee"/><Check name="socialInclusion" value="Extremely Poor / Social Registry Household"/></div></Panel></>}
    {step===2&&<><Panel title="Type of Agriculture (Select All That Apply)"><div className="choice-row">{cropGroups.map(x=><Check name="agricultureTypes" value={x} key={x}/>)}</div></Panel><h3>Primary Commodity and Value Chains</h3><div className="check-grid">{crops.map(x=><Check name="commodities" value={x} key={x}/>)}</div><Panel title="Vegetables & Horticulture — Specify Exact Crops"><div className="check-grid vegetables">{vegetables.map(x=><Check name="vegetables" value={x} key={x}/>)}</div></Panel><label className="full-label">Other specialty commodity<input name="otherCommodity" placeholder="Ginger, turmeric, honey, tree crops…"/></label><Panel title="Ministry of Agriculture Accreditation Status"><div className="radio-line"><label><input type="radio" name="moaAccredited" value="Yes"/> Yes, accredited</label><label><input type="radio" name="moaAccredited" value="No / Pending" defaultChecked/> No / Pending accreditation</label></div></Panel></>}
    {step===3&&<><h3>⌖ Geographic Location (15 Liberian Counties)</h3><div className="enroll-grid three"><label>County*<select name="county" value={county} onChange={e=>setCounty(e.target.value)}>{counties.map(c=><option key={c}>{c}</option>)}</select></label><label>District*<select name="district">{districts[county].map(d=><option key={d}>{d}</option>)}</select></label><label>Clan / Township<input name="township"/></label><label>Community / City*<input name="community" required/></label><label>Village / Local Settlement<input name="village"/></label></div><Panel title="GPS Centroid Coordinates"><button type="button" className="gps-button" onClick={capture}>⌖ Capture Current GPS Location</button><div className="enroll-grid"><label>Latitude (N)<input name="latitude" value={draft.latitude||""} onChange={e=>field("latitude",e.target.value)} placeholder="e.g. 8.3512"/></label><label>Longitude (W)<input name="longitude" value={draft.longitude||""} onChange={e=>field("longitude",e.target.value)} placeholder="e.g. -10.2245"/></label></div></Panel><Panel title="Farm / Parcel Profile"><div className="enroll-grid three"><label>Total farm area (ha)*<input name="farmSize" type="number" step=".01" required/></label><label>Land tenure<select name="landTenure"><option>Customary ownership</option><option>Private deed</option><option>Lease agreement</option><option>Government concession</option><option>Communal land</option></select></label><label>Number of parcels<input name="parcelCount" type="number" min="1"/></label></div></Panel></>}
     {step===4&&<><Panel title="1. Financial Assistance & Intervention Grants"><div className="choice-row"><Check name="assistance" value="Grant only"/><Check name="assistance" value="Loan only"/><Check name="assistance" value="Both grant and loan"/><Check name="assistance" value="No assistance"/></div><h4>Assisting entities & donor programmes</h4><div className="check-grid">{["FAO","MoA STAR-P / REDISSE","World Bank / IFAD","USAID / Feed the Future","AfDB","Commercial bank / MFI","Cooperative / NGO partner","Other"].map(x=><Check name="supportProviders" value={x} key={x}/>)}</div><div className="enroll-grid"><label>Total assistance amount (USD)<input name="assistanceAmount" type="number"/></label><label>Disbursement year<input name="assistanceYear" type="number"/></label></div></Panel>
@@ -89,20 +103,22 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
 
 <Panel title="6. Agricultural Mechanization, Irrigation & Smart Farming Infrastructure"><div className="enroll-grid three"><label>Tillage mechanization level<select name="tillageMechanization"><option>Manual hand tools (cutlass, hoe)</option><option>Power tiller / 2-wheel walking tractor</option><option>4-wheel commercial tractor (rented / hired)</option><option>4-wheel commercial tractor (owned)</option><option>Animal traction / draft oxen</option></select></label><label>Irrigation water infrastructure<select name="irrigationAccess"><option>Rainfed only</option><option>Manual watering can / bucket from stream or well</option><option>Solar-powered surface / submersible pump</option><option>Motorized petrol / diesel water pump</option><option>Gravity-fed canal / lowland swamp water control</option><option>Drip or sprinkler irrigation scheme</option></select></label><label>Digital &amp; smart tech readiness<select name="smartTechReadiness"><option>Basic 2G feature phone (SMS / Voice)</option><option>Smartphone with GPS &amp; camera</option><option>Digital soil testing kit / NPK probe</option><option>On-farm rain gauge / micro weather station</option><option>Digital farm management app / recordbook</option><option>None / No phone access</option></select></label></div><h4 style={{marginTop:"14px",marginBottom:"8px"}}>Operating farm tools &amp; equipment owned</h4><div className="check-grid">{tools.map(x=><Check name="tools" value={x} key={x}/>)}</div></Panel></>}
    {step===5&&<><h3>♧ Farmer Household & Labour Profile</h3><Panel title="Household Composition"><div className="enroll-grid three"><label>Household size<input name="householdSize" type="number"/></label><label>Women in household<input name="householdWomen" type="number"/></label><label>Youth in household<input name="householdYouth" type="number"/></label><label>Permanent farm workers<input name="permanentEmployees" type="number"/></label><label>Seasonal farm workers<input name="seasonalWorkers" type="number"/></label><label>Persons with disability<input name="pwdCount" type="number"/></label></div></Panel></>}
-   {step===6&&<form onSubmit={submit} onChange={e=>{const x=e.target as HTMLInputElement|HTMLSelectElement;if(!x.name)return;if(x.type==="checkbox"){const values=Array.from(e.currentTarget.querySelectorAll<HTMLInputElement>(`input[name="${x.name}"]:checked`)).map(i=>i.value);field(x.name,values.join(", "))}else field(x.name,x.value)}}>
-    <h3>▭ Mobile Money Account & Final Review</h3>
+   {step===6&&<>
+    <h3>▭ Mobile Money Account &amp; Notification Verification</h3>
     <div className="enroll-grid three">
-      <label>Mobile money provider<select name="mobileProvider"><option>MTN Mobile Money Liberia</option><option>Orange Money Liberia</option><option>Bank account</option><option>No account</option></select></label>
-      <label>Payment phone / account number<input name="paymentAccount"/></label>
-      <label>Account holder name<input name="accountHolder"/></label>
+      <label>Mobile money provider<select name="mobileProvider" defaultValue={draft.mobileProvider || "MTN Mobile Money Liberia"} onChange={e => field("mobileProvider", e.target.value)}><option>MTN Mobile Money Liberia</option><option>Orange Money Liberia</option><option>Bank account</option><option>No account</option></select></label>
+      <label>Payment / MoMo phone number*<input name="paymentAccount" defaultValue={draft.paymentAccount || draft.phone || ""} onChange={e => field("paymentAccount", e.target.value)} placeholder="e.g. +231 770 123 456" /></label>
+      <label>Account holder name<input name="accountHolder" defaultValue={draft.accountHolder || `${draft.firstName || ""} ${draft.lastName || ""}`.trim()} onChange={e => field("accountHolder", e.target.value)} /></label>
+      <label>SMS notification phone number*<input name="phone" required defaultValue={draft.phone || ""} onChange={e => field("phone", e.target.value)} placeholder="e.g. +231 770 123 456" /></label>
+      <label>Notification email (for official e-Gov dispatch)<input name="email" type="email" defaultValue={draft.email || ""} onChange={e => field("email", e.target.value)} placeholder="e.g. farmer@example.com (optional)" /></label>
     </div>
     <div className="review-card">
-      <h4>Registration Profile Summary & Verification Preview</h4>
+      <h4>Registration Profile Summary &amp; Verification Preview</h4>
       <div>
         <p><span>Entity classification</span><b>{entity.title}</b></p>
-        <p><span>Primary name</span><b>{draft.legalName||`${draft.firstName||"—"} ${draft.lastName||""}`}</b></p>
+        <p><span>Beneficiary Name</span><b>{`${draft.firstName || ""} ${draft.lastName || ""}`.trim() || draft.legalName || "Enrolled Producer"}</b></p>
         <p><span>Location</span><b>{county} ({draft.district||districts[county][0]})</b></p>
-        <p><span>MoA accredited</span><b>{draft.moaAccredited||"No / Pending"}</b></p>
+        <p><span>Notification Dispatch</span><b>📱 {draft.phone || "No phone"} · ✉️ {draft.email || "No email (SMS-only)"}</b></p>
       </div>
     </div>
     <label className="consent" style={{marginBottom: "20px"}}>
@@ -114,7 +130,7 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
         {busy ? "Submitting to National Registry…" : "Submit Official Registration →"}
       </button>
     </div>
-   </form>}
+   </>}
    {step===7&&registeredResult&&(
     <div className="onboarding-dossier" style={{padding: "4px 0"}}>
       <div style={{background: "linear-gradient(135deg, #092c19, #14532d)", color: "#fff", padding: "18px 22px", borderRadius: "14px", border: "1.5px solid #22c55e", marginBottom: "16px"}}>
@@ -191,6 +207,54 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
               <p style={{margin: 0, fontSize: "11px", color: "#475569"}}>
                 Provisional access assigned with Temporary Password: <code style={{color: "#b91c1c", fontWeight: 800}}>{registeredResult.tempPassword}</code>. Policy requires setting your permanent password prior to voucher access.
               </p>
+            </div>
+            <div style={{marginTop: "8px", display: "flex", justifyContent: "flex-end"}}>
+              <a
+                href={`mailto:${encodeURIComponent(draft.email || registeredResult.accountUser.email)}?subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
+`Republic of Liberia - Ministry of Agriculture
+National Digital Farmer Registry (DFR)
+
+Dear ${registeredResult.farmerName},
+
+Your official enrollment in the Liberia Digital Farmer Registry has been successfully completed.
+
+Registration Details:
+- Farmer Name: ${registeredResult.farmerName}
+- National DFR ID: ${registeredResult.dfrId}
+- County: ${county} (${draft.district || districts[county][0]})
+- Enrollment Date: ${registeredResult.enrolledAt}
+
+Portal Access Credentials:
+- Sign-In Email: ${registeredResult.accountUser.email}
+- Temporary Password / PIN: ${registeredResult.tempPassword}
+- First-Login Requirement: Mandatory Password Change Required
+
+To activate your account:
+1. Visit the portal at: https://totagits.github.io/liberia-digital-farmer-registry/signin
+2. Sign in with your email and temporary password
+3. Set your secure permanent password
+
+For USSD access on Lonestar MTN or Orange Liberia, dial *144#.
+
+Ministry of Agriculture, Republic of Liberia`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  textDecoration: "none"
+                }}
+              >
+                ✉️ Send Real Email to Inbox ({draft.email || registeredResult.accountUser.email})
+              </a>
             </div>
           </div>
         </div>
@@ -289,8 +353,102 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
       </div>
     )}
   </footer>
- </div></div>
+ </form></div>
 }
 function Panel({title,children}:{title:string;children:React.ReactNode}){return <section className="enroll-panel"><h3>{title}</h3>{children}</section>}
 function Check({name,value}:{name:string;value:string}){return <label className="check-choice"><input type="checkbox" name={name} value={value}/><b>{value}</b></label>}
-function IndividualIdentity({kind}:{kind:string}){return <section className="identity-panel"><h3>♙ {kind==="smallholder"?"Smallholder / Subsistence Farmer Identity":"Individual Farmer Identity Details"}</h3><div className="enroll-grid three"><label>First name*<input name="firstName" required/></label><label>Middle name<input name="middleName"/></label><label>Last name*<input name="lastName" required/></label><label>Date of birth<input name="dateOfBirth" type="date"/></label><label>Sex<select name="gender"><option>Female</option><option>Male</option><option>Other</option></select></label><label>National ID (NIN / Voter ID)<input name="nationalId"/></label><label>Phone<input name="phone"/></label></div></section>}
+function IndividualIdentity({
+  kind,
+  draft,
+  field
+}: {
+  kind: string;
+  draft: Record<string, string>;
+  field: (k: string, v: string) => void;
+}) {
+  return (
+    <section className="identity-panel">
+      <h3>♙ {kind === "smallholder" ? "Smallholder / Subsistence Farmer Identity" : "Individual Farmer Identity Details"}</h3>
+      <div className="enroll-grid three">
+        <label>
+          First name*
+          <input
+            name="firstName"
+            required
+            value={draft.firstName || ""}
+            onChange={e => field("firstName", e.target.value)}
+            placeholder="e.g. Korto"
+          />
+        </label>
+        <label>
+          Middle name
+          <input
+            name="middleName"
+            value={draft.middleName || ""}
+            onChange={e => field("middleName", e.target.value)}
+          />
+        </label>
+        <label>
+          Last name*
+          <input
+            name="lastName"
+            required
+            value={draft.lastName || ""}
+            onChange={e => field("lastName", e.target.value)}
+            placeholder="e.g. Kollie"
+          />
+        </label>
+        <label>
+          Date of birth
+          <input
+            name="dateOfBirth"
+            type="date"
+            value={draft.dateOfBirth || ""}
+            onChange={e => field("dateOfBirth", e.target.value)}
+          />
+        </label>
+        <label>
+          Sex
+          <select
+            name="gender"
+            value={draft.gender || "Female"}
+            onChange={e => field("gender", e.target.value)}
+          >
+            <option>Female</option>
+            <option>Male</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>
+          National ID (NIN / Voter ID)
+          <input
+            name="nationalId"
+            value={draft.nationalId || ""}
+            onChange={e => field("nationalId", e.target.value)}
+            placeholder="e.g. 100-245-891"
+          />
+        </label>
+        <label>
+          Phone number (SMS &amp; MoMo)*
+          <input
+            name="phone"
+            value={draft.phone || ""}
+            onChange={e => field("phone", e.target.value)}
+            placeholder="e.g. +231 770 123 456"
+          />
+        </label>
+        <label>
+          Email address (official digital notices &amp; login)
+          <input
+            name="email"
+            type="email"
+            value={draft.email || ""}
+            onChange={e => field("email", e.target.value)}
+            placeholder="e.g. farmer@gmail.com"
+          />
+        </label>
+      </div>
+    </section>
+  );
+}
+
