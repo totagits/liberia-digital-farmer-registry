@@ -472,17 +472,134 @@ function handleMockApi(url: string, init?: RequestInit): Response | null {
       ? "Regional Operational"
       : "Scoped";
 
+    const defaultControls = [
+      { id: 1, controlCode: "CTRL-SEC-01", controlType: "Field supervision", title: "Audit Trail Immutability Verification", institution: "MOA", county: "National", owner: "Security Auditor", reviewer: "Quality Assurance Specialist", status: "Active", priority: "Critical", dueDate: "2026-10-01", details: { scope: "All 15 Counties", target: "Daily Ledger" } },
+      { id: 2, controlCode: "CTRL-DQA-02", controlType: "Spot check", title: "Parcel Demarcation Spot Check", institution: "LISGIS", county: "Nimba", owner: "GIS Supervisor", reviewer: "County Agricultural Officer", status: "Active", priority: "High", dueDate: "2026-09-25", details: { scope: "Sanniquellie-Mah District", target: "50 Farmer Parcels" } },
+      { id: 3, controlCode: "CTRL-DQA-03", controlType: "Periodic DQA", title: "Biometric & Phone Number Uniqueness Audit", institution: "MOA", county: "Lofa", owner: "District Agricultural Officer", reviewer: "Data Quality Lead", status: "Active", priority: "High", dueDate: "2026-10-15", details: { scope: "Foya & Voinjama Districts", target: "Provisional Farmer Records" } },
+      { id: 4, controlCode: "CTRL-REP-01", controlType: "Scheduled report", title: "National Farmer Registry Coverage Release", institution: "MOA", county: "National", owner: "M&E Officer", reviewer: "National Steering Committee", status: "Active", priority: "Critical", dueDate: "2026-09-30", details: { scope: "National", target: "Quarterly Bulletin" } },
+    ];
+
+    let controls = defaultControls;
+    let assessments: any[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const storedC = localStorage.getItem("dfr_appendix_controls_v2");
+        if (storedC) {
+          const parsed = JSON.parse(storedC);
+          if (Array.isArray(parsed) && parsed.length > 0) controls = parsed;
+        }
+        const storedA = localStorage.getItem("dfr_quality_assessments_v2");
+        if (storedA) {
+          const parsedA = JSON.parse(storedA);
+          if (Array.isArray(parsedA) && parsedA.length > 0) assessments = parsedA;
+        }
+      } catch {}
+    }
+
+    if (method === "PATCH" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        if (body.entity === "control") {
+          controls = controls.map((c) => {
+            if (c.id === Number(body.id)) {
+              return {
+                ...c,
+                status: body.status || c.status,
+                evidence: body.evidence || `Status updated to ${body.status} on ${new Date().toLocaleDateString()}`,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return c;
+          });
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("dfr_appendix_controls_v2", JSON.stringify(controls));
+            } catch {}
+          }
+          addStoredAudit({
+            actor: activeDemo?.email || "dao.foya@moa.gov.lr",
+            action: `Operational control updated to ${body.status}`,
+            entity: `Control #${body.id}`,
+            details: `Status set to ${body.status}. Action executed by ${activeDemo?.name || "Officer"}.`,
+          });
+          return jsonResponse({ ok: true, status: body.status });
+        }
+        if (body.entity === "sop") {
+          return jsonResponse({ ok: true });
+        }
+      } catch {}
+      return jsonResponse({ ok: true });
+    }
+
+    if (method === "POST" && init?.body) {
+      try {
+        const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        if (body.action === "run-quality") {
+          const farmers = getStoredFarmers();
+          assessments = farmers.map((f, i) => ({
+            id: i + 1,
+            assessmentCode: `DQA-${f.id}-${Date.now().toString().slice(-4)}`,
+            subjectRef: f.approvedDfrId || f.provisionalId || f.dfrId,
+            accuracy: 96,
+            completeness: 100,
+            consistency: 94,
+            timeliness: 92,
+            uniqueness: 98,
+            reliability: 95,
+            overallScore: 96,
+            outcome: "Passed",
+            assessedAt: new Date().toISOString().replace("T", " ").slice(0, 19),
+          }));
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("dfr_quality_assessments_v2", JSON.stringify(assessments));
+            } catch {}
+          }
+          addStoredAudit({
+            actor: activeDemo?.email || "dao.foya@moa.gov.lr",
+            action: "Six-dimensional quality assessment executed",
+            entity: "Farmer Registry",
+            details: `${farmers.length} records assessed against six quality dimensions.`,
+          });
+          return jsonResponse({ ok: true, count: farmers.length });
+        }
+        if (body.action === "create-control") {
+          const newCode = `CTRL-${String(body.controlType || "SPOT").slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+          const newControl = {
+            id: Date.now(),
+            controlCode: newCode,
+            controlType: body.controlType || "Spot check",
+            title: body.title || "Supervisory Spot Check",
+            subjectRef: body.subjectRef || "Farmer Registrations",
+            institution: body.institution || activeInst,
+            county: body.county || activeDemo?.countyScope || "National",
+            owner: body.owner || activeDemo?.name || "District Officer",
+            reviewer: body.reviewer || "Quality Assurance",
+            dueDate: body.dueDate || "2026-10-30",
+            status: "Active",
+            priority: body.priority || "Normal",
+            details: { notes: body.notes || "Assigned via operational control framework" },
+          };
+          controls = [newControl, ...controls];
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("dfr_appendix_controls_v2", JSON.stringify(controls));
+            } catch {}
+          }
+          return jsonResponse({ ok: true, code: newCode }, 201);
+        }
+      } catch {}
+      return jsonResponse({ ok: true });
+    }
+
     return jsonResponse({
       sops: getStoredSOPs(),
       rules: [
         { ruleCode: "DQR-01", name: "GPS Coordinate Liberia Bounding Box Check", dimension: "Accuracy", entityType: "Parcel", expression: "lat BETWEEN 4.15 AND 8.75 AND lng BETWEEN -11.65 AND -7.25", severity: "Fatal", ownerInstitution: "LISGIS", enabled: true },
         { ruleCode: "DQR-02", name: "Mandatory Phone Number Format Check", dimension: "Completeness", entityType: "Farmer", expression: "phone MATCHES ^(\\+231|0)[0-9]{8,9}$", severity: "Warning", ownerInstitution: "MOA", enabled: true },
       ],
-      assessments: [],
-      controls: [
-        { id: 1, controlCode: "CTRL-SEC-01", controlType: "Field supervision", title: "Audit Trail Immutability Verification", institution: "MOA", county: "National", owner: "Security Auditor", status: "Active", priority: "Critical", dueDate: "2026-10-01" },
-        { id: 2, controlCode: "CTRL-DQA-02", controlType: "Spot check", title: "Parcel Demarcation Spot Check", institution: "LISGIS", county: "Nimba", owner: "GIS Supervisor", status: "Active", priority: "High", dueDate: "2026-09-25" },
-      ],
+      assessments,
+      controls,
       consents: [],
       indicators: [
         { indicatorCode: "IND-01", name: "County Registry Coverage Percentage", definition: "% of targeted farming households enrolled in the national DFR", numerator: "0", denominator: "220000", frequency: "Monthly", owner: "M&E Officer", disaggregations: "County, Gender, Commodity", currentValue: 0, unit: "%", lastCalculatedAt: new Date().toISOString().slice(0, 10) },

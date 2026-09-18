@@ -1399,7 +1399,12 @@ export default function DashboardClient({
             <GovernanceWorkspace notify={setNotice} />
           )}
           {active === "Appendix 2 Operations" && (
-            <AppendixControls key="appendix-operations" notify={setNotice} />
+            <AppendixControls 
+              key="appendix-operations" 
+              notify={setNotice} 
+              onNavigate={(t) => setActive(t)}
+              onOpenRegistration={() => setRouter(true)}
+            />
           )}
           {active === "Users & Access" && (
             <UsersAccessWorkspace
