@@ -1831,11 +1831,42 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
   }
 
   /* 3. When a Modal is Open (Voucher Docket, Extension Advisory Slip, Receipt, Certificate) */
-  body:has(.modal-wrap) .dash-content,
-  body:has(.modal-wrap) .dash-main > :not(.modal-wrap),
+  body:has(.modal-wrap) .fao-evaluator-banner,
+  body:has(.modal-wrap) .page-head,
+  body:has(.modal-wrap) .notice,
   body:has(.modal-wrap) .benefit-hero,
-  body:has(.modal-wrap) .benefit-table {
+  body:has(.modal-wrap) .benefit-table,
+  body:has(.modal-wrap) .ext-hero,
+  body:has(.modal-wrap) .ext-tabs,
+  body:has(.modal-wrap) .ext-content,
+  body:has(.modal-wrap) .extension-panel,
+  body:has(.modal-wrap) .extension-table,
+  body:has(.modal-wrap) .extension-space > header,
+  body:has(.modal-wrap) .extension-space > div > header,
+  body:has(.modal-wrap) .extension-space > div > .table-wrap,
+  body:has(.modal-wrap) .a2-hero,
+  body:has(.modal-wrap) .a2-grid,
+  body:has(.modal-wrap) .registry,
+  body:has(.modal-wrap) .table-wrap,
+  body:has(.modal-wrap) .metric-grid,
+  body:has(.modal-wrap) .overview-grid {
     display: none !important;
+  }
+
+  .dash-shell,
+  .dash-main,
+  .dash-content,
+  .benefit-space,
+  .extension-space {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
   }
 
   .modal-wrap {
@@ -1848,10 +1879,13 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
     margin: 0 !important;
     width: 100% !important;
     height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
     display: block !important;
     overflow: visible !important;
     box-shadow: none !important;
     border: none !important;
+    z-index: auto !important;
   }
 
   /* Target all printable document cards specifically */
@@ -1871,6 +1905,9 @@ html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{fon
     background: #ffffff !important;
     color: #0f172a !important;
     padding: 20px !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     overflow: visible !important;
