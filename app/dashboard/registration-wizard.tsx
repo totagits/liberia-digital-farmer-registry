@@ -165,20 +165,42 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
               <span style={{fontSize: "18px"}}>📱</span>
               <div>
                 <b style={{fontSize: "12px", color: "#0f172a"}}>Liberia Telco SMS Gateway</b>
-                <div style={{fontSize: "10px", color: "#64748b"}}>Lonestar MTN / Orange SMPP Port 2775</div>
+                <div style={{fontSize: "10px", color: "#64748b"}}>Lonestar MTN / Orange SMPP (Demo Simulation)</div>
               </div>
             </div>
-            <span style={{fontSize: "10px", background: "#ecfdf5", color: "#059669", fontWeight: 800, padding: "2px 8px", borderRadius: "10px", border: "1px solid #a7f3d0"}}>
-              ✓ DELIVRD (140ms)
+            <span style={{fontSize: "10px", background: "#fef3c7", color: "#92400e", fontWeight: 800, padding: "2px 8px", borderRadius: "10px", border: "1px solid #fde68a"}}>
+              ● Telco Dispatch Preview
             </span>
           </div>
           <div style={{background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px", fontSize: "11px", lineHeight: "1.6", color: "#1e293b"}}>
             <div style={{fontSize: "10px", color: "#64748b", marginBottom: "4px", fontWeight: 700}}>
-              To: <span style={{color: "#0284c7"}}>{draft.phone || "+231 770 449 102"}</span>
+              Recipient Phone: <span style={{color: "#0284c7"}}>{draft.phone || "+231 770 449 102"}</span>
             </div>
             <p style={{margin: 0, fontStyle: "italic", background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1"}}>
               &ldquo;Republic of Liberia MoA DFR: Welcome <b>{registeredResult.farmerName}</b>! Registration confirmed. DFR ID: <b>{registeredResult.dfrId}</b>. Provisional portal account created. Temp PIN/Password: <b style={{color: "#b91c1c", background: "#fee2e2", padding: "1px 4px", borderRadius: "4px"}}>{registeredResult.tempPassword}</b>. You MUST change your password on first sign-in via *144# or at dfr.moa.gov.lr/signin. Keep confidential.&rdquo;
             </p>
+            <div style={{marginTop: "8px", display: "flex", justifyContent: "flex-end"}}>
+              <button
+                type="button"
+                onClick={() => {
+                  const smsText = `Republic of Liberia MoA DFR: Welcome ${registeredResult.farmerName}! Registration confirmed. DFR ID: ${registeredResult.dfrId}. Provisional portal account created. Temp PIN/Password: ${registeredResult.tempPassword}. Change password on first sign-in at https://totagits.github.io/liberia-digital-farmer-registry/signin`;
+                  navigator.clipboard?.writeText(smsText);
+                  notify("✓ SMS text and temporary PIN copied to clipboard!");
+                }}
+                style={{
+                  background: "#f1f5f9",
+                  color: "#0f172a",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  cursor: "pointer"
+                }}
+              >
+                📋 Copy SMS Message &amp; PIN
+              </button>
+            </div>
           </div>
         </div>
 
@@ -189,16 +211,16 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
               <span style={{fontSize: "18px"}}>✉️</span>
               <div>
                 <b style={{fontSize: "12px", color: "#0f172a"}}>MoA Official e-Gov Mailer</b>
-                <div style={{fontSize: "10px", color: "#64748b"}}>SMTP Relay: registry@moa.gov.lr</div>
+                <div style={{fontSize: "10px", color: "#64748b"}}>SMTP Relay: registry@moa.gov.lr (Demo Simulation)</div>
               </div>
             </div>
             <span style={{fontSize: "10px", background: "#eff6ff", color: "#1d4ed8", fontWeight: 800, padding: "2px 8px", borderRadius: "10px", border: "1px solid #bfdbfe" }}>
-              ✓ SENT (250 OK)
+              ● SMTP Dispatch Preview
             </span>
           </div>
           <div style={{background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px", fontSize: "11px", lineHeight: "1.6", color: "#1e293b"}}>
             <div style={{fontSize: "10px", color: "#64748b", marginBottom: "4px", fontWeight: 700}}>
-              To: <span style={{color: "#0284c7"}}>{draft.email || registeredResult.accountUser.email}</span>
+              Recipient Email: <span style={{color: "#0284c7"}}>{draft.email || registeredResult.accountUser.email}</span>
             </div>
             <div style={{background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1"}}>
               <div style={{fontWeight: 700, color: "#0f172a", marginBottom: "2px"}}>
@@ -208,7 +230,72 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
                 Provisional access assigned with Temporary Password: <code style={{color: "#b91c1c", fontWeight: 800}}>{registeredResult.tempPassword}</code>. Policy requires setting your permanent password prior to voucher access.
               </p>
             </div>
-            <div style={{marginTop: "8px", display: "flex", justifyContent: "flex-end"}}>
+            <div style={{marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "flex-end"}}>
+              <button
+                type="button"
+                onClick={() => {
+                  const letter = `Republic of Liberia - Ministry of Agriculture\nNational Digital Farmer Registry (DFR)\n\nDear ${registeredResult.farmerName},\n\nYour official enrollment in the Liberia Digital Farmer Registry has been completed.\n\nRegistration Details:\n- Farmer Name: ${registeredResult.farmerName}\n- National DFR ID: ${registeredResult.dfrId}\n- County: ${county} (${draft.district || districts[county][0]})\n- Enrollment Date: ${registeredResult.enrolledAt}\n\nPortal Access Credentials:\n- Sign-In Email: ${draft.email || registeredResult.accountUser.email}\n- Temporary Password / PIN: ${registeredResult.tempPassword}\n- First-Login Requirement: Mandatory Password Change Required\n\nTo activate your account, visit:\nhttps://totagits.github.io/liberia-digital-farmer-registry/signin\n\nMinistry of Agriculture, Republic of Liberia`;
+                  navigator.clipboard?.writeText(letter);
+                  notify("✓ Full onboarding letter and credentials copied to clipboard!");
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "#0f766e",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer"
+                }}
+              >
+                📋 Copy Full Letter &amp; Credentials
+              </button>
+              <a
+                href={`https://mail.zoho.com/zm/#mail/compose?to=${encodeURIComponent(draft.email || registeredResult.accountUser.email)}&subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
+`Republic of Liberia - Ministry of Agriculture
+National Digital Farmer Registry (DFR)
+
+Dear ${registeredResult.farmerName},
+
+Your official enrollment in the Liberia Digital Farmer Registry has been successfully completed.
+
+Registration Details:
+- Farmer Name: ${registeredResult.farmerName}
+- National DFR ID: ${registeredResult.dfrId}
+- County: ${county} (${draft.district || districts[county][0]})
+- Enrollment Date: ${registeredResult.enrolledAt}
+
+Portal Access Credentials:
+- Sign-In Email: ${registeredResult.accountUser.email}
+- Temporary Password / PIN: ${registeredResult.tempPassword}
+- First-Login Requirement: Mandatory Password Change Required
+
+To activate your account:
+https://totagits.github.io/liberia-digital-farmer-registry/signin
+
+Ministry of Agriculture, Republic of Liberia`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "#ea580c",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  textDecoration: "none"
+                }}
+              >
+                ✉️ Open in Zoho Mail
+              </a>
               <a
                 href={`mailto:${encodeURIComponent(draft.email || registeredResult.accountUser.email)}?subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
 `Republic of Liberia - Ministry of Agriculture
@@ -230,11 +317,7 @@ Portal Access Credentials:
 - First-Login Requirement: Mandatory Password Change Required
 
 To activate your account:
-1. Visit the portal at: https://totagits.github.io/liberia-digital-farmer-registry/signin
-2. Sign in with your email and temporary password
-3. Set your secure permanent password
-
-For USSD access on Lonestar MTN or Orange Liberia, dial *144#.
+https://totagits.github.io/liberia-digital-farmer-registry/signin
 
 Ministry of Agriculture, Republic of Liberia`
                 )}`}
@@ -243,7 +326,7 @@ Ministry of Agriculture, Republic of Liberia`
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "6px",
+                  gap: "4px",
                   background: "#2563eb",
                   color: "#ffffff",
                   fontSize: "11px",
@@ -253,11 +336,14 @@ Ministry of Agriculture, Republic of Liberia`
                   textDecoration: "none"
                 }}
               >
-                ✉️ Send Real Email to Inbox ({draft.email || registeredResult.accountUser.email})
+                ✉️ Desktop Mail (mailto)
               </a>
             </div>
           </div>
         </div>
+      </div>
+      <div style={{background: "#fef9c3", border: "1px solid #fde047", color: "#854d0e", padding: "10px 14px", borderRadius: "10px", fontSize: "11px", marginBottom: "14px", lineHeight: "1.5"}}>
+        <b>ℹ️ Evaluation Environment Notice:</b> Automatic cellular SMS delivery to mobile phones (+231 carriers) and background server-to-server SMTP relays require production telco gateways (Lonestar MTN / Orange SMPP) and government email server credentials. In this static cloud demo, dispatches are simulated above. Click <b>&ldquo;🔑 Activate &amp; Change Password Now &rarr;&rdquo;</b> below to immediately log in and set your permanent password.
       </div>
 
       {/* Printable Slip Card */}
