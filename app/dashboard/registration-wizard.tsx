@@ -20,6 +20,13 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
  const normalizedKind=initialKind==="household"?"household-representative":initialKind;
  const [step,setStep]=useState(1),[kind,setKind]=useState(normalizedKind),[county,setCounty]=useState("Bomi"),[draft,setDraft]=useState<Record<string,string>>({}),[busy,setBusy]=useState(false);
  const [registeredResult, setRegisteredResult] = useState<any | null>(null);
+ const [showPhoneModal, setShowPhoneModal] = useState(false);
+ const [showEmailModal, setShowEmailModal] = useState(false);
+ const isGh = typeof window !== "undefined" && window.location.pathname.startsWith("/liberia-digital-farmer-registry");
+ const prefix = isGh ? "/liberia-digital-farmer-registry" : "";
+ const origin = typeof window !== "undefined" ? window.location.origin : "https://totagits.github.io";
+ const recipientEmail = draft.email || registeredResult?.accountUser?.email || "";
+ const activationUrl = registeredResult ? `${origin}${prefix}/signin?email=${encodeURIComponent(recipientEmail)}&temp=${encodeURIComponent(registeredResult.tempPassword)}` : "";
  const entity=classes.find(x=>x.id===kind)!;
  const field=(name:string,value:string)=>setDraft(d=>({...d,[name]:value}));
  const capture=()=>navigator.geolocation?.getCurrentPosition(p=>setDraft(d=>({...d,latitude:p.coords.latitude.toFixed(6),longitude:p.coords.longitude.toFixed(6)})),()=>notify("Location permission was not available. Enter coordinates manually."));
@@ -179,11 +186,11 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
             <p style={{margin: 0, fontStyle: "italic", background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1"}}>
               &ldquo;Republic of Liberia MoA DFR: Welcome <b>{registeredResult.farmerName}</b>! Registration confirmed. DFR ID: <b>{registeredResult.dfrId}</b>. Provisional portal account created. Temp PIN/Password: <b style={{color: "#b91c1c", background: "#fee2e2", padding: "1px 4px", borderRadius: "4px"}}>{registeredResult.tempPassword}</b>. You MUST change your password on first sign-in via *144# or at dfr.moa.gov.lr/signin. Keep confidential.&rdquo;
             </p>
-            <div style={{marginTop: "8px", display: "flex", justifyContent: "flex-end"}}>
+            <div style={{marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "flex-end"}}>
               <button
                 type="button"
                 onClick={() => {
-                  const smsText = `Republic of Liberia MoA DFR: Welcome ${registeredResult.farmerName}! Registration confirmed. DFR ID: ${registeredResult.dfrId}. Provisional portal account created. Temp PIN/Password: ${registeredResult.tempPassword}. Change password on first sign-in at https://totagits.github.io/liberia-digital-farmer-registry/signin`;
+                  const smsText = `Republic of Liberia MoA DFR: Welcome ${registeredResult.farmerName}! Registration confirmed. DFR ID: ${registeredResult.dfrId}. Provisional portal account created. Temp PIN/Password: ${registeredResult.tempPassword}. Change password on first sign-in at ${activationUrl}`;
                   navigator.clipboard?.writeText(smsText);
                   notify("✓ SMS text and temporary PIN copied to clipboard!");
                 }}
@@ -198,7 +205,26 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
                   cursor: "pointer"
                 }}
               >
-                📋 Copy SMS Message &amp; PIN
+                📋 Copy SMS Message
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPhoneModal(true)}
+                style={{
+                  background: "#059669",
+                  color: "#ffffff",
+                  border: "none",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px"
+                }}
+              >
+                📱 Open Farmer&apos;s Phone (Test SMS &amp; Link)
               </button>
             </div>
           </div>
@@ -234,7 +260,7 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
               <button
                 type="button"
                 onClick={() => {
-                  const letter = `Republic of Liberia - Ministry of Agriculture\nNational Digital Farmer Registry (DFR)\n\nDear ${registeredResult.farmerName},\n\nYour official enrollment in the Liberia Digital Farmer Registry has been completed.\n\nRegistration Details:\n- Farmer Name: ${registeredResult.farmerName}\n- National DFR ID: ${registeredResult.dfrId}\n- County: ${county} (${draft.district || districts[county][0]})\n- Enrollment Date: ${registeredResult.enrolledAt}\n\nPortal Access Credentials:\n- Sign-In Email: ${draft.email || registeredResult.accountUser.email}\n- Temporary Password / PIN: ${registeredResult.tempPassword}\n- First-Login Requirement: Mandatory Password Change Required\n\nTo activate your account, visit:\nhttps://totagits.github.io/liberia-digital-farmer-registry/signin\n\nMinistry of Agriculture, Republic of Liberia`;
+                  const letter = `Republic of Liberia - Ministry of Agriculture\nNational Digital Farmer Registry (DFR)\n\nDear ${registeredResult.farmerName},\n\nYour official enrollment in the Liberia Digital Farmer Registry has been completed.\n\nRegistration Details:\n- Farmer Name: ${registeredResult.farmerName}\n- National DFR ID: ${registeredResult.dfrId}\n- County: ${county} (${draft.district || districts[county][0]})\n- Enrollment Date: ${registeredResult.enrolledAt}\n\nPortal Access Credentials:\n- Sign-In Email: ${recipientEmail}\n- Temporary Password / PIN: ${registeredResult.tempPassword}\n- First-Login Requirement: Mandatory Password Change Required\n\nTo activate your account, visit:\n${activationUrl}\n\nMinistry of Agriculture, Republic of Liberia`;
                   navigator.clipboard?.writeText(letter);
                   notify("✓ Full onboarding letter and credentials copied to clipboard!");
                 }}
@@ -254,8 +280,27 @@ export default function RegistrationWizard({close,notify,refresh,initialKind="in
               >
                 📋 Copy Full Letter &amp; Credentials
               </button>
+              <button
+                type="button"
+                onClick={() => setShowEmailModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "#1d4ed8",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer"
+                }}
+              >
+                ✉️ Open Citizen Webmail (Test Link)
+              </button>
               <a
-                href={`https://mail.zoho.com/zm/#mail/compose?to=${encodeURIComponent(draft.email || registeredResult.accountUser.email)}&subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
+                href={`https://mail.zoho.com/zm/#mail/compose?to=${encodeURIComponent(recipientEmail)}&subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
 `Republic of Liberia - Ministry of Agriculture
 National Digital Farmer Registry (DFR)
 
@@ -270,12 +315,12 @@ Registration Details:
 - Enrollment Date: ${registeredResult.enrolledAt}
 
 Portal Access Credentials:
-- Sign-In Email: ${registeredResult.accountUser.email}
+- Sign-In Email: ${recipientEmail}
 - Temporary Password / PIN: ${registeredResult.tempPassword}
 - First-Login Requirement: Mandatory Password Change Required
 
-To activate your account:
-https://totagits.github.io/liberia-digital-farmer-registry/signin
+To activate your account, click the link below:
+${activationUrl}
 
 Ministry of Agriculture, Republic of Liberia`
                 )}`}
@@ -294,10 +339,10 @@ Ministry of Agriculture, Republic of Liberia`
                   textDecoration: "none"
                 }}
               >
-                ✉️ Open in Zoho Mail
+                ✉️ Send via Zoho Mail
               </a>
               <a
-                href={`mailto:${encodeURIComponent(draft.email || registeredResult.accountUser.email)}?subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
+                href={`mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(`Liberia DFR — Registration Confirmed (${registeredResult.dfrId})`)}&body=${encodeURIComponent(
 `Republic of Liberia - Ministry of Agriculture
 National Digital Farmer Registry (DFR)
 
@@ -312,12 +357,12 @@ Registration Details:
 - Enrollment Date: ${registeredResult.enrolledAt}
 
 Portal Access Credentials:
-- Sign-In Email: ${registeredResult.accountUser.email}
+- Sign-In Email: ${recipientEmail}
 - Temporary Password / PIN: ${registeredResult.tempPassword}
 - First-Login Requirement: Mandatory Password Change Required
 
 To activate your account:
-https://totagits.github.io/liberia-digital-farmer-registry/signin
+${activationUrl}
 
 Ministry of Agriculture, Republic of Liberia`
                 )}`}
@@ -438,6 +483,29 @@ Ministry of Agriculture, Republic of Liberia`
         </div>
       </div>
     )}
+   {showPhoneModal && registeredResult && (
+     <FarmerPhoneModal
+       farmerName={registeredResult.farmerName}
+       dfrId={registeredResult.dfrId}
+       tempPassword={registeredResult.tempPassword}
+       activationUrl={activationUrl}
+       phone={draft.phone || "+231 777 666 999"}
+       onClose={() => setShowPhoneModal(false)}
+     />
+   )}
+   {showEmailModal && registeredResult && (
+     <CitizenEmailModal
+       farmerName={registeredResult.farmerName}
+       dfrId={registeredResult.dfrId}
+       tempPassword={registeredResult.tempPassword}
+       recipientEmail={recipientEmail}
+       county={county}
+       district={draft.district || districts[county][0]}
+       enrolledAt={registeredResult.enrolledAt}
+       activationUrl={activationUrl}
+       onClose={() => setShowEmailModal(false)}
+     />
+   )}
   </footer>
  </form></div>
 }
@@ -537,4 +605,233 @@ function IndividualIdentity({
     </section>
   );
 }
+
+function FarmerPhoneModal({
+  farmerName,
+  dfrId,
+  tempPassword,
+  activationUrl,
+  phone,
+  onClose
+}: {
+  farmerName: string;
+  dfrId: string;
+  tempPassword: string;
+  activationUrl: string;
+  phone: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="modal-wrap" style={{ zIndex: 11000, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div
+        style={{
+          width: "360px",
+          background: "#0f172a",
+          borderRadius: "36px",
+          padding: "12px",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
+          border: "4px solid #334155",
+          color: "#fff"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "8px" }}>
+          <div style={{ width: "60px", height: "4px", background: "#475569", borderRadius: "2px" }} />
+        </div>
+        <div style={{ background: "#f8fafc", borderRadius: "26px", overflow: "hidden", color: "#0f172a", display: "flex", flexDirection: "column", minHeight: "510px" }}>
+          <div style={{ background: "#0f172a", color: "#94a3b8", padding: "6px 14px", fontSize: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Lonestar MTN 4G</span>
+            <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span>94% 🔋</span>
+          </div>
+          <div style={{ background: "#166534", color: "#ffffff", padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#22c55e", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "12px" }}>
+                MoA
+              </div>
+              <div>
+                <b style={{ fontSize: "13px", display: "block" }}>MoA-DFR Liberia</b>
+                <span style={{ fontSize: "10px", color: "#bbf7d0" }}>To: {phone}</span>
+              </div>
+            </div>
+            <button type="button" onClick={onClose} style={{ background: "transparent", border: 0, color: "#fff", fontSize: "20px", cursor: "pointer" }}>×</button>
+          </div>
+          <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", gap: "10px", background: "#f1f5f9" }}>
+            <div style={{ textAlign: "center", fontSize: "10px", color: "#64748b", margin: "4px 0" }}>
+              Today · Received via Cellular Network (Lonestar/Orange)
+            </div>
+            <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "16px 16px 16px 4px", padding: "14px", fontSize: "12px", lineHeight: "1.5", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
+              <p style={{ margin: "0 0 8px" }}>
+                Republic of Liberia MoA DFR: Welcome <b>{farmerName}</b>! Registration confirmed.
+              </p>
+              <p style={{ margin: "0 0 8px" }}>
+                National DFR ID: <b style={{ color: "#166534" }}>{dfrId}</b><br />
+                Provisional PIN: <b style={{ color: "#b91c1c", background: "#fee2e2", padding: "1px 4px", borderRadius: "4px" }}>{tempPassword}</b>
+              </p>
+              <p style={{ margin: "0 0 12px", fontSize: "11px", color: "#475569" }}>
+                Mandatory first-login policy requires setting your private password before accessing vouchers.
+              </p>
+              <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "8px", padding: "12px 10px", textAlign: "center" }}>
+                <span style={{ fontSize: "10px", color: "#166534", display: "block", marginBottom: "8px", fontWeight: 700 }}>
+                  👉 TAP LINK BELOW TO ACTIVATE YOUR ACCOUNT:
+                </span>
+                <a
+                  href={activationUrl}
+                  style={{
+                    display: "inline-block",
+                    background: "#16a34a",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                    fontSize: "12px",
+                    padding: "10px 18px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    boxShadow: "0 3px 8px rgba(22,163,74,0.35)"
+                  }}
+                >
+                  🔗 Activate My DFR Account Now →
+                </a>
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: "8px", background: "#f8fafc", textAlign: "center" }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ background: "#e2e8f0", border: 0, padding: "5px 22px", borderRadius: "10px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Close Phone View
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CitizenEmailModal({
+  farmerName,
+  dfrId,
+  tempPassword,
+  activationUrl,
+  recipientEmail,
+  county,
+  district,
+  enrolledAt,
+  onClose
+}: {
+  farmerName: string;
+  dfrId: string;
+  tempPassword: string;
+  activationUrl: string;
+  recipientEmail: string;
+  county: string;
+  district: string;
+  enrolledAt: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="modal-wrap" style={{ zIndex: 11000, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div
+        style={{
+          width: "min(680px, 94vw)",
+          background: "#ffffff",
+          borderRadius: "16px",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ background: "#0f172a", color: "#ffffff", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "18px" }}>✉️</span>
+            <div>
+              <b style={{ fontSize: "13px" }}>MoA Citizen Webmail · Inbox Viewer</b>
+              <div style={{ fontSize: "10px", color: "#94a3b8" }}>Viewing incoming message for {recipientEmail}</div>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} style={{ background: "transparent", border: 0, color: "#fff", fontSize: "22px", cursor: "pointer" }}>×</button>
+        </div>
+
+        <div style={{ background: "#f8fafc", padding: "14px 20px", borderBottom: "1px solid #e2e8f0" }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: "15px", color: "#0f172a" }}>
+            Liberia DFR — Registration Confirmed &amp; Mandatory Account Activation
+          </h3>
+          <div style={{ fontSize: "11px", color: "#475569", lineHeight: "1.6" }}>
+            <div><b>From:</b> Republic of Liberia Ministry of Agriculture &lt;registry@moa.gov.lr&gt;</div>
+            <div><b>To:</b> {farmerName} &lt;{recipientEmail}&gt;</div>
+            <div><b>Date:</b> {enrolledAt} · Official Government Notice</div>
+          </div>
+        </div>
+
+        <div style={{ padding: "20px", overflowY: "auto", fontSize: "13px", lineHeight: "1.6", color: "#1e293b" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: "2px solid #166534", paddingBottom: "10px", marginBottom: "14px" }}>
+            <img src="/assets/moa-logo.png" alt="MoA" style={{ width: "36px", height: "36px", objectFit: "contain" }} />
+            <div>
+              <div style={{ fontSize: "10px", fontWeight: 800, color: "#166534", letterSpacing: "0.06em" }}>REPUBLIC OF LIBERIA · MINISTRY OF AGRICULTURE</div>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>National Digital Farmer Registry (DFR) Enrollment Confirmation</div>
+            </div>
+          </div>
+
+          <p>Dear <b>{farmerName}</b>,</p>
+          <p>
+            Congratulations! Your official registration with the Republic of Liberia National Digital Farmer Registry has been successfully completed.
+          </p>
+
+          <div style={{ background: "#f1f5f9", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", fontSize: "12px" }}>
+            <div><b>National DFR ID:</b> <code style={{ color: "#166534", fontWeight: 800 }}>{dfrId}</code></div>
+            <div><b>Jurisdiction:</b> {county} County ({district})</div>
+            <div><b>Registered Email:</b> {recipientEmail}</div>
+            <div><b>Temporary Password / PIN:</b> <code style={{ color: "#b91c1c", fontWeight: 800, background: "#fee2e2", padding: "1px 4px", borderRadius: "4px" }}>{tempPassword}</code></div>
+          </div>
+
+          <p style={{ color: "#475569", fontSize: "12px" }}>
+            As part of national data security protocols, your account requires a <b>mandatory password change</b> on first login. You must set a private password before you can view assigned vouchers or link subsidies.
+          </p>
+
+          <div style={{ textAlign: "center", margin: "24px 0" }}>
+            <a
+              href={activationUrl}
+              style={{
+                display: "inline-block",
+                background: "#16a34a",
+                color: "#ffffff",
+                fontWeight: 800,
+                fontSize: "14px",
+                padding: "12px 28px",
+                borderRadius: "8px",
+                textDecoration: "none",
+                boxShadow: "0 4px 12px rgba(22,163,74,0.35)"
+              }}
+            >
+              🔑 Click Here to Sign In &amp; Set Your Password →
+            </a>
+            <div style={{ fontSize: "10px", color: "#64748b", marginTop: "8px" }}>
+              Direct activation link: {activationUrl}
+            </div>
+          </div>
+
+          <p style={{ fontSize: "11px", color: "#64748b", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+            Ministry of Agriculture · Republic of Liberia<br />
+            Support Hotline: *144# on Lonestar MTN and Orange Liberia
+          </p>
+        </div>
+
+        <div style={{ background: "#f8fafc", padding: "10px 18px", borderTop: "1px solid #e2e8f0", textAlign: "right" }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ background: "#1e293b", color: "#ffffff", border: 0, padding: "8px 18px", borderRadius: "6px", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+          >
+            Close Webmail View
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
